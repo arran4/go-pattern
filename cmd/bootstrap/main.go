@@ -31,26 +31,32 @@ type PatternInfo struct {
 func main() {
 	// Parse the parent directory (root of repo)
 	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, ".", nil, parser.ParseComments)
+	entries, err := os.ReadDir(".")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var patternPkg *ast.Package
-	for name, pkg := range pkgs {
-		if name == "pattern" {
-			patternPkg = pkg
-			break
+	var files []*ast.File
+	var filenames []string
+
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".go") {
+			file, err := parser.ParseFile(fset, entry.Name(), nil, parser.ParseComments)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if file.Name.Name == "pattern" {
+				files = append(files, file)
+				filenames = append(filenames, entry.Name())
+			}
 		}
-	}
-	if patternPkg == nil {
-		log.Fatal("Could not find pattern package")
 	}
 
 	patterns := make(map[string]*PatternInfo)
 
 	// 1. Scan for ExampleNew<Name> in _example.go files
-	for filename, file := range patternPkg.Files {
+	for i, file := range files {
+		filename := filenames[i]
 		if !strings.HasSuffix(filename, "_example.go") {
 			continue
 		}
@@ -85,7 +91,8 @@ func main() {
 	}
 
 	// 2. Scan for Metadata in _example.go files
-	for filename, file := range patternPkg.Files {
+	for i, file := range files {
+		filename := filenames[i]
 		if !strings.HasSuffix(filename, "_example.go") {
 			continue
 		}
@@ -169,7 +176,8 @@ func main() {
 	}
 
 	// 3. Scan for Description in regular .go files (New<Name> or Type <Name>)
-	for filename, file := range patternPkg.Files {
+	for i, file := range files {
+		filename := filenames[i]
 		if strings.HasSuffix(filename, "_example.go") || strings.HasSuffix(filename, "_test.go") {
 			continue
 		}
