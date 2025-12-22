@@ -42,7 +42,8 @@ These patterns are designed to be:
 
 ```go
 	// Example 1: Simple 2x2 grid with Gophers
-	gopher := NewGopher()
+	// Shrink the Gopher so it fits better
+	gopher := NewScale(NewGopher(), ScaleFactor(0.25))
 
 	args := []any{
 		Row(Cell(gopher), Cell(gopher)),

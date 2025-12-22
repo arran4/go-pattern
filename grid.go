@@ -26,7 +26,7 @@ type Bounded interface {
 var _ image.Image = (*Grid)(nil)
 
 type Grid struct {
-	Null
+	bounds      image.Rectangle
 	rows        map[int]map[int]image.Image
 	cols        int
 	rowsCount   int
@@ -42,6 +42,10 @@ func (g *Grid) ColorModel() color.Model {
 
 func (g *Grid) Bounds() image.Rectangle {
 	return g.bounds
+}
+
+func (g *Grid) SetBounds(b image.Rectangle) {
+	g.bounds = b
 }
 
 func (g *Grid) At(x, y int) color.Color {
@@ -171,10 +175,8 @@ func FixedSize(w, h int) any {
 
 func NewGrid(ops ...any) image.Image {
 	g := &Grid{
-		Null: Null{
-			bounds: image.Rect(0, 0, 0, 0),
-		},
-		rows: make(map[int]map[int]image.Image),
+		bounds: image.Rect(0, 0, 0, 0),
+		rows:   make(map[int]map[int]image.Image),
 	}
 
 	// Process ops
