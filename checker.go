@@ -32,6 +32,9 @@ func (c *Checker) At(x, y int) color.Color {
 // NewChecker creates a new Checker with the given colors and square size.
 func NewChecker(color1, color2 color.Color, ops ...func(any)) image.Image {
 	p := &Checker{
+		Null: Null{
+			bounds: image.Rect(0, 0, 255, 255),
+		},
 		color1: color1,
 		color2: color2,
 	}
