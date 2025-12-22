@@ -86,7 +86,7 @@ func CreatePatternList() []*PatternDemo {
 				{
 					Label: "Original",
 					Generator: func(b image.Rectangle) image.Image {
-						return pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 5, pattern.SetBounds(b))
+						return pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 10, pattern.SetBounds(b))
 					},
 				},
 			},
