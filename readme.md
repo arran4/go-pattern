@@ -120,9 +120,15 @@ These patterns are designed to be:
 ![And Pattern](boolean_and.png)
 
 ```go
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
-	i := NewAnd([]image.Image{h, v})
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+
+	// Use a predicate that considers White=True, Black=False.
+	// Default is FuzzyAlpha which sees both as 1.0 (Opaque).
+	// So we use AverageGrayAbove(128).
+	pred := PredicateAverageGrayAbove(128)
+
+	i := NewAnd([]image.Image{h, v}, SetPredicate(pred))
 
 	f, err := os.Create(AndOutputFilename)
 	if err != nil {
@@ -169,9 +175,12 @@ These patterns are designed to be:
 ![Or Pattern](boolean_or.png)
 
 ```go
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
-	i := NewOr([]image.Image{h, v})
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+
+	pred := PredicateAverageGrayAbove(128)
+
+	i := NewOr([]image.Image{h, v}, SetPredicate(pred))
 
 	f, err := os.Create(OrOutputFilename)
 	if err != nil {
@@ -195,9 +204,12 @@ These patterns are designed to be:
 ![Xor Pattern](boolean_xor.png)
 
 ```go
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
-	i := NewXor([]image.Image{h, v})
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+
+	pred := PredicateAverageGrayAbove(128)
+
+	i := NewXor([]image.Image{h, v}, SetPredicate(pred))
 
 	f, err := os.Create(XorOutputFilename)
 	if err != nil {
@@ -221,8 +233,11 @@ These patterns are designed to be:
 ![Not Pattern](boolean_not.png)
 
 ```go
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
-	i := NewNot(h)
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+
+	pred := PredicateAverageGrayAbove(128)
+
+	i := NewNot(h, SetPredicate(pred))
 
 	f, err := os.Create(NotOutputFilename)
 	if err != nil {
