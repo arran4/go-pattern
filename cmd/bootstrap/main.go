@@ -78,9 +78,9 @@ func CreatePatternList() []*PatternDemo {
 			GoUsageSample: "i := pattern.NewTransposed(pattern.NewDemoNull(), 10, 10)\n\tf, err := os.Create(\"transposed.png\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer func() {\n\t\tif e := f.Close(); e != nil {\n\t\t\tpanic(e)\n\t\t}\n\t}()\n\tif err = png.Encode(f, i); err != nil {\n\t\tpanic(err)\n\t}",
 			Generator: func(b image.Rectangle) image.Image {
 				// Base: simple zoom of a checker (5x)
-				baseImg := pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 5, pattern.SetBounds(b))
+				baseImg := pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 10, pattern.SetBounds(b))
 				// Transposed
-				return pattern.NewTransposed(baseImg, 10, 10, pattern.SetBounds(b))
+				return pattern.NewTransposed(baseImg, 5, 5, pattern.SetBounds(b))
 			},
 			References: []LabelledGenerator{
 				{
