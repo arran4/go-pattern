@@ -1,0 +1,35 @@
+name: Update README
+
+on:
+  push:
+    branches-ignore:
+      - '*-updated'
+    paths:
+      - '**/*.go'
+      - '**/*.gotmpl'
+      - '**/*.gotempl'
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - name: Generate README and Images
+        run: go run ./cmd/bootstrap
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update README and images
+          title: Update README and images
+          body: Auto-generated updates for README and images.
+          branch: ${{ github.ref_name }}-updated
+          base: ${{ github.ref_name }}
+          delete-branch: true
