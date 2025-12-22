@@ -1,0 +1,5 @@
+Usage: pattern-cli run <subcommand> [arguments]
+
+Subcommands:
+
+    version      Print version information
