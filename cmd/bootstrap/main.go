@@ -27,10 +27,16 @@ var readmeTemplateRaw []byte
 
 type PatternDemo struct {
 	Name           string
-	Create         func(bounds image.Rectangle) image.Image
 	OutputFilename string
 	Description    string
 	GoUsageSample  string
+
+	Generator func(image.Rectangle) image.Image
+
+	References []LabelledGenerator
+	Steps      []LabelledGenerator
+	BaseLabel  string
+	ZoomLevels []int
 }
 
 var Patterns = CreatePatternList()
@@ -41,7 +47,7 @@ func CreatePatternList() []*PatternDemo {
 			Name:          "Null Pattern",
 			Description:   "Undefined RGBA colour.",
 			GoUsageSample: "i := pattern.NewNull()\n\tf, err := os.Create(\"null.png\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer func() {\n\t\tif e := f.Close(); e != nil {\n\t\t\tpanic(e)\n\t\t}\n\t}()\n\tif err = png.Encode(f, i); err != nil {\n\t\tpanic(err)\n\t}",
-			Create: func(bounds image.Rectangle) image.Image {
+			Generator: func(bounds image.Rectangle) image.Image {
 				return pattern.NewDemoNull(pattern.SetBounds(bounds))
 			},
 			OutputFilename: "null.png",
@@ -50,50 +56,41 @@ func CreatePatternList() []*PatternDemo {
 			Name:          "Checker Pattern",
 			Description:   "Alternates between two colors in a checkerboard fashion.",
 			GoUsageSample: "i := pattern.NewChecker(color.Black, color.White)\n\tf, err := os.Create(\"checker.png\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer func() {\n\t\tif e := f.Close(); e != nil {\n\t\t\tpanic(e)\n\t\t}\n\t}()\n\tif err = png.Encode(f, i); err != nil {\n\t\tpanic(err)\n\t}",
-			Create: func(bounds image.Rectangle) image.Image {
-				return GenerateDemo(func(b image.Rectangle) image.Image {
-					return pattern.NewDemoChecker(pattern.SetBounds(b))
-				}, DemoConfig{
-					ZoomLevels: []int{2, 4},
-				})
+			Generator: func(b image.Rectangle) image.Image {
+				return pattern.NewDemoChecker(pattern.SetBounds(b))
 			},
+			ZoomLevels:     []int{2, 4},
 			OutputFilename: "checker.png",
 		},
 		{
 			Name:          "Simple Zoom Pattern",
 			Description:   "Zooms in on an underlying image.",
 			GoUsageSample: "i := pattern.NewSimpleZoom(pattern.NewChecker(color.Black, color.White), 2)\n\tf, err := os.Create(\"simplezoom.png\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer func() {\n\t\tif e := f.Close(); e != nil {\n\t\t\tpanic(e)\n\t\t}\n\t}()\n\tif err = png.Encode(f, i); err != nil {\n\t\tpanic(err)\n\t}",
-			Create: func(bounds image.Rectangle) image.Image {
-				return GenerateDemo(func(b image.Rectangle) image.Image {
-					return pattern.NewDemoChecker(pattern.SetBounds(b))
-				}, DemoConfig{
-					ZoomLevels: []int{2, 4},
-				})
+			Generator: func(b image.Rectangle) image.Image {
+				return pattern.NewDemoChecker(pattern.SetBounds(b))
 			},
+			ZoomLevels:     []int{2, 4},
 			OutputFilename: "simplezoom.png",
 		},
 		{
 			Name:          "Transposed Pattern",
 			Description:   "Transposes the X and Y coordinates of an underlying image.",
 			GoUsageSample: "i := pattern.NewTransposed(pattern.NewDemoNull(), 10, 10)\n\tf, err := os.Create(\"transposed.png\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer func() {\n\t\tif e := f.Close(); e != nil {\n\t\t\tpanic(e)\n\t\t}\n\t}()\n\tif err = png.Encode(f, i); err != nil {\n\t\tpanic(err)\n\t}",
-			Create: func(bounds image.Rectangle) image.Image {
-				return GenerateDemo(func(b image.Rectangle) image.Image {
-					// Base: simple zoom of a checker (5x)
-					baseImg := pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 5, pattern.SetBounds(b))
-					// Transposed
-					return pattern.NewTransposed(baseImg, 10, 10, pattern.SetBounds(b))
-				}, DemoConfig{
-					References: []LabelledGenerator{
-						{
-							Label: "Original",
-							Generator: func(b image.Rectangle) image.Image {
-								return pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 5, pattern.SetBounds(b))
-							},
-						},
-					},
-					BaseLabel: "Transposed",
-				})
+			Generator: func(b image.Rectangle) image.Image {
+				// Base: simple zoom of a checker (5x)
+				baseImg := pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 5, pattern.SetBounds(b))
+				// Transposed
+				return pattern.NewTransposed(baseImg, 10, 10, pattern.SetBounds(b))
 			},
+			References: []LabelledGenerator{
+				{
+					Label: "Original",
+					Generator: func(b image.Rectangle) image.Image {
+						return pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 5, pattern.SetBounds(b))
+					},
+				},
+			},
+			BaseLabel:      "Transposed",
 			OutputFilename: "transposed.png",
 		},
 	}
@@ -145,7 +142,7 @@ func main() {
 }
 
 func DrawDemoPattern(pattern *PatternDemo, size image.Rectangle) {
-	i := addBorder(pattern.Create(size))
+	i := addBorder(pattern.Generate())
 	f, err := os.Create(pattern.OutputFilename)
 	if err != nil {
 		log.Fatalf("Error creating i file: %v", err)
@@ -210,14 +207,7 @@ type LabelledGenerator struct {
 	Generator func(image.Rectangle) image.Image
 }
 
-type DemoConfig struct {
-	References []LabelledGenerator
-	Steps      []LabelledGenerator
-	BaseLabel  string
-	ZoomLevels []int // e.g., 2, 4
-}
-
-func GenerateDemo(baseGenerator func(image.Rectangle) image.Image, cfg DemoConfig) image.Image {
+func (p *PatternDemo) Generate() image.Image {
 	sz := 150
 	b := image.Rect(0, 0, sz, sz)
 	padding := 10
@@ -230,25 +220,25 @@ func GenerateDemo(baseGenerator func(image.Rectangle) image.Image, cfg DemoConfi
 	var items []item
 
 	// 1. References
-	for _, ref := range cfg.References {
+	for _, ref := range p.References {
 		items = append(items, item{ref.Generator(b), ref.Label})
 	}
 
 	// 2. Steps
-	for _, step := range cfg.Steps {
+	for _, step := range p.Steps {
 		items = append(items, item{step.Generator(b), step.Label})
 	}
 
 	// 3. Base 1x
-	baseLabel := cfg.BaseLabel
+	baseLabel := p.BaseLabel
 	if baseLabel == "" {
 		baseLabel = "1x"
 	}
-	items = append(items, item{baseGenerator(b), baseLabel})
+	items = append(items, item{p.Generator(b), baseLabel})
 
 	// 4. Zooms
-	for _, z := range cfg.ZoomLevels {
-		img := pattern.NewSimpleZoom(baseGenerator(b), z, pattern.SetBounds(b))
+	for _, z := range p.ZoomLevels {
+		img := pattern.NewSimpleZoom(p.Generator(b), z, pattern.SetBounds(b))
 		items = append(items, item{img, fmt.Sprintf("%dx", z)})
 	}
 
