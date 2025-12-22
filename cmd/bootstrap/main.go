@@ -33,8 +33,8 @@ type PatternDemo struct {
 
 	Generator func(image.Rectangle) image.Image
 
-	InputGenerator func(image.Rectangle) image.Image
-	Transformer    func(image.Image, image.Rectangle) image.Image
+	Inputs       []LabelledGenerator
+	Transformers []LabelledTransformer
 
 	References []LabelledGenerator
 	Steps      []LabelledGenerator
@@ -79,13 +79,23 @@ func CreatePatternList() []*PatternDemo {
 			Name:          "Transposed Pattern",
 			Description:   "Transposes the X and Y coordinates of an underlying image.",
 			GoUsageSample: "i := pattern.NewTransposed(pattern.NewDemoNull(), 10, 10)\n\tf, err := os.Create(\"transposed.png\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer func() {\n\t\tif e := f.Close(); e != nil {\n\t\t\tpanic(e)\n\t\t}\n\t}()\n\tif err = png.Encode(f, i); err != nil {\n\t\tpanic(err)\n\t}",
-			InputGenerator: func(b image.Rectangle) image.Image {
-				// Base: simple zoom of a checker (10x)
-				return pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 10, pattern.SetBounds(b))
+			Inputs: []LabelledGenerator{
+				{
+					Label: "Original",
+					Generator: func(b image.Rectangle) image.Image {
+						// Base: simple zoom of a checker (10x)
+						return pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 10, pattern.SetBounds(b))
+					},
+				},
 			},
-			Transformer: func(base image.Image, b image.Rectangle) image.Image {
-				// Transposed
-				return pattern.NewTransposed(base, 5, 5, pattern.SetBounds(b))
+			Transformers: []LabelledTransformer{
+				{
+					Label: "Transposed",
+					Transformer: func(base image.Image, b image.Rectangle) image.Image {
+						// Transposed
+						return pattern.NewTransposed(base, 5, 5, pattern.SetBounds(b))
+					},
+				},
 			},
 			BaseLabel:      "Transposed",
 			OutputFilename: "transposed.png",
@@ -204,6 +214,11 @@ type LabelledGenerator struct {
 	Generator func(image.Rectangle) image.Image
 }
 
+type LabelledTransformer struct {
+	Label       string
+	Transformer func(image.Image, image.Rectangle) image.Image
+}
+
 func (p *PatternDemo) Generate() image.Image {
 	sz := 150
 	b := image.Rect(0, 0, sz, sz)
@@ -217,8 +232,8 @@ func (p *PatternDemo) Generate() image.Image {
 	var items []item
 
 	// 1. References
-	if p.InputGenerator != nil {
-		items = append(items, item{p.InputGenerator(b), "Original"})
+	for _, input := range p.Inputs {
+		items = append(items, item{input.Generator(b), input.Label})
 	}
 	for _, ref := range p.References {
 		items = append(items, item{ref.Generator(b), ref.Label})
@@ -235,18 +250,26 @@ func (p *PatternDemo) Generate() image.Image {
 		baseLabel = "1x"
 	}
 
-	gen := p.Generator
-	if gen == nil && p.InputGenerator != nil && p.Transformer != nil {
-		gen = func(b image.Rectangle) image.Image {
-			return p.Transformer(p.InputGenerator(b), b)
+	var baseImg image.Image
+
+	if p.Generator != nil {
+		baseImg = p.Generator(b)
+	} else if len(p.Inputs) > 0 {
+		baseImg = p.Inputs[0].Generator(b)
+		for i, t := range p.Transformers {
+			baseImg = t.Transformer(baseImg, b)
+			// Add intermediate transformation steps to the strip.
+			if i < len(p.Transformers)-1 {
+				items = append(items, item{baseImg, t.Label})
+			}
 		}
 	}
 
-	items = append(items, item{gen(b), baseLabel})
+	items = append(items, item{baseImg, baseLabel})
 
 	// 4. Zooms
 	for _, z := range p.ZoomLevels {
-		img := pattern.NewSimpleZoom(gen(b), z, pattern.SetBounds(b))
+		img := pattern.NewSimpleZoom(baseImg, z, pattern.SetBounds(b))
 		items = append(items, item{img, fmt.Sprintf("%dx", z)})
 	}
 
