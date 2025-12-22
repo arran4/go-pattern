@@ -22,3 +22,5 @@ func ExampleNewNull() {
 		panic(err)
 	}
 }
+
+const NullOrder = 0

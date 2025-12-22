@@ -23,3 +23,7 @@ func ExampleNewChecker() {
 		panic(err)
 	}
 }
+
+var CheckerZoomLevels = []int{2, 4}
+
+const CheckerOrder = 1

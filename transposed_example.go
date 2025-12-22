@@ -1,6 +1,7 @@
 package pattern
 
 import (
+	"image"
 	"image/png"
 	"os"
 )
@@ -22,3 +23,17 @@ func ExampleNewTransposed() {
 		panic(err)
 	}
 }
+
+func BootstrapTransposed(ops ...func(any)) image.Image {
+	return NewTransposed(NewSimpleZoom(NewDemoChecker(ops...), 10, ops...), 5, 5, ops...)
+}
+
+func BootstrapTransposedReferences() (map[string]func(ops ...func(any)) image.Image, []string) {
+	return map[string]func(ops ...func(any)) image.Image{
+		"Original": func(ops ...func(any)) image.Image {
+			return NewSimpleZoom(NewDemoChecker(ops...), 10, ops...)
+		},
+	}, []string{"Original"}
+}
+
+const TransposedOrder = 3
