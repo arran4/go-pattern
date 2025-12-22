@@ -83,10 +83,14 @@ func CreatePatternList() []*PatternDemo {
 					// Transposed
 					return pattern.NewTransposed(baseImg, 10, 10, pattern.SetBounds(b))
 				}, DemoConfig{
-					ReferenceGenerator: func(b image.Rectangle) image.Image {
-						return pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 5, pattern.SetBounds(b))
+					References: []LabelledGenerator{
+						{
+							Label: "Original",
+							Generator: func(b image.Rectangle) image.Image {
+								return pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 5, pattern.SetBounds(b))
+							},
+						},
 					},
-					ReferenceLabel: "Original",
 				})
 			},
 			OutputFilename: "transposed.png",
@@ -200,10 +204,15 @@ func drawLabel(img draw.Image, label string, x, y int) {
 	d.DrawString(label)
 }
 
+type LabelledGenerator struct {
+	Label     string
+	Generator func(image.Rectangle) image.Image
+}
+
 type DemoConfig struct {
-	ReferenceGenerator func(image.Rectangle) image.Image
-	ReferenceLabel     string
-	ZoomLevels         []int // e.g., 2, 4
+	References []LabelledGenerator
+	Steps      []LabelledGenerator
+	ZoomLevels []int // e.g., 2, 4
 }
 
 func GenerateDemo(baseGenerator func(image.Rectangle) image.Image, cfg DemoConfig) image.Image {
@@ -218,19 +227,20 @@ func GenerateDemo(baseGenerator func(image.Rectangle) image.Image, cfg DemoConfi
 	}
 	var items []item
 
-	// 1. Reference
-	if cfg.ReferenceGenerator != nil {
-		lbl := cfg.ReferenceLabel
-		if lbl == "" {
-			lbl = "Original"
-		}
-		items = append(items, item{cfg.ReferenceGenerator(b), lbl})
+	// 1. References
+	for _, ref := range cfg.References {
+		items = append(items, item{ref.Generator(b), ref.Label})
 	}
 
-	// 2. Base 1x
+	// 2. Steps
+	for _, step := range cfg.Steps {
+		items = append(items, item{step.Generator(b), step.Label})
+	}
+
+	// 3. Base 1x
 	items = append(items, item{baseGenerator(b), "1x"})
 
-	// 3. Zooms
+	// 4. Zooms
 	for _, z := range cfg.ZoomLevels {
 		img := pattern.NewSimpleZoom(baseGenerator(b), z, pattern.SetBounds(b))
 		items = append(items, item{img, fmt.Sprintf("%dx", z)})
