@@ -1,8 +1,9 @@
-package main
+package pattern_cli
 
 import (
 	"bufio"
 	"fmt"
+	"github.com/arran4/go-pattern/dsl"
 	"image"
 	"image/color"
 	"image/png"
@@ -11,39 +12,38 @@ import (
 	"strings"
 
 	"github.com/arran4/go-pattern"
-	"github.com/arran4/go-pattern/dsl"
 	"golang.org/x/image/colornames"
 )
 
-func main() {
+// Repl is a subcommand `pattern-cli repl`
+func Repl() {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("> ")
 	funcMap := make(dsl.FuncMap)
 	registerCommands(funcMap)
-
-	if len(os.Args) > 1 {
-		// Single line mode
-		input := strings.Join(os.Args[1:], " ")
+	for scanner.Scan() {
+		input := scanner.Text()
+		if input == "exit" || input == "quit" {
+			break
+		}
 		if err := process(input, funcMap); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
 		}
-	} else {
-		// REPL mode
-		scanner := bufio.NewScanner(os.Stdin)
 		fmt.Print("> ")
-		for scanner.Scan() {
-			input := scanner.Text()
-			if input == "exit" || input == "quit" {
-				break
-			}
-			if err := process(input, funcMap); err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			}
-			fmt.Print("> ")
-		}
-		if err := scanner.Err(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading stdin: %v\n", err)
-			os.Exit(1)
-		}
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading stdin: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+// Run is a subcommand `pattern-cli run`
+func Run(pipeline string) {
+	funcMap := make(dsl.FuncMap)
+	registerCommands(funcMap)
+	if err := process(pipeline, funcMap); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
 	}
 }
 
@@ -141,6 +141,5 @@ func parseColor(s string) (color.Color, error) {
 	if c, ok := colornames.Map[s]; ok {
 		return c, nil
 	}
-	// TODO: support hex?
 	return nil, fmt.Errorf("unknown color: %s", s)
 }
