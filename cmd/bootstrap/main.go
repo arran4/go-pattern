@@ -21,6 +21,7 @@ type PatternInfo struct {
 	Description     string
 	Usage           string
 	OutputFilename  string
+	BaseLabel       string
 	ZoomLevels      string // e.g., "[]int{2, 4}" (raw Go code)
 	GeneratorFunc   string // e.g., "pattern.NewDemoChecker"
 	ReferencesFunc  string
@@ -115,6 +116,18 @@ func main() {
 								}
 							}
 						}
+						// <Name>BaseLabel
+						if strings.HasSuffix(name, "BaseLabel") {
+							pName := strings.TrimSuffix(name, "BaseLabel")
+							if p, ok := patterns[pName]; ok {
+								// Extract value
+								if i < len(vSpec.Values) {
+									if lit, ok := vSpec.Values[i].(*ast.BasicLit); ok {
+										p.BaseLabel = strings.Trim(lit.Value, "\"")
+									}
+								}
+							}
+						}
 						// <Name>ZoomLevels
 						if strings.HasSuffix(name, "ZoomLevels") {
 							pName := strings.TrimSuffix(name, "ZoomLevels")
@@ -127,6 +140,18 @@ func main() {
 									start := fset.Position(v.Pos()).Offset
 									end := fset.Position(v.End()).Offset
 									p.ZoomLevels = string(fBytes[start:end])
+								}
+							}
+						}
+						// <Name>BaseLabel
+						if strings.HasSuffix(name, "BaseLabel") {
+							pName := strings.TrimSuffix(name, "BaseLabel")
+							if p, ok := patterns[pName]; ok {
+								// Extract value
+								if i < len(vSpec.Values) {
+									if lit, ok := vSpec.Values[i].(*ast.BasicLit); ok {
+										p.BaseLabel = strings.Trim(lit.Value, "\"")
+									}
 								}
 							}
 						}
@@ -319,6 +344,9 @@ func main() {
 			Description:   "{{.Description}}",
 			GoUsageSample: {{printf "%q" .Usage}},
 			OutputFilename: "{{.OutputFilename}}",
+            {{- if .BaseLabel }}
+			BaseLabel: "{{.BaseLabel}}",
+            {{- end }}
 			Generator: func(b image.Rectangle) image.Image {
 				return {{.GeneratorFunc}}(pattern.SetBounds(b))
 			},

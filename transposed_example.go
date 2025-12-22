@@ -37,3 +37,5 @@ func BootstrapTransposedReferences() (map[string]func(ops ...func(any)) image.Im
 }
 
 const TransposedOrder = 3
+
+const TransposedBaseLabel = "Transposed"
