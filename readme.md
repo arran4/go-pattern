@@ -34,6 +34,29 @@ These patterns are designed to be:
 ```
 
 
+### Grid Pattern
+
+
+
+![Grid Pattern](grid.png)
+
+```go
+	// Example 1: Simple 2x2 grid with Gophers
+	gopher := NewGopher()
+
+	args := []any{
+		Row(Cell(gopher), Cell(gopher)),
+		Row(Cell(gopher), Cell(gopher)),
+	}
+	for _, op := range ops {
+		args = append(args, op)
+	}
+
+	// Create a grid with explicit Rows
+	return NewGrid(args...)
+```
+
+
 ### Checker Pattern
 
 
