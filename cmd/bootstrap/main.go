@@ -91,6 +91,7 @@ func CreatePatternList() []*PatternDemo {
 							},
 						},
 					},
+					BaseLabel: "Transposed",
 				})
 			},
 			OutputFilename: "transposed.png",
@@ -212,6 +213,7 @@ type LabelledGenerator struct {
 type DemoConfig struct {
 	References []LabelledGenerator
 	Steps      []LabelledGenerator
+	BaseLabel  string
 	ZoomLevels []int // e.g., 2, 4
 }
 
@@ -238,7 +240,11 @@ func GenerateDemo(baseGenerator func(image.Rectangle) image.Image, cfg DemoConfi
 	}
 
 	// 3. Base 1x
-	items = append(items, item{baseGenerator(b), "1x"})
+	baseLabel := cfg.BaseLabel
+	if baseLabel == "" {
+		baseLabel = "1x"
+	}
+	items = append(items, item{baseGenerator(b), baseLabel})
 
 	// 4. Zooms
 	for _, z := range cfg.ZoomLevels {
