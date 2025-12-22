@@ -34,30 +34,6 @@ These patterns are designed to be:
 ```
 
 
-### Grid Pattern
-
-
-
-![Grid Pattern](grid.png)
-
-```go
-	// Example 1: Simple 2x2 grid with Gophers
-	// Shrink the Gopher so it fits better
-	gopher := NewScale(NewGopher(), ScaleFactor(0.25))
-
-	args := []any{
-		Row(Cell(gopher), Cell(gopher)),
-		Row(Cell(gopher), Cell(gopher)),
-	}
-	for _, op := range ops {
-		args = append(args, op)
-	}
-
-	// Create a grid with explicit Rows
-	return NewGrid(args...)
-```
-
-
 ### Checker Pattern
 
 
@@ -124,6 +100,30 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### Grid Pattern
+
+
+
+![Grid Pattern](grid.png)
+
+```go
+	// Example 1: Simple 2x2 grid with Gophers
+	// Shrink the Gopher so it fits better
+	gopher := NewScale(NewGopher(), ScaleFactor(0.25))
+
+	args := []any{
+		Row(Cell(gopher), Cell(gopher)),
+		Row(Cell(gopher), Cell(gopher)),
+	}
+	for _, op := range ops {
+		args = append(args, op)
+	}
+
+	// Create a grid with explicit Rows
+	return NewGrid(args...)
 ```
 
 

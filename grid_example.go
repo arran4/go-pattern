@@ -8,8 +8,11 @@ import (
 var (
 	GridOutputFilename = "grid.png"
 	GridZoomLevels     = []int{}
-	GridOrder          = 5
-	GridBaseLabel      = "Grid"
+)
+
+const (
+	GridOrder     = 5
+	GridBaseLabel = "Grid"
 )
 
 func init() {
@@ -21,6 +24,9 @@ func init() {
 
 func BootstrapGridReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
+		"Rows": func(bounds image.Rectangle) image.Image {
+			return NewDemoGridRows(SetBounds(bounds))
+		},
 		"Cols": func(bounds image.Rectangle) image.Image {
 			return NewDemoGridColumns(SetBounds(bounds))
 		},
@@ -33,7 +39,7 @@ func BootstrapGridReferences() (map[string]func(image.Rectangle) image.Image, []
 		"Advanced": func(bounds image.Rectangle) image.Image {
 			return NewDemoGridAdvanced(SetBounds(bounds))
 		},
-	}, []string{"Cols", "Fixed", "Bounded", "Advanced"}
+	}, []string{"Rows", "Cols", "Fixed", "Bounded", "Advanced"}
 }
 
 func ExampleNewGrid(ops ...func(any)) image.Image {
@@ -98,15 +104,15 @@ func NewDemoGridBounded(ops ...func(any)) image.Image {
 
 	// Create a bounded version that claims to be larger
 	zero := 0
-	fiveHundred := 500
+	twoHundred := 200
 
 	b := &boundedGopher{
 		Image: gopher,
 		bounds: Bounds{
 			Left:   &Range{Low: &zero, High: &zero},
-			Right:  &Range{Low: &fiveHundred, High: &fiveHundred},
+			Right:  &Range{Low: &twoHundred, High: &twoHundred},
 			Top:    &Range{Low: &zero, High: &zero},
-			Bottom: &Range{Low: &fiveHundred, High: &fiveHundred},
+			Bottom: &Range{Low: &twoHundred, High: &twoHundred},
 		},
 	}
 
