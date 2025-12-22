@@ -290,22 +290,13 @@ func (g *Grid) layout() {
 						if w > colWidths[c] {
 							colWidths[c] = w
 						}
-					} else {
-						// Fallback to image.Image.Bounds()
-						w := img.Bounds().Dx()
-						if w > colWidths[c] {
-							colWidths[c] = w
-						}
 					}
+					// If ranges are nil, we treat it as 0 width (flexible/unbounded),
+					// do NOT fallback to image.Image.Bounds().
 
 					// Similar for height
 					if pb.Bottom != nil && pb.Bottom.High != nil && pb.Top != nil && pb.Top.Low != nil {
 						h := *pb.Bottom.High - *pb.Top.Low
-						if h > rowHeights[r] {
-							rowHeights[r] = h
-						}
-					} else {
-						h := img.Bounds().Dy()
 						if h > rowHeights[r] {
 							rowHeights[r] = h
 						}
@@ -339,14 +330,56 @@ func (g *Grid) layout() {
 		totalH += h
 	}
 
-	// If FixedSize is set, we might need to adjust or center?
-	// For now, let's set the bounds to the calculated total size
+	// If FixedSize is set, handle flexible expansion
 	if g.fixedWidth > 0 && g.fixedHeight > 0 {
 		g.bounds = image.Rect(0, 0, g.fixedWidth, g.fixedHeight)
-		// If content is smaller, we might want to distribute space?
-		// "Table balancing formula that is a simplified one webbrowsers use"
-		// If content exceeds fixed size, we clip?
+
+		// 1. Distribute extra width to flexible columns
+		// A column is flexible if it has 0 width (meaning no bounded content forced a size).
+		// Or if we define "flexible" explicitly? For now, assume 0-width columns are flexible.
+		// Wait, 0-width columns are likely empty or fully unbounded.
+		// If a column contains an Unbounded item, it might still have 0 calculated width.
+
+		flexibleCols := 0
+		for _, w := range colWidths {
+			if w == 0 {
+				flexibleCols++
+			}
+		}
+
+		if flexibleCols > 0 && totalW < g.fixedWidth {
+			extraW := g.fixedWidth - totalW
+			perCol := extraW / flexibleCols
+			for i := range colWidths {
+				if colWidths[i] == 0 {
+					colWidths[i] = perCol
+					// Handle remainder? Simple integer division for now.
+				}
+			}
+		}
+
+		// 2. Distribute extra height to flexible rows
+		flexibleRows := 0
+		for _, h := range rowHeights {
+			if h == 0 {
+				flexibleRows++
+			}
+		}
+
+		if flexibleRows > 0 && totalH < g.fixedHeight {
+			extraH := g.fixedHeight - totalH
+			perRow := extraH / flexibleRows
+			for i := range rowHeights {
+				if rowHeights[i] == 0 {
+					rowHeights[i] = perRow
+				}
+			}
+		}
+
 	} else {
 		g.bounds = image.Rect(0, 0, totalW, totalH)
 	}
+
+	g.cellWidths = colWidths
+	g.rowHeights = rowHeights
 }

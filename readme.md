@@ -11,6 +11,19 @@ These patterns are designed to be:
 ## Patterns
 
 
+### Tile Pattern
+
+
+
+![Tile Pattern](tile.png)
+
+```go
+	gopher := NewScale(NewGopher(), ScaleFactor(0.25))
+	// Tile the gopher in a 200x200 area
+	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+```
+
+
 ### Null Pattern
 
 
@@ -31,6 +44,55 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### GridUnbounded Pattern
+
+
+
+![GridUnbounded Pattern](grid_unbounded.png)
+
+```go
+	// 300x100 Grid
+	// Col 0: Bounded (100x100)
+	// Col 1: Unbounded (Should take remaining 200px)
+
+	// bounded := NewChecker(color.Black, color.White) // Checkers default to 255x255 but here we want fixed?
+	// Actually NewChecker returns default bounds.
+	// Let's use NewCrop or just standard bounds behavior.
+	// But `layout()` uses `image.Bounds()` if not `Bounded`.
+
+	// Let's create a bounded Mock that is 100x100.
+	hundred := 100
+	zero := 0
+
+	b := &boundedGopher{
+		Image: NewScale(NewGopher(), ScaleSize(100, 100)),
+		bounds: Bounds{
+			Left:   &Range{Low: &zero, High: &zero},
+			Right:  &Range{Low: &hundred, High: &hundred},
+			Top:    &Range{Low: &zero, High: &zero},
+			Bottom: &Range{Low: &hundred, High: &hundred},
+		},
+	}
+
+	// Unbounded pattern: e.g. a generic Tile or Checker that we want to fill space.
+	// NewChecker returns 255x255.
+	// Let's wrap it in an unbounded structure.
+	u := &unboundedPattern{
+		Image: NewChecker(color.RGBA{200, 0, 0, 255}, color.White),
+	}
+
+	args := []any{
+		FixedSize(300, 100),
+		Row(Cell(b), Cell(u)),
+	}
+	for _, op := range ops {
+		args = append(args, op)
+	}
+
+	return NewGrid(args...)
 ```
 
 
