@@ -68,6 +68,7 @@ These patterns are designed to be:
 		SetLineSize(5),
 		SetSpaceSize(5),
 		SetLineColor(color.RGBA{255, 0, 0, 255}),
+		SetSpaceColor(color.White),
 	)
 	f, err := os.Create(HorizontalLineOutputFilename)
 	if err != nil {
@@ -95,31 +96,9 @@ These patterns are designed to be:
 		SetLineSize(5),
 		SetSpaceSize(5),
 		SetLineColor(color.RGBA{0, 0, 255, 255}),
+		SetSpaceColor(color.White),
 	)
 	f, err := os.Create(VerticalLineOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Gopher Pattern
-
-
-
-![Gopher Pattern](gopher.png)
-
-```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -146,6 +125,29 @@ These patterns are designed to be:
 	i := NewAnd([]image.Image{h, v})
 
 	f, err := os.Create(AndOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Gopher Pattern
+
+
+
+![Gopher Pattern](gopher.png)
+
+```go
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}

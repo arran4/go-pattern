@@ -17,6 +17,7 @@ func ExampleNewHorizontalLine() {
 		SetLineSize(5),
 		SetSpaceSize(5),
 		SetLineColor(color.RGBA{255, 0, 0, 255}),
+		SetSpaceColor(color.White),
 	)
 	f, err := os.Create(HorizontalLineOutputFilename)
 	if err != nil {
@@ -37,7 +38,8 @@ func GenerateHorizontalLine(b image.Rectangle) image.Image {
 		SetBounds(b),
 		SetLineSize(10),
 		SetSpaceSize(10),
-		SetLineColor(color.Black), // More visible than default? Default is Black.
+		SetLineColor(color.Black),
+		SetSpaceColor(color.White), // Explicit white background
 	)
 }
 
@@ -51,6 +53,7 @@ func ExampleNewVerticalLine() {
 		SetLineSize(5),
 		SetSpaceSize(5),
 		SetLineColor(color.RGBA{0, 0, 255, 255}),
+		SetSpaceColor(color.White),
 	)
 	f, err := os.Create(VerticalLineOutputFilename)
 	if err != nil {
@@ -72,6 +75,7 @@ func GenerateVerticalLine(b image.Rectangle) image.Image {
 		SetLineSize(10),
 		SetSpaceSize(10),
 		SetLineColor(color.Black),
+		SetSpaceColor(color.White), // Explicit white background
 	)
 }
 

@@ -14,6 +14,7 @@ type HorizontalLine struct {
 	SpaceSize
 	LineSize
 	LineColor
+	SpaceColor
 	LineImageSource
 }
 
@@ -37,6 +38,10 @@ func (p *HorizontalLine) At(x, y int) color.Color {
 		}
 		return p.LineColor.LineColor
 	}
+
+	if p.SpaceColor.SpaceColor != nil {
+		return p.SpaceColor.SpaceColor
+	}
 	return color.RGBA{}
 }
 
@@ -51,6 +56,7 @@ func NewHorizontalLine(ops ...func(any)) image.Image {
 	p.LineSize.LineSize = 1
 	p.SpaceSize.SpaceSize = 1
 	p.LineColor.LineColor = color.Black
+	// SpaceColor defaults to nil (transparent)
 
 	for _, op := range ops {
 		op(p)
@@ -72,6 +78,7 @@ type VerticalLine struct {
 	SpaceSize
 	LineSize
 	LineColor
+	SpaceColor
 	LineImageSource
 }
 
@@ -95,6 +102,10 @@ func (p *VerticalLine) At(x, y int) color.Color {
 		}
 		return p.LineColor.LineColor
 	}
+
+	if p.SpaceColor.SpaceColor != nil {
+		return p.SpaceColor.SpaceColor
+	}
 	return color.RGBA{}
 }
 
@@ -109,6 +120,7 @@ func NewVerticalLine(ops ...func(any)) image.Image {
 	p.LineSize.LineSize = 1
 	p.SpaceSize.SpaceSize = 1
 	p.LineColor.LineColor = color.Black
+	// SpaceColor defaults to nil (transparent)
 
 	for _, op := range ops {
 		op(p)

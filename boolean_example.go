@@ -3,6 +3,7 @@ package pattern
 import (
 	"image"
 	"image/color"
+	"image/draw"
 	"image/png"
 	"os"
 )
@@ -31,7 +32,14 @@ func ExampleNewAnd() {
 }
 
 func GenerateAnd(b image.Rectangle) image.Image {
-	return NewDemoAnd(SetBounds(b))
+	hWhite := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black), SetBounds(b))
+	vWhite := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black), SetBounds(b))
+
+	pred := PredicateAverageGrayAbove(128)
+
+	i := NewAnd([]image.Image{hWhite, vWhite}, SetPredicate(pred), SetBounds(b))
+
+	return stitchImages(hWhite, vWhite, i)
 }
 
 var OrOutputFilename = "boolean_or.png"
@@ -58,7 +66,13 @@ func ExampleNewOr() {
 }
 
 func GenerateOr(b image.Rectangle) image.Image {
-	return NewDemoOr(SetBounds(b))
+	hWhite := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black), SetBounds(b))
+	vWhite := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black), SetBounds(b))
+
+	pred := PredicateAverageGrayAbove(128)
+
+	i := NewOr([]image.Image{hWhite, vWhite}, SetPredicate(pred), SetBounds(b))
+	return stitchImages(hWhite, vWhite, i)
 }
 
 var XorOutputFilename = "boolean_xor.png"
@@ -85,7 +99,13 @@ func ExampleNewXor() {
 }
 
 func GenerateXor(b image.Rectangle) image.Image {
-	return NewDemoXor(SetBounds(b))
+	hWhite := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black), SetBounds(b))
+	vWhite := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black), SetBounds(b))
+
+	pred := PredicateAverageGrayAbove(128)
+
+	i := NewXor([]image.Image{hWhite, vWhite}, SetPredicate(pred), SetBounds(b))
+	return stitchImages(hWhite, vWhite, i)
 }
 
 var NotOutputFilename = "boolean_not.png"
@@ -111,7 +131,46 @@ func ExampleNewNot() {
 }
 
 func GenerateNot(b image.Rectangle) image.Image {
-	return NewDemoNot(SetBounds(b))
+	hWhite := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black), SetBounds(b))
+
+	pred := PredicateAverageGrayAbove(128)
+
+	i := NewNot(hWhite, SetPredicate(pred), SetBounds(b))
+	return stitchImages(hWhite, i)
+}
+
+// Helper to stitch images horizontally
+func stitchImages(images ...image.Image) image.Image {
+	if len(images) == 0 {
+		return nil
+	}
+
+	width := 0
+	height := 0
+	for _, img := range images {
+		b := img.Bounds()
+		width += b.Dx()
+		if b.Dy() > height {
+			height = b.Dy()
+		}
+	}
+	// Add padding
+	padding := 10
+	width += padding * (len(images) - 1)
+
+	out := image.NewRGBA(image.Rect(0, 0, width, height))
+	// Fill with gray background to show extent
+	draw.Draw(out, out.Bounds(), &image.Uniform{color.RGBA{200, 200, 200, 255}}, image.Point{}, draw.Src)
+
+	x := 0
+	for _, img := range images {
+		b := img.Bounds()
+		r := image.Rect(x, 0, x+b.Dx(), b.Dy())
+		draw.Draw(out, r, img, b.Min, draw.Over)
+		x += b.Dx() + padding
+	}
+
+	return out
 }
 
 func init() {

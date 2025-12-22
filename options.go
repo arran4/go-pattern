@@ -72,6 +72,28 @@ func SetLineColor(v color.Color) func(any) {
 	}
 }
 
+// SpaceColor configures the color of spaces in a pattern.
+type SpaceColor struct {
+	SpaceColor color.Color
+}
+
+func (s *SpaceColor) SetSpaceColor(v color.Color) {
+	s.SpaceColor = v
+}
+
+type hasSpaceColor interface {
+	SetSpaceColor(color.Color)
+}
+
+// SetSpaceColor creates an option to set the space color.
+func SetSpaceColor(v color.Color) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasSpaceColor); ok {
+			h.SetSpaceColor(v)
+		}
+	}
+}
+
 // LineImageSource configures an image source for lines in a pattern.
 type LineImageSource struct {
 	LineImageSource image.Image
