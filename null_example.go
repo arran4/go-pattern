@@ -7,12 +7,12 @@ import (
 )
 
 var NullOutputFilename = "null.png"
-var NullZoomLevels = []int{}
+var NullZoomLevels = []int{2, 4}
 
 const NullOrder = 0
 
 // Null Pattern
-// Undefined RGBA colour.
+// Returns a transparent color for all pixels.
 func ExampleNewNull() {
 	i := NewNull()
 	f, err := os.Create(NullOutputFilename)
@@ -29,10 +29,10 @@ func ExampleNewNull() {
 	}
 }
 
-func BootstrapNull(b image.Rectangle) image.Image {
+func GenerateNull(b image.Rectangle) image.Image {
 	return NewDemoNull(SetBounds(b))
 }
 
 func init() {
-	RegisterGenerator("Null", BootstrapNull)
+	RegisterGenerator("Null", GenerateNull)
 }

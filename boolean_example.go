@@ -12,8 +12,8 @@ var AndZoomLevels = []int{2, 4}
 const AndOrder = 20
 
 func ExampleNewAnd() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 	i := NewAnd([]image.Image{h, v})
 
 	f, err := os.Create(AndOutputFilename)
@@ -30,7 +30,7 @@ func ExampleNewAnd() {
 	}
 }
 
-func BootstrapAnd(b image.Rectangle) image.Image {
+func GenerateAnd(b image.Rectangle) image.Image {
 	return NewDemoAnd(SetBounds(b))
 }
 
@@ -39,8 +39,8 @@ var OrZoomLevels = []int{2, 4}
 const OrOrder = 21
 
 func ExampleNewOr() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 	i := NewOr([]image.Image{h, v})
 
 	f, err := os.Create(OrOutputFilename)
@@ -57,7 +57,7 @@ func ExampleNewOr() {
 	}
 }
 
-func BootstrapOr(b image.Rectangle) image.Image {
+func GenerateOr(b image.Rectangle) image.Image {
 	return NewDemoOr(SetBounds(b))
 }
 
@@ -66,8 +66,8 @@ var XorZoomLevels = []int{2, 4}
 const XorOrder = 22
 
 func ExampleNewXor() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 	i := NewXor([]image.Image{h, v})
 
 	f, err := os.Create(XorOutputFilename)
@@ -84,7 +84,7 @@ func ExampleNewXor() {
 	}
 }
 
-func BootstrapXor(b image.Rectangle) image.Image {
+func GenerateXor(b image.Rectangle) image.Image {
 	return NewDemoXor(SetBounds(b))
 }
 
@@ -93,7 +93,7 @@ var NotZoomLevels = []int{2, 4}
 const NotOrder = 23
 
 func ExampleNewNot() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 	i := NewNot(h)
 
 	f, err := os.Create(NotOutputFilename)
@@ -110,13 +110,13 @@ func ExampleNewNot() {
 	}
 }
 
-func BootstrapNot(b image.Rectangle) image.Image {
+func GenerateNot(b image.Rectangle) image.Image {
 	return NewDemoNot(SetBounds(b))
 }
 
 func init() {
-	RegisterGenerator("And", BootstrapAnd)
-	RegisterGenerator("Or", BootstrapOr)
-	RegisterGenerator("Xor", BootstrapXor)
-	RegisterGenerator("Not", BootstrapNot)
+	RegisterGenerator("And", GenerateAnd)
+	RegisterGenerator("Or", GenerateOr)
+	RegisterGenerator("Xor", GenerateXor)
+	RegisterGenerator("Not", GenerateNot)
 }

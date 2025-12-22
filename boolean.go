@@ -1,6 +1,7 @@
 package pattern
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"math"
@@ -24,8 +25,8 @@ type ColorPredicate func(c color.Color) float64
 // BooleanImage represents a boolean or fuzzy logic operation on input images.
 type BooleanImage struct {
 	Null
-	Op BooleanOpType
-	Inputs []image.Image
+	Op        BooleanOpType
+	Inputs    []image.Image
 	Predicate ColorPredicate
 	TrueColor
 	FalseColor
@@ -63,19 +64,15 @@ func (bi *BooleanImage) At(x, y int) color.Color {
 		}
 	case OpXor:
 		// XOR for fuzzy logic: |a - b|
-		// For multiple inputs, it's cumulative? Xor(a, b, c) = Xor(Xor(a, b), c)
-		// Let's assume binary or sequential.
+		// Xor is restricted to 2 inputs by construction for the Xor type.
+		// But BooleanImage can handle more generically if we wanted, but we'll stick to binary for now.
 		val = 0.0
-		for i, input := range bi.Inputs {
-			if input == nil {
-				continue
-			}
-			v := bi.Predicate(input.At(x, y))
-			if i == 0 {
-				val = v
-			} else {
-				val = math.Abs(val - v)
-			}
+		if len(bi.Inputs) >= 1 && bi.Inputs[0] != nil {
+			val = bi.Predicate(bi.Inputs[0].At(x, y))
+		}
+		if len(bi.Inputs) >= 2 && bi.Inputs[1] != nil {
+			v := bi.Predicate(bi.Inputs[1].At(x, y))
+			val = math.Abs(val - v)
 		}
 	case OpNot:
 		if len(bi.Inputs) > 0 && bi.Inputs[0] != nil {
@@ -102,10 +99,6 @@ func interpolateColor(c0, c1 color.Color, t float64) color.Color {
 	g := float64(g0) + t*(float64(g1)-float64(g0))
 	b := float64(b0) + t*(float64(b1)-float64(b0))
 	a := float64(a0) + t*(float64(a1)-float64(a0))
-
-	// RGBA() returns 16-bit values (0-0xffff).
-	// We need to return a color.Color. The standard library doesn't have a generic 64-bit color.
-	// We can use color.RGBA64.
 
 	return color.RGBA64{
 		R: uint16(r),
@@ -176,7 +169,6 @@ func DefaultPredicate(c color.Color) float64 {
 	return PredicateFuzzyAlpha()(c)
 }
 
-
 // SetPredicate sets the predicate for the boolean operation.
 type hasPredicate interface {
 	SetPredicate(ColorPredicate)
@@ -194,14 +186,39 @@ func SetPredicate(p ColorPredicate) func(any) {
 	}
 }
 
+// Specific Types
+
+// And represents a boolean AND operation.
+type And struct {
+	BooleanImage
+}
+
+// Or represents a boolean OR operation.
+type Or struct {
+	BooleanImage
+}
+
+// Xor represents a boolean XOR operation.
+type Xor struct {
+	BooleanImage
+}
+
+// Not represents a boolean NOT operation.
+type Not struct {
+	BooleanImage
+}
+
 // Constructors
 
+// NewAnd creates a new And pattern.
 func NewAnd(inputs []image.Image, ops ...func(any)) image.Image {
-	p := &BooleanImage{
-		Null: Null{bounds: image.Rect(0, 0, 255, 255)},
-		Op: OpAnd,
-		Inputs: inputs,
-		Predicate: DefaultPredicate,
+	p := &And{
+		BooleanImage: BooleanImage{
+			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:        OpAnd,
+			Inputs:    inputs,
+			Predicate: DefaultPredicate,
+		},
 	}
 	p.TrueColor.TrueColor = color.White
 	p.FalseColor.FalseColor = color.Black
@@ -212,12 +229,15 @@ func NewAnd(inputs []image.Image, ops ...func(any)) image.Image {
 	return p
 }
 
+// NewOr creates a new Or pattern.
 func NewOr(inputs []image.Image, ops ...func(any)) image.Image {
-	p := &BooleanImage{
-		Null: Null{bounds: image.Rect(0, 0, 255, 255)},
-		Op: OpOr,
-		Inputs: inputs,
-		Predicate: DefaultPredicate,
+	p := &Or{
+		BooleanImage: BooleanImage{
+			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:        OpOr,
+			Inputs:    inputs,
+			Predicate: DefaultPredicate,
+		},
 	}
 	p.TrueColor.TrueColor = color.White
 	p.FalseColor.FalseColor = color.Black
@@ -228,12 +248,20 @@ func NewOr(inputs []image.Image, ops ...func(any)) image.Image {
 	return p
 }
 
+// NewXor creates a new Xor pattern. It enforces exactly 2 inputs.
 func NewXor(inputs []image.Image, ops ...func(any)) image.Image {
-	p := &BooleanImage{
-		Null: Null{bounds: image.Rect(0, 0, 255, 255)},
-		Op: OpXor,
-		Inputs: inputs,
-		Predicate: DefaultPredicate,
+	if len(inputs) != 2 {
+		// Enforcing strict input count as requested.
+		// Panic is appropriate here as it's likely a configuration error.
+		panic(fmt.Sprintf("Xor requires exactly 2 inputs, got %d", len(inputs)))
+	}
+	p := &Xor{
+		BooleanImage: BooleanImage{
+			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:        OpXor,
+			Inputs:    inputs,
+			Predicate: DefaultPredicate,
+		},
 	}
 	p.TrueColor.TrueColor = color.White
 	p.FalseColor.FalseColor = color.Black
@@ -244,12 +272,15 @@ func NewXor(inputs []image.Image, ops ...func(any)) image.Image {
 	return p
 }
 
+// NewNot creates a new Not pattern. It enforces exactly 1 input.
 func NewNot(input image.Image, ops ...func(any)) image.Image {
-	p := &BooleanImage{
-		Null: Null{bounds: image.Rect(0, 0, 255, 255)},
-		Op: OpNot,
-		Inputs: []image.Image{input},
-		Predicate: DefaultPredicate,
+	p := &Not{
+		BooleanImage: BooleanImage{
+			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:        OpNot,
+			Inputs:    []image.Image{input},
+			Predicate: DefaultPredicate,
+		},
 	}
 	p.TrueColor.TrueColor = color.White
 	p.FalseColor.FalseColor = color.Black
@@ -264,24 +295,30 @@ func NewNot(input image.Image, ops ...func(any)) image.Image {
 
 func NewDemoAnd(ops ...func(any)) image.Image {
 	// Demo needs some inputs. We can create some default lines.
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
+	// Using Black lines on transparent background.
+	// Input 1: Black Lines (A=1) / Transparent (A=0).
+	// Input 2: Black Lines (A=1) / Transparent (A=0).
+	// Predicate: FuzzyAlpha.
+	// AND: If both are Lines -> 1.0 (White). If one is Space -> 0.0 (Black).
+	// So intersection will be White, rest Black.
 	return NewAnd([]image.Image{h, v}, ops...)
 }
 
 func NewDemoOr(ops ...func(any)) image.Image {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 	return NewOr([]image.Image{h, v}, ops...)
 }
 
 func NewDemoXor(ops ...func(any)) image.Image {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 	return NewXor([]image.Image{h, v}, ops...)
 }
 
 func NewDemoNot(ops ...func(any)) image.Image {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 	return NewNot(h, ops...)
 }

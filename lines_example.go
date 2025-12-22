@@ -32,11 +32,12 @@ func ExampleNewHorizontalLine() {
 	}
 }
 
-func BootstrapHorizontalLine(b image.Rectangle) image.Image {
+func GenerateHorizontalLine(b image.Rectangle) image.Image {
 	return NewDemoHorizontalLine(
 		SetBounds(b),
 		SetLineSize(10),
 		SetSpaceSize(10),
+		SetLineColor(color.Black), // More visible than default? Default is Black.
 	)
 }
 
@@ -65,15 +66,16 @@ func ExampleNewVerticalLine() {
 	}
 }
 
-func BootstrapVerticalLine(b image.Rectangle) image.Image {
+func GenerateVerticalLine(b image.Rectangle) image.Image {
 	return NewDemoVerticalLine(
 		SetBounds(b),
 		SetLineSize(10),
 		SetSpaceSize(10),
+		SetLineColor(color.Black),
 	)
 }
 
 func init() {
-	RegisterGenerator("HorizontalLine", BootstrapHorizontalLine)
-	RegisterGenerator("VerticalLine", BootstrapVerticalLine)
+	RegisterGenerator("HorizontalLine", GenerateHorizontalLine)
+	RegisterGenerator("VerticalLine", GenerateVerticalLine)
 }

@@ -30,11 +30,11 @@ func ExampleNewGopher() {
 	}
 }
 
-func BootstrapGopher(b image.Rectangle) image.Image {
+func GenerateGopher(b image.Rectangle) image.Image {
 	return NewGopher()
 }
 
-func BootstrapGopherReferences() (map[string]func(image.Rectangle) image.Image, []string) {
+func GenerateGopherReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
 		"Gopher": func(b image.Rectangle) image.Image {
 			return NewGopher()
@@ -43,6 +43,6 @@ func BootstrapGopherReferences() (map[string]func(image.Rectangle) image.Image, 
 }
 
 func init() {
-	RegisterGenerator("Gopher", BootstrapGopher)
-	RegisterReferences("Gopher", BootstrapGopherReferences)
+	RegisterGenerator("Gopher", GenerateGopher)
+	RegisterReferences("Gopher", GenerateGopherReferences)
 }
