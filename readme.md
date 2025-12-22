@@ -10,7 +10,7 @@ These patterns are designed to be:
 ## Patterns
 
 
-### Null Pattern Pattern
+### Null Pattern
 
 Undefined RGBA colour.
 
@@ -33,7 +33,7 @@ i := pattern.NewNull()
 ```
 
 
-### Checker Pattern Pattern
+### Checker Pattern
 
 Alternates between two colors in a checkerboard fashion.
 
@@ -56,7 +56,7 @@ i := pattern.NewChecker(color.Black, color.White)
 ```
 
 
-### Simple Zoom Pattern Pattern
+### Simple Zoom Pattern
 
 Zooms in on an underlying image.
 
@@ -79,7 +79,7 @@ i := pattern.NewSimpleZoom(pattern.NewChecker(color.Black, color.White), 2)
 ```
 
 
-### Transposed Pattern Pattern
+### Transposed Pattern
 
 Transposes the X and Y coordinates of an underlying image.
 
