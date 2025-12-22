@@ -4,6 +4,9 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"image"
 	"image/color"
 	"image/draw"
@@ -13,6 +16,9 @@ import (
 	"log"
 	"os"
 	"path"
+	"sort"
+	"strconv"
+	"strings"
 	"text/template"
 
 	pattern "github.com/arran4/go-pattern"
@@ -40,67 +46,7 @@ type PatternDemo struct {
 	Steps      []LabelledGenerator
 	BaseLabel  string
 	ZoomLevels []int
-}
-
-var Patterns = CreatePatternList()
-
-func CreatePatternList() []*PatternDemo {
-	return []*PatternDemo{
-		{
-			Name:          "Null Pattern",
-			Description:   "Undefined RGBA colour.",
-			GoUsageSample: "i := pattern.NewNull()\n\tf, err := os.Create(\"null.png\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer func() {\n\t\tif e := f.Close(); e != nil {\n\t\t\tpanic(e)\n\t\t}\n\t}()\n\tif err = png.Encode(f, i); err != nil {\n\t\tpanic(err)\n\t}",
-			Generator: func(bounds image.Rectangle) image.Image {
-				return pattern.NewDemoNull(pattern.SetBounds(bounds))
-			},
-			OutputFilename: "null.png",
-		},
-		{
-			Name:          "Checker Pattern",
-			Description:   "Alternates between two colors in a checkerboard fashion.",
-			GoUsageSample: "i := pattern.NewChecker(color.Black, color.White)\n\tf, err := os.Create(\"checker.png\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer func() {\n\t\tif e := f.Close(); e != nil {\n\t\t\tpanic(e)\n\t\t}\n\t}()\n\tif err = png.Encode(f, i); err != nil {\n\t\tpanic(err)\n\t}",
-			Generator: func(b image.Rectangle) image.Image {
-				return pattern.NewDemoChecker(pattern.SetBounds(b))
-			},
-			ZoomLevels:     []int{2, 4},
-			OutputFilename: "checker.png",
-		},
-		{
-			Name:          "Simple Zoom Pattern",
-			Description:   "Zooms in on an underlying image.",
-			GoUsageSample: "i := pattern.NewSimpleZoom(pattern.NewChecker(color.Black, color.White), 2)\n\tf, err := os.Create(\"simplezoom.png\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer func() {\n\t\tif e := f.Close(); e != nil {\n\t\t\tpanic(e)\n\t\t}\n\t}()\n\tif err = png.Encode(f, i); err != nil {\n\t\tpanic(err)\n\t}",
-			Generator: func(b image.Rectangle) image.Image {
-				return pattern.NewDemoChecker(pattern.SetBounds(b))
-			},
-			ZoomLevels:     []int{2, 4},
-			OutputFilename: "simplezoom.png",
-		},
-		{
-			Name:          "Transposed Pattern",
-			Description:   "Transposes the X and Y coordinates of an underlying image.",
-			GoUsageSample: "i := pattern.NewTransposed(pattern.NewDemoNull(), 10, 10)\n\tf, err := os.Create(\"transposed.png\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer func() {\n\t\tif e := f.Close(); e != nil {\n\t\t\tpanic(e)\n\t\t}\n\t}()\n\tif err = png.Encode(f, i); err != nil {\n\t\tpanic(err)\n\t}",
-			Inputs: []LabelledGenerator{
-				{
-					Label: "Original",
-					Generator: func(b image.Rectangle) image.Image {
-						// Base: simple zoom of a checker (10x)
-						return pattern.NewSimpleZoom(pattern.NewDemoChecker(pattern.SetBounds(b)), 10, pattern.SetBounds(b))
-					},
-				},
-			},
-			Transformers: []LabelledTransformer{
-				{
-					Label: "Transposed",
-					Transformer: func(base image.Image, b image.Rectangle) image.Image {
-						// Transposed
-						return pattern.NewTransposed(base, 5, 5, pattern.SetBounds(b))
-					},
-				},
-			},
-			BaseLabel:      "Transposed",
-			OutputFilename: "transposed.png",
-		},
-	}
+	Order      int
 }
 
 func main() {
@@ -116,6 +62,12 @@ func main() {
 		flags.Usage()
 		return
 	}
+
+	patterns, err := discoverPatterns(".")
+	if err != nil {
+		log.Fatalf("Failed to discover patterns: %v", err)
+	}
+
 	readmeTemplate, err := template.New("readme.md").Parse(string(readmeTemplateRaw))
 	if err != nil {
 		panic(err)
@@ -135,11 +87,11 @@ func main() {
 		Patterns    []PatternDemo
 	}{
 		ProjectName: "go-pattern",
+		Patterns:    patterns,
 	}
 	sz := image.Rect(0, 0, 255, 255)
-	for _, pattern := range Patterns {
-		data.Patterns = append(data.Patterns, *pattern)
-		DrawDemoPattern(pattern, sz)
+	for _, p := range patterns {
+		DrawDemoPattern(&p, sz)
 	}
 	err = readmeTemplate.Execute(f, data)
 	if err != nil {
@@ -147,6 +99,230 @@ func main() {
 	}
 	log.Printf("Generated %s successfully\n", fn)
 }
+
+func discoverPatterns(root string) ([]PatternDemo, error) {
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, root, nil, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	var patterns []PatternDemo
+
+	for _, pkg := range pkgs {
+		for filename, f := range pkg.Files {
+			// We only care about _example.go files for metadata
+			if !strings.HasSuffix(filename, "_example.go") {
+				continue
+			}
+
+			// To extract source code properly, we need to read the file content
+			fileContent, err := os.ReadFile(filename)
+			if err != nil {
+				return nil, err
+			}
+
+			ast.Inspect(f, func(n ast.Node) bool {
+				fn, ok := n.(*ast.FuncDecl)
+				if !ok {
+					return true
+				}
+				if !strings.HasPrefix(fn.Name.Name, "ExampleNew") {
+					return true
+				}
+
+				name := strings.TrimPrefix(fn.Name.Name, "ExampleNew")
+
+				// Extract Usage Sample
+				start := fset.Position(fn.Body.Lbrace).Offset + 1
+				end := fset.Position(fn.Body.Rbrace).Offset
+				usage := string(fileContent[start:end])
+				// usage = strings.TrimSpace(usage) // Keep indentation or adjust?
+				// The original code had tabs. Let's try to dedent if needed,
+				// but simplistic extraction is likely fine if formatted.
+				// Actually, we should probably strip leading/trailing newlines.
+				usage = strings.Trim(usage, "\n")
+
+				pd := PatternDemo{
+					Name:          name + " Pattern", // Convention from hardcoded list
+					GoUsageSample: usage,
+					// Description:   "", // Description was hardcoded. We might need to extract it from comments?
+					// For now, let's leave description empty or infer?
+					// The hardcoded list had descriptions. The prompt doesn't explicitly say where to get description.
+					// "Metadata is extracted... Usage... OutputFilename... ZoomLevels... Order... Custom Generator".
+					// It missed Description. I'll check if I can get it from doc comments.
+				}
+
+				if fn.Doc != nil {
+					pd.Description = strings.TrimSpace(fn.Doc.Text())
+				}
+
+				// Look up configuration in the AST of the same file
+				pd.OutputFilename = findStringVar(f, name+"OutputFilename")
+				pd.ZoomLevels = findIntSliceVar(f, fileContent, fset, name+"ZoomLevels")
+				pd.Order = findIntConst(f, name+"Order")
+				pd.BaseLabel = findStringConst(f, name+"BaseLabel")
+
+				// Look up Generator in Registry
+				if gen, ok := pattern.GlobalGenerators[name]; ok {
+					pd.Generator = gen
+				} else {
+					log.Printf("Warning: No generator found for %s", name)
+				}
+
+				// Look up References in Registry
+				if refsFunc, ok := pattern.GlobalReferences[name]; ok {
+					refMap, order := refsFunc()
+					// Map to Inputs/Transformers is tricky because the structure in main.go
+					// was specific to Transposed which used Inputs/Transformers.
+					// However, the `Generate` function in main.go handles `Inputs`, `References`, `Steps`.
+					// `Transposed` example in main.go used `Inputs` and `Transformers`.
+					// If `BootstrapTransposedReferences` returns a map, we can put them in `Inputs` or `References`.
+					// Let's use `References` for general map items?
+					// But `Transposed` logic in `Generate` (main.go) used `Inputs[0]` as base for Transformers.
+
+					// Let's try to adapt.
+					// If the pattern has references, we can populate `Inputs` or `References`.
+					// `Transposed` had `Original` (Input) and `Transposed` (Transformer output?).
+					// But here `refMap` gives us generators.
+					// If `BootstrapTransposedReferences` returns "Original" -> func and "Transposed" -> func.
+					// We can put them into `Inputs`?
+
+					for _, label := range order {
+						if g, ok := refMap[label]; ok {
+							pd.Inputs = append(pd.Inputs, LabelledGenerator{
+								Label: label,
+								Generator: g,
+							})
+						}
+					}
+
+					// If "Transposed" logic specifically needs `Transformers`, we might need more metadata.
+					// But the requirement says: "References for patterns are provided by Bootstrap<Name>References functions which return a map of generators and a slice of labels for ordering."
+					// This matches `Inputs` or `References` in `PatternDemo` struct usage in `Generate` method:
+					// // 1. References
+					// for _, input := range p.Inputs { ... }
+					// for _, ref := range p.References { ... }
+					// So putting them in `Inputs` seems fine to display them.
+				}
+
+				patterns = append(patterns, pd)
+				return true
+			})
+		}
+	}
+
+	// Sort by Order
+	sort.Slice(patterns, func(i, j int) bool {
+		return patterns[i].Order < patterns[j].Order
+	})
+
+	return patterns, nil
+}
+
+func findStringVar(f *ast.File, name string) string {
+	var val string
+	ast.Inspect(f, func(n ast.Node) bool {
+		if gen, ok := n.(*ast.GenDecl); ok && gen.Tok == token.VAR {
+			for _, spec := range gen.Specs {
+				if vs, ok := spec.(*ast.ValueSpec); ok {
+					for i, ident := range vs.Names {
+						if ident.Name == name {
+							if len(vs.Values) > i {
+								if lit, ok := vs.Values[i].(*ast.BasicLit); ok && lit.Kind == token.STRING {
+									val, _ = strconv.Unquote(lit.Value)
+								}
+							}
+							return false
+						}
+					}
+				}
+			}
+		}
+		return true
+	})
+	return val
+}
+
+func findIntConst(f *ast.File, name string) int {
+	var val int
+	ast.Inspect(f, func(n ast.Node) bool {
+		if gen, ok := n.(*ast.GenDecl); ok && gen.Tok == token.CONST {
+			for _, spec := range gen.Specs {
+				if vs, ok := spec.(*ast.ValueSpec); ok {
+					for i, ident := range vs.Names {
+						if ident.Name == name {
+							if len(vs.Values) > i {
+								if lit, ok := vs.Values[i].(*ast.BasicLit); ok && lit.Kind == token.INT {
+									v, _ := strconv.Atoi(lit.Value)
+									val = v
+								}
+							}
+							return false
+						}
+					}
+				}
+			}
+		}
+		return true
+	})
+	return val
+}
+
+func findStringConst(f *ast.File, name string) string {
+	var val string
+	ast.Inspect(f, func(n ast.Node) bool {
+		if gen, ok := n.(*ast.GenDecl); ok && gen.Tok == token.CONST {
+			for _, spec := range gen.Specs {
+				if vs, ok := spec.(*ast.ValueSpec); ok {
+					for i, ident := range vs.Names {
+						if ident.Name == name {
+							if len(vs.Values) > i {
+								if lit, ok := vs.Values[i].(*ast.BasicLit); ok && lit.Kind == token.STRING {
+									val, _ = strconv.Unquote(lit.Value)
+								}
+							}
+							return false
+						}
+					}
+				}
+			}
+		}
+		return true
+	})
+	return val
+}
+
+
+func findIntSliceVar(f *ast.File, content []byte, fset *token.FileSet, name string) []int {
+	var nums []int
+	ast.Inspect(f, func(n ast.Node) bool {
+		if gen, ok := n.(*ast.GenDecl); ok && gen.Tok == token.VAR {
+			for _, spec := range gen.Specs {
+				if vs, ok := spec.(*ast.ValueSpec); ok {
+					for i, ident := range vs.Names {
+						if ident.Name == name {
+							if len(vs.Values) > i {
+								if cl, ok := vs.Values[i].(*ast.CompositeLit); ok {
+									for _, elt := range cl.Elts {
+										if lit, ok := elt.(*ast.BasicLit); ok && lit.Kind == token.INT {
+											v, _ := strconv.Atoi(lit.Value)
+											nums = append(nums, v)
+										}
+									}
+								}
+							}
+							return false
+						}
+					}
+				}
+			}
+		}
+		return true
+	})
+	return nums
+}
+
 
 func DrawDemoPattern(pattern *PatternDemo, size image.Rectangle) {
 	i := addBorder(pattern.Generate())
@@ -177,6 +353,10 @@ func DrawDemoPattern(pattern *PatternDemo, size image.Rectangle) {
 }
 
 func addBorder(img image.Image) image.Image {
+	if img == nil {
+		// Create a placeholder if image is nil (e.g. if generator returned nil)
+		img = image.NewRGBA(image.Rect(0, 0, 150, 150))
+	}
 	b := img.Bounds()
 	borderWidth := 5
 	nb := image.Rect(0, 0, b.Dx()+2*borderWidth, b.Dy()+2*borderWidth)
@@ -231,7 +411,7 @@ func (p *PatternDemo) Generate() image.Image {
 	}
 	var items []item
 
-	// 1. References
+	// 1. References / Inputs
 	for _, input := range p.Inputs {
 		items = append(items, item{input.Generator(b), input.Label})
 	}
@@ -253,28 +433,36 @@ func (p *PatternDemo) Generate() image.Image {
 	var baseImg image.Image
 
 	if p.Generator != nil {
-		baseImg = p.Generator(b)
-	} else if len(p.Inputs) > 0 {
-		baseImg = p.Inputs[0].Generator(b)
-		for i, t := range p.Transformers {
-			baseImg = t.Transformer(baseImg, b)
-			// Add intermediate transformation steps to the strip.
-			if i < len(p.Transformers)-1 {
-				items = append(items, item{baseImg, t.Label})
-			}
+		genImg := p.Generator(b)
+		if genImg != nil {
+			baseImg = genImg
+			items = append(items, item{baseImg, baseLabel})
 		}
 	}
-
-	items = append(items, item{baseImg, baseLabel})
+	// The original logic had: if generator != nil { ... } else if len(Inputs) > 0 { ... }
+	// In the original Transposed example, Generator was nil? No, `main.go` logic used `Inputs` and `Transformers`.
+	// Since we are refactoring, we might lose the `Transformers` logic unless we reconstructed it.
+	// But `BootstrapTransposedReferences` returned a map of generators.
+	// So we can just display those generators.
+	// For Transposed, we now have "Original" and "Transposed" as generators in `Inputs`.
+	// So we don't need `Transformers` logic if the generators already do the transformation.
+	// The `BootstrapTransposedReferences` I wrote earlier creates a `NewTransposed` from scratch.
+	// So displaying them via `Inputs` is sufficient.
 
 	// 4. Zooms
-	for _, z := range p.ZoomLevels {
-		img := pattern.NewSimpleZoom(baseImg, z, pattern.SetBounds(b))
-		items = append(items, item{img, fmt.Sprintf("%dx", z)})
+	if baseImg != nil {
+		for _, z := range p.ZoomLevels {
+			img := pattern.NewSimpleZoom(baseImg, z, pattern.SetBounds(b))
+			items = append(items, item{img, fmt.Sprintf("%dx", z)})
+		}
 	}
 
 	// Layout
 	n := len(items)
+	if n == 0 {
+		return image.NewRGBA(b)
+	}
+
 	totalW := n*sz + (n+1)*padding
 	totalH := sz + 2*padding + labelHeight
 

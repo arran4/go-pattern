@@ -1,13 +1,19 @@
 package pattern
 
 import (
+	"image"
 	"image/color"
 	"image/png"
 	"os"
 )
 
 var CheckerOutputFilename = "checker.png"
+var CheckerZoomLevels = []int{2, 4}
 
+const CheckerOrder = 1
+
+// Checker Pattern
+// Alternates between two colors in a checkerboard fashion.
 func ExampleNewChecker() {
 	i := NewChecker(color.Black, color.White)
 	f, err := os.Create(CheckerOutputFilename)
@@ -22,4 +28,12 @@ func ExampleNewChecker() {
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+}
+
+func BootstrapChecker(b image.Rectangle) image.Image {
+	return NewDemoChecker(SetBounds(b))
+}
+
+func init() {
+	RegisterGenerator("Checker", BootstrapChecker)
 }
