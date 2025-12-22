@@ -103,6 +103,86 @@ These patterns are designed to be:
 ```
 
 
+### HorizontalLine Pattern
+
+
+
+![HorizontalLine Pattern](horizontal_line.png)
+
+```go
+	i := NewHorizontalLine(
+		SetLineSize(5),
+		SetSpaceSize(5),
+		SetLineColor(color.RGBA{255, 0, 0, 255}),
+	)
+	f, err := os.Create(HorizontalLineOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### VerticalLine Pattern
+
+
+
+![VerticalLine Pattern](vertical_line.png)
+
+```go
+	i := NewVerticalLine(
+		SetLineSize(5),
+		SetSpaceSize(5),
+		SetLineColor(color.RGBA{0, 0, 255, 255}),
+	)
+	f, err := os.Create(VerticalLineOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### And Pattern
+
+
+
+![And Pattern](boolean_and.png)
+
+```go
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	i := NewAnd([]image.Image{h, v})
+
+	f, err := os.Create(AndOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Gopher Pattern
 
 
@@ -112,6 +192,83 @@ These patterns are designed to be:
 ```go
 	i := NewGopher()
 	f, err := os.Create(GopherOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Or Pattern
+
+
+
+![Or Pattern](boolean_or.png)
+
+```go
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	i := NewOr([]image.Image{h, v})
+
+	f, err := os.Create(OrOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Xor Pattern
+
+
+
+![Xor Pattern](boolean_xor.png)
+
+```go
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	i := NewXor([]image.Image{h, v})
+
+	f, err := os.Create(XorOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Not Pattern
+
+
+
+![Not Pattern](boolean_not.png)
+
+```go
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White))
+	i := NewNot(h)
+
+	f, err := os.Create(NotOutputFilename)
 	if err != nil {
 		panic(err)
 	}
