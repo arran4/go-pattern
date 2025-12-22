@@ -13,13 +13,13 @@ These patterns are designed to be:
 
 ### Null Pattern
 
-Undefined RGBA colour.
+
 
 ![Null Pattern](null.png)
 
 ```go
-i := pattern.NewNull()
-	f, err := os.Create("null.png")
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -36,13 +36,13 @@ i := pattern.NewNull()
 
 ### Checker Pattern
 
-Alternates between two colors in a checkerboard fashion.
+
 
 ![Checker Pattern](checker.png)
 
 ```go
-i := pattern.NewChecker(color.Black, color.White)
-	f, err := os.Create("checker.png")
+	i := NewChecker(color.Black, color.White)
+	f, err := os.Create(CheckerOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -57,15 +57,15 @@ i := pattern.NewChecker(color.Black, color.White)
 ```
 
 
-### Simple Zoom Pattern
+### SimpleZoom Pattern
 
-Zooms in on an underlying image.
 
-![Simple Zoom Pattern](simplezoom.png)
+
+![SimpleZoom Pattern](simplezoom.png)
 
 ```go
-i := pattern.NewSimpleZoom(pattern.NewChecker(color.Black, color.White), 2)
-	f, err := os.Create("simplezoom.png")
+	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
+	f, err := os.Create(SimpleZoomOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -82,13 +82,13 @@ i := pattern.NewSimpleZoom(pattern.NewChecker(color.Black, color.White), 2)
 
 ### Transposed Pattern
 
-Transposes the X and Y coordinates of an underlying image.
+
 
 ![Transposed Pattern](transposed.png)
 
 ```go
-i := pattern.NewTransposed(pattern.NewDemoNull(), 10, 10)
-	f, err := os.Create("transposed.png")
+	i := NewTransposed(NewDemoNull(), 10, 10)
+	f, err := os.Create(TransposedOutputFilename)
 	if err != nil {
 		panic(err)
 	}
