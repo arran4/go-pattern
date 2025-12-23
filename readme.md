@@ -24,29 +24,6 @@ These patterns are designed to be:
 ```
 
 
-### Null Pattern
-
-
-
-![Null Pattern](null.png)
-
-```go
-	i := NewNull()
-	f, err := os.Create(NullOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### GridUnbounded Pattern
 
 
@@ -93,6 +70,29 @@ These patterns are designed to be:
 	}
 
 	return NewGrid(args...)
+```
+
+
+### Null Pattern
+
+
+
+![Null Pattern](null.png)
+
+```go
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
@@ -186,6 +186,19 @@ These patterns are designed to be:
 
 	// Create a grid with explicit Rows
 	return NewGrid(args...)
+```
+
+
+### Padding Pattern
+
+
+
+![Padding Pattern](padding.png)
+
+```go
+	gopher := NewScale(NewGopher(), ScaleFactor(0.5))
+	// Padding with transparent background (nil)
+	return NewPadding(gopher, 20, nil)
 ```
 
 
