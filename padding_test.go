@@ -48,6 +48,7 @@ func TestPaddingWithBackground(t *testing.T) {
 		// Note: Black is 0,0,0
 		// Uniform Black might return alpha?
 		// color.Black is opaque black.
+		t.Errorf("Expected black background, got r=%d g=%d b=%d", r, g, b)
 	}
 	// Check alpha
 	_, _, _, a := p.At(0, 0).RGBA()

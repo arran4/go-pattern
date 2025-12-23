@@ -39,8 +39,6 @@ func NewText(s string, fontSize float64, fg color.Color, bg color.Color) image.I
 	// Fill background
 	if bg != nil {
 		draw.Draw(img, rect, image.NewUniform(bg), image.Point{}, draw.Src)
-	} else {
-		// Transparent
 	}
 
 	// Draw text
