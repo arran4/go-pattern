@@ -2,6 +2,7 @@ package pattern
 
 import (
 	"image"
+	"image/color"
 	"image/png"
 	"os"
 )
@@ -29,10 +30,22 @@ func ExampleNewTransposed() {
 	}
 }
 
+func demoTransposedInput(b image.Rectangle) image.Image {
+	// The original demo used NewSimpleZoom(NewChecker..., 20)
+	return NewSimpleZoom(NewChecker(color.Black, color.White, SetBounds(b)), 20, SetBounds(b))
+}
+
 func GenerateTransposed(b image.Rectangle) image.Image {
-	return NewDemoTransposed(SetBounds(b))
+	return NewTransposed(demoTransposedInput(b), 10, 10, SetBounds(b))
+}
+
+func GenerateTransposedReferences() (map[string]func(image.Rectangle) image.Image, []string) {
+	return map[string]func(image.Rectangle) image.Image{
+		"Input": demoTransposedInput,
+	}, []string{"Input"}
 }
 
 func init() {
 	RegisterGenerator("Transposed", GenerateTransposed)
+	RegisterReferences("Transposed", GenerateTransposedReferences)
 }

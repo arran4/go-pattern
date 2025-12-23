@@ -8,12 +8,13 @@ import (
 )
 
 // Helpers for consistent demo inputs
+// Black lines on White background ("Ink on Paper")
 func demoHorizontal(b image.Rectangle) image.Image {
 	return NewHorizontalLine(
 		SetLineSize(20),
 		SetSpaceSize(20),
-		SetLineColor(color.White),
-		SetSpaceColor(color.Black),
+		SetLineColor(color.Black),
+		SetSpaceColor(color.White),
 		SetBounds(b),
 	)
 }
@@ -22,28 +23,39 @@ func demoVertical(b image.Rectangle) image.Image {
 	return NewVerticalLine(
 		SetLineSize(20),
 		SetSpaceSize(20),
-		SetLineColor(color.White),
-		SetSpaceColor(color.Black),
+		SetLineColor(color.Black),
+		SetSpaceColor(color.White),
 		SetBounds(b),
 	)
+}
+
+// PredicateInk returns 1.0 for Black (ink), 0.0 for White (paper).
+// Used to perform logic on the "ink" rather than luminance.
+func PredicateInk(c color.Color) float64 {
+	r, g, b, _ := c.RGBA()
+	// Calculate luminance or average.
+	// White is 0xFFFF. Black is 0.
+	avg := float64(r+g+b) / 3.0
+	// Normalize to 0-1 (White=1, Black=0)
+	v := avg / 65535.0
+	// Invert: Black=1, White=0
+	return 1.0 - v
 }
 
 // AND Pattern
 
 var AndOutputFilename = "boolean_and.png"
-var AndZoomLevels = []int{2, 4}
+var AndZoomLevels = []int{}
 const AndOrder = 20
 
 func ExampleNewAnd() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	// Use a predicate that considers White=True, Black=False.
-	// Default is FuzzyAlpha which sees both as 1.0 (Opaque).
-	// So we use AverageGrayAbove(128).
-	pred := PredicateAverageGrayAbove(128)
-
-	i := NewAnd([]image.Image{h, v}, SetPredicate(pred))
+	// Use PredicateInk so Logic operates on Black lines.
+	// Black=True, White=False.
+	// AND(Black, Black) = Black.
+	i := NewAnd([]image.Image{h, v}, SetPredicate(PredicateInk))
 
 	f, err := os.Create(AndOutputFilename)
 	if err != nil {
@@ -62,7 +74,7 @@ func ExampleNewAnd() {
 func GenerateAnd(b image.Rectangle) image.Image {
 	return NewAnd(
 		[]image.Image{demoHorizontal(b), demoVertical(b)},
-		SetPredicate(PredicateAverageGrayAbove(128)),
+		SetPredicate(PredicateInk),
 		SetBounds(b),
 	)
 }
@@ -78,16 +90,14 @@ func GenerateAndReferences() (map[string]func(image.Rectangle) image.Image, []st
 // OR Pattern
 
 var OrOutputFilename = "boolean_or.png"
-var OrZoomLevels = []int{2, 4}
+var OrZoomLevels = []int{}
 const OrOrder = 21
 
 func ExampleNewOr() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	pred := PredicateAverageGrayAbove(128)
-
-	i := NewOr([]image.Image{h, v}, SetPredicate(pred))
+	i := NewOr([]image.Image{h, v}, SetPredicate(PredicateInk))
 
 	f, err := os.Create(OrOutputFilename)
 	if err != nil {
@@ -106,7 +116,7 @@ func ExampleNewOr() {
 func GenerateOr(b image.Rectangle) image.Image {
 	return NewOr(
 		[]image.Image{demoHorizontal(b), demoVertical(b)},
-		SetPredicate(PredicateAverageGrayAbove(128)),
+		SetPredicate(PredicateInk),
 		SetBounds(b),
 	)
 }
@@ -122,16 +132,14 @@ func GenerateOrReferences() (map[string]func(image.Rectangle) image.Image, []str
 // XOR Pattern
 
 var XorOutputFilename = "boolean_xor.png"
-var XorZoomLevels = []int{2, 4}
+var XorZoomLevels = []int{}
 const XorOrder = 22
 
 func ExampleNewXor() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	pred := PredicateAverageGrayAbove(128)
-
-	i := NewXor([]image.Image{h, v}, SetPredicate(pred))
+	i := NewXor([]image.Image{h, v}, SetPredicate(PredicateInk))
 
 	f, err := os.Create(XorOutputFilename)
 	if err != nil {
@@ -150,7 +158,7 @@ func ExampleNewXor() {
 func GenerateXor(b image.Rectangle) image.Image {
 	return NewXor(
 		[]image.Image{demoHorizontal(b), demoVertical(b)},
-		SetPredicate(PredicateAverageGrayAbove(128)),
+		SetPredicate(PredicateInk),
 		SetBounds(b),
 	)
 }
@@ -166,15 +174,13 @@ func GenerateXorReferences() (map[string]func(image.Rectangle) image.Image, []st
 // NOT Pattern
 
 var NotOutputFilename = "boolean_not.png"
-var NotZoomLevels = []int{2, 4}
+var NotZoomLevels = []int{}
 const NotOrder = 23
 
 func ExampleNewNot() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.White), SetSpaceColor(color.Black))
+	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	pred := PredicateAverageGrayAbove(128)
-
-	i := NewNot(h, SetPredicate(pred))
+	i := NewNot(h, SetPredicate(PredicateInk))
 
 	f, err := os.Create(NotOutputFilename)
 	if err != nil {
@@ -193,7 +199,7 @@ func ExampleNewNot() {
 func GenerateNot(b image.Rectangle) image.Image {
 	return NewNot(
 		demoHorizontal(b),
-		SetPredicate(PredicateAverageGrayAbove(128)),
+		SetPredicate(PredicateInk),
 		SetBounds(b),
 	)
 }
