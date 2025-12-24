@@ -146,10 +146,44 @@ func registerCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("invalid degrees: %v", err)
 		}
 		return pattern.NewRotate(input, deg), nil
+  }
+	fm["edgedetect"] = func(args []string, input image.Image) (image.Image, error) {
+		if input == nil {
+			return nil, fmt.Errorf("edgedetect requires an input image")
+		}
+		return pattern.NewEdgeDetect(input), nil
+  }
+	fm["quantize"] = func(args []string, input image.Image) (image.Image, error) {
+		if input == nil {
+			return nil, fmt.Errorf("quantize requires an input image")
+		}
+		if len(args) < 1 {
+			return nil, fmt.Errorf("quantize requires a levels argument")
+		}
+		levels, err := strconv.Atoi(args[0])
+		if err != nil {
+			return nil, fmt.Errorf("invalid levels: %v", err)
+		}
+		return pattern.NewQuantize(input, levels), nil
 	}
 
 	fm["null"] = func(args []string, input image.Image) (image.Image, error) {
 		return pattern.NewNull(), nil
+	}
+
+	fm["circle"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) < 2 {
+			return nil, fmt.Errorf("circle requires 2 color arguments (line, space)")
+		}
+		c1, err := parseColor(args[0])
+		if err != nil {
+			return nil, err
+		}
+		c2, err := parseColor(args[1])
+		if err != nil {
+			return nil, err
+		}
+		return pattern.NewCircle(pattern.SetLineColor(c1), pattern.SetSpaceColor(c2)), nil
 	}
 
 	fm["save"] = func(args []string, input image.Image) (image.Image, error) {
