@@ -269,3 +269,25 @@ func SetFalseColor(v color.Color) func(any) {
 		}
 	}
 }
+
+// Angle configures an angle option.
+type Angle struct {
+	Angle float64
+}
+
+func (s *Angle) SetAngle(v float64) {
+	s.Angle = v
+}
+
+type hasAngle interface {
+	SetAngle(float64)
+}
+
+// SetAngle creates an option to set the angle.
+func SetAngle(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasAngle); ok {
+			h.SetAngle(v)
+		}
+	}
+}
