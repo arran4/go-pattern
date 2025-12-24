@@ -8,7 +8,7 @@ import (
 )
 
 var VoronoiOutputFilename = "voronoi.png"
-var VoronoiZoomLevels = []int{2, 4}
+var VoronoiZoomLevels = []int{}
 
 const VoronoiBaseLabel = "Voronoi"
 
