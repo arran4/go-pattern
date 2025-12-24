@@ -61,8 +61,8 @@ func NewDemoPaddingBounded(ops ...func(any)) image.Image {
 }
 
 func NewDemoPaddingCentered(ops ...func(any)) image.Image {
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.13)) // Slightly larger to fit 100x100 better
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.2)) // Larger scale
 
-	// Center the gopher in a 100x100 box (fits in 150x150 bootstrap box)
-	return NewCenter(gopher, 100, 100, image.NewUniform(color.RGBA{240, 240, 240, 255}))
+	// Center the gopher in a 150x150 box (fills the available space)
+	return NewCenter(gopher, 150, 150, image.NewUniform(color.RGBA{240, 240, 240, 255}))
 }
