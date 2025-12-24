@@ -27,6 +27,72 @@ func SetSpaceSize(v int) func(any) {
 	}
 }
 
+// Radius configures the radius of circles/dots in a pattern.
+type Radius struct {
+	Radius int
+}
+
+func (s *Radius) SetRadius(v int) {
+	s.Radius = v
+}
+
+type hasRadius interface {
+	SetRadius(int)
+}
+
+// SetRadius creates an option to set the radius.
+func SetRadius(v int) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasRadius); ok {
+			h.SetRadius(v)
+		}
+	}
+}
+
+// Spacing configures the spacing/periodicity in a pattern.
+type Spacing struct {
+	Spacing int
+}
+
+func (s *Spacing) SetSpacing(v int) {
+	s.Spacing = v
+}
+
+type hasSpacing interface {
+	SetSpacing(int)
+}
+
+// SetSpacing creates an option to set the spacing.
+func SetSpacing(v int) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasSpacing); ok {
+			h.SetSpacing(v)
+		}
+	}
+}
+
+// FillColor configures the fill color in a pattern (e.g. for dots).
+type FillColor struct {
+	FillColor color.Color
+}
+
+func (s *FillColor) SetFillColor(v color.Color) {
+	s.FillColor = v
+}
+
+type hasFillColor interface {
+	SetFillColor(color.Color)
+}
+
+// SetFillColor creates an option to set the fill color.
+func SetFillColor(v color.Color) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasFillColor); ok {
+			h.SetFillColor(v)
+		}
+	}
+}
+
 // LineSize configures the thickness of lines in a pattern.
 type LineSize struct {
 	LineSize int
