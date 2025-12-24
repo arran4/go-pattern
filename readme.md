@@ -11,45 +11,6 @@ These patterns are designed to be:
 ## Patterns
 
 
-### Polka Pattern
-
-
-
-![Polka Pattern](polka.png)
-
-```go
-	i := NewPolka(
-		SetRadius(10),
-		SetSpacing(40),
-		SetFillColor(color.Black),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(PolkaOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Shojo Pattern
-
-
-
-![Shojo Pattern](shojo.png)
-
-```go
-	return NewShojo(ops...)
-```
-
-
 ### Shojo_pink Pattern
 
 
@@ -61,56 +22,6 @@ These patterns are designed to be:
 		SetSpaceColor(color.RGBA{20, 0, 10, 255}), // Dark red/brown bg
 		SetFillColor(color.RGBA{255, 200, 220, 255}), // Pink sparkles
 	)
-```
-
-
-### Shojo_blue Pattern
-
-
-
-![Shojo_blue Pattern](shojo_blue.png)
-
-```go
-	return NewShojo(
-		SetSpaceColor(color.RGBA{0, 0, 40, 255}), // Dark blue bg
-		SetFillColor(color.RGBA{200, 220, 255, 255}), // Blueish sparkles
-	)
-```
-
-
-### Tile Pattern
-
-
-
-![Tile Pattern](tile.png)
-
-```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
-```
-
-
-### Null Pattern
-
-
-
-![Null Pattern](null.png)
-
-```go
-	i := NewNull()
-	f, err := os.Create(NullOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
 ```
 
 
@@ -146,6 +57,95 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### Polka Pattern
+
+
+
+![Polka Pattern](polka.png)
+
+```go
+	i := NewPolka(
+		SetRadius(10),
+		SetSpacing(40),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(PolkaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Null Pattern
+
+
+
+![Null Pattern](null.png)
+
+```go
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Shojo_blue Pattern
+
+
+
+![Shojo_blue Pattern](shojo_blue.png)
+
+```go
+	return NewShojo(
+		SetSpaceColor(color.RGBA{0, 0, 40, 255}), // Dark blue bg
+		SetFillColor(color.RGBA{200, 220, 255, 255}), // Blueish sparkles
+	)
+```
+
+
+### Shojo Pattern
+
+
+
+![Shojo Pattern](shojo.png)
+
+```go
+	return NewShojo(ops...)
+```
+
+
+### Tile Pattern
+
+
+
+![Tile Pattern](tile.png)
+
+```go
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
+	// Tile the gopher in a 200x200 area
+	return NewTile(gopher, image.Rect(0, 0, 200, 200))
 ```
 
 
@@ -314,16 +314,15 @@ These patterns are designed to be:
 ```
 
 
-### Noise Pattern
+### Gopher Pattern
 
 
 
-![Noise Pattern](noise.png)
+![Gopher Pattern](gopher.png)
 
 ```go
-	// Create a noise pattern with default (Crypto) algorithm
-	i := NewNoise()
-	f, err := os.Create(NoiseOutputFilename)
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -349,15 +348,16 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
+### Noise Pattern
 
 
 
-![Gopher Pattern](gopher.png)
+![Noise Pattern](noise.png)
 
 ```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
+	// Create a noise pattern with default (Crypto) algorithm
+	i := NewNoise()
+	f, err := os.Create(NoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -402,17 +402,6 @@ These patterns are designed to be:
 ```
 
 
-### MathsJulia Pattern
-
-
-
-![MathsJulia Pattern](maths_julia.png)
-
-```go
-	// See GenerateMathsJulia for implementation details
-```
-
-
 ### Or Pattern
 
 
@@ -441,14 +430,14 @@ These patterns are designed to be:
 ```
 
 
-### MathsSine Pattern
+### MathsJulia Pattern
 
 
 
-![MathsSine Pattern](maths_sine.png)
+![MathsJulia Pattern](maths_julia.png)
 
 ```go
-	// See GenerateMathsSine for implementation details
+	// See GenerateMathsJulia for implementation details
 ```
 
 
@@ -477,6 +466,17 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### MathsSine Pattern
+
+
+
+![MathsSine Pattern](maths_sine.png)
+
+```go
+	// See GenerateMathsSine for implementation details
 ```
 
 
@@ -547,26 +547,18 @@ These patterns are designed to be:
 ```
 
 
-### Quantize Pattern
+### LinearGradient Pattern
 
 
 
-![Quantize Pattern](quantize.png)
+![LinearGradient Pattern](linear_gradient.png)
 
 ```go
-	i := NewQuantize(NewGopher(), 4)
-	f, err := os.Create(QuantizeOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
+	// Linear Gradient (Horizontal)
+	NewLinearGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
 ```
 
 
@@ -593,18 +585,26 @@ These patterns are designed to be:
 ```
 
 
-### LinearGradient Pattern
+### Quantize Pattern
 
 
 
-![LinearGradient Pattern](linear_gradient.png)
+![Quantize Pattern](quantize.png)
 
 ```go
-	// Linear Gradient (Horizontal)
-	NewLinearGradient(
-		SetStartColor(color.RGBA{255, 0, 0, 255}),
-		SetEndColor(color.RGBA{0, 0, 255, 255}),
-	)
+	i := NewQuantize(NewGopher(), 4)
+	f, err := os.Create(QuantizeOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
