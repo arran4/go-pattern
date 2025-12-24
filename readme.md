@@ -11,20 +11,6 @@ These patterns are designed to be:
 ## Patterns
 
 
-### Polka Pattern
-
-
-
-![Polka Pattern](polka.png)
-
-```go
-	i := NewPolka(
-		SetRadius(10),
-		SetSpacing(40),
-		SetFillColor(color.Black),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(PolkaOutputFilename)
 ### Null Pattern
 
 
@@ -45,19 +31,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-```
-
-
-### Tile Pattern
-
-
-
-![Tile Pattern](tile.png)
-
-```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
 ```
 
 
@@ -93,6 +66,10 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### Tile Pattern
 
 
 
@@ -102,6 +79,34 @@ These patterns are designed to be:
 	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
 	// Tile the gopher in a 200x200 area
 	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+```
+
+
+### Polka Pattern
+
+
+
+![Polka Pattern](polka.png)
+
+```go
+	i := NewPolka(
+		SetRadius(10),
+		SetSpacing(40),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(PolkaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
@@ -270,6 +275,36 @@ These patterns are designed to be:
 ```
 
 
+### And Pattern
+
+
+
+![And Pattern](boolean_and.png)
+
+```go
+	// Gopher AND Horizontal Stripes
+	g := NewGopher()
+	// Line: Black (Alpha 1). Space: White (Alpha 1).
+	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
+
+	// Default uses component-wise min if no TrueColor/FalseColor set.
+	i := NewAnd([]image.Image{g, h})
+
+	f, err := os.Create(AndOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Gopher Pattern
 
 
@@ -317,33 +352,14 @@ These patterns are designed to be:
 ```
 
 
-### And Pattern
+### MathsMandelbrot Pattern
 
 
 
-![And Pattern](boolean_and.png)
+![MathsMandelbrot Pattern](maths_mandelbrot.png)
 
 ```go
-	// Gopher AND Horizontal Stripes
-	g := NewGopher()
-	// Line: Black (Alpha 1). Space: White (Alpha 1).
-	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
-
-	// Default uses component-wise min if no TrueColor/FalseColor set.
-	i := NewAnd([]image.Image{g, h})
-
-	f, err := os.Create(AndOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
+	// See GenerateMathsMandelbrot for implementation details
 ```
 
 
@@ -375,6 +391,17 @@ These patterns are designed to be:
 ```
 
 
+### MathsJulia Pattern
+
+
+
+![MathsJulia Pattern](maths_julia.png)
+
+```go
+	// See GenerateMathsJulia for implementation details
+```
+
+
 ### Xor Pattern
 
 
@@ -400,6 +427,17 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### MathsSine Pattern
+
+
+
+![MathsSine Pattern](maths_sine.png)
+
+```go
+	// See GenerateMathsSine for implementation details
 ```
 
 
@@ -431,6 +469,17 @@ These patterns are designed to be:
 ```
 
 
+### MathsWaves Pattern
+
+
+
+![MathsWaves Pattern](maths_waves.png)
+
+```go
+	// See GenerateMathsWaves for implementation details
+```
+
+
 ### Circle Pattern
 
 
@@ -459,29 +508,6 @@ These patterns are designed to be:
 ```
 
 
-### SimpleZoom Pattern
-
-
-
-![SimpleZoom Pattern](simplezoom.png)
-
-```go
-	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
-	f, err := os.Create(SimpleZoomOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### LinearGradient Pattern
 
 
@@ -494,6 +520,9 @@ These patterns are designed to be:
 		SetStartColor(color.RGBA{255, 0, 0, 255}),
 		SetEndColor(color.RGBA{0, 0, 255, 255}),
 	)
+```
+
+
 ### Quantize Pattern
 
 
@@ -517,15 +546,15 @@ These patterns are designed to be:
 ```
 
 
-### Transposed Pattern
+### SimpleZoom Pattern
 
 
 
-![Transposed Pattern](transposed.png)
+![SimpleZoom Pattern](simplezoom.png)
 
 ```go
-	i := NewTransposed(NewDemoNull(), 10, 10)
-	f, err := os.Create(TransposedOutputFilename)
+	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
+	f, err := os.Create(SimpleZoomOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -537,6 +566,21 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### RadialGradient Pattern
+
+
+
+![RadialGradient Pattern](radial_gradient.png)
+
+```go
+	// Radial Gradient
+	NewRadialGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
 ```
 
 
@@ -564,6 +608,20 @@ These patterns are designed to be:
 
 
 ### ConicGradient Pattern
+
+
+
+![ConicGradient Pattern](conic_gradient.png)
+
+```go
+	// Conic Gradient
+	NewConicGradient(
+		SetStartColor(color.RGBA{255, 0, 255, 255}),
+		SetEndColor(color.RGBA{0, 255, 255, 255}),
+	)
+```
+
+
 ### EdgeDetect Pattern
 
 
@@ -573,6 +631,53 @@ These patterns are designed to be:
 ```go
 	i := NewDemoEdgeDetect()
 	f, err := os.Create(EdgeDetectOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### ErrorDiffusion Pattern
+
+
+
+![ErrorDiffusion Pattern](dither_errordiffusion.png)
+
+```go
+	// Standard example
+	i := NewDemoErrorDiffusion()
+	f, err := os.Create(ErrorDiffusionOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### OrderedDither Pattern
+
+
+
+![OrderedDither Pattern](dither_ordered.png)
+
+```go
+	i := NewDemoOrderedDither()
+	f, err := os.Create(OrderedDitherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
