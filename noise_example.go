@@ -37,37 +37,6 @@ func GeneratePerlinNoise(b image.Rectangle) image.Image {
 	return NewPerlinNoise(SetBounds(b), SetFrequency(0.1))
 }
 
-var SimplexNoiseOutputFilename = "simplex_noise.png"
-var SimplexNoiseZoomLevels = []int{}
-const SimplexNoiseOrder = 21
-
-// Simplex Noise Pattern
-// Generates smooth procedural noise using the OpenSimplex algorithm.
-func ExampleNewSimplexNoise() {
-	i := NewSimplexNoise(
-		SetNoiseColorLow(color.Black),
-		SetNoiseColorHigh(color.White),
-		SetFrequency(0.1),
-	)
-	f, err := os.Create(SimplexNoiseOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-}
-
-func GenerateSimplexNoise(b image.Rectangle) image.Image {
-	return NewSimplexNoise(SetBounds(b), SetFrequency(0.1))
-}
-
 func init() {
 	RegisterGenerator("PerlinNoise", GeneratePerlinNoise)
-	RegisterGenerator("SimplexNoise", GenerateSimplexNoise)
 }

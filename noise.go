@@ -3,35 +3,26 @@ package pattern
 import (
 	"image"
 	"image/color"
-
-	"github.com/aquilax/go-perlin"
-	"github.com/ojrac/opensimplex-go"
+	"math"
+	"math/rand"
 )
 
 // Ensure Noise implements the image.Image interface.
 var _ image.Image = (*Noise)(nil)
 
-// NoiseType distinguishes between different noise algorithms.
-type NoiseType int
-
-const (
-	PerlinNoise NoiseType = iota
-	OpenSimplexNoise
-)
-
-// Noise generates procedural noise using Perlin or OpenSimplex algorithms.
+// Noise generates procedural noise using a native Perlin implementation.
 type Noise struct {
 	Null
-	noiseType   NoiseType
 	seed        int64
-	alpha       float64 // For Perlin: weight when summing octaves (persistence)
-	beta        float64 // For Perlin: frequency multiplier (lacunarity)
-	n           int     // For Perlin: number of octaves
+	alpha       float64 // Persistence
+	beta        float64 // Lacunarity
+	n           int     // Octaves
 	frequency   float64 // Base frequency
-	perlinGen   *perlin.Perlin
-	simplexGen  opensimplex.Noise
-	color1      color.Color // Low value color (approx -1)
-	color2      color.Color // High value color (approx 1)
+	color1      color.Color // Low value color
+	color2      color.Color // High value color
+
+	// Internal perlin state
+	p []int
 }
 
 func (n *Noise) ColorModel() color.Model {
@@ -43,17 +34,9 @@ func (n *Noise) Bounds() image.Rectangle {
 }
 
 func (n *Noise) At(x, y int) color.Color {
-	var val float64
+	val := n.fbm(float64(x)*n.frequency, float64(y)*n.frequency)
 
-	switch n.noiseType {
-	case PerlinNoise:
-		// go-perlin expects float coordinates. We scale by frequency.
-		val = n.perlinGen.Noise2D(float64(x)*n.frequency, float64(y)*n.frequency)
-	case OpenSimplexNoise:
-		val = n.simplexGen.Eval2(float64(x)*n.frequency, float64(y)*n.frequency)
-	}
-
-	// val is roughly -1 to 1. Normalize to 0..1 for color interpolation
+	// val is roughly -1 to 1. Normalize to 0..1
 	norm := (val + 1.0) / 2.0
 	if norm < 0 {
 		norm = 0
@@ -64,6 +47,116 @@ func (n *Noise) At(x, y int) color.Color {
 
 	return interpolateColor(n.color1, n.color2, norm)
 }
+
+// fbm implements Fractional Brownian Motion
+func (n *Noise) fbm(x, y float64) float64 {
+	total := 0.0
+	frequency := 1.0
+	amplitude := 1.0
+	maxValue := 0.0 // Used for normalizing result
+
+	for i := 0; i < n.n; i++ {
+		total += n.perlin(x*frequency, y*frequency) * amplitude
+
+		maxValue += amplitude
+
+		// Use beta as lacunarity (frequency multiplier)
+		// Use alpha as persistence (amplitude multiplier - usually < 1)
+
+		amplitude *= n.alpha
+		frequency *= n.beta
+	}
+
+	if maxValue > 0 {
+		return total / maxValue
+	}
+	return total
+}
+
+
+// Perlin Noise Implementation
+
+func (n *Noise) initPerlin() {
+	r := rand.New(rand.NewSource(n.seed))
+	n.p = make([]int, 512)
+	permutation := make([]int, 256)
+	for i := 0; i < 256; i++ {
+		permutation[i] = i
+	}
+
+	// Shuffle
+	for i := 255; i > 0; i-- {
+		j := r.Intn(i + 1)
+		permutation[i], permutation[j] = permutation[j], permutation[i]
+	}
+
+	for i := 0; i < 256; i++ {
+		n.p[i] = permutation[i]
+		n.p[i+256] = permutation[i]
+	}
+}
+
+func (n *Noise) perlin(x, y float64) float64 {
+	if n.p == nil {
+		n.initPerlin()
+	}
+
+	X := int(math.Floor(x)) & 255
+	Y := int(math.Floor(y)) & 255
+
+	x -= math.Floor(x)
+	y -= math.Floor(y)
+
+	u := fade(x)
+	v := fade(y)
+
+	A := n.p[X] + Y
+	B := n.p[X+1] + Y
+
+	return lerp(v, lerp(u, grad(n.p[A], x, y), grad(n.p[B], x-1, y)),
+		lerp(u, grad(n.p[A+1], x, y-1), grad(n.p[B+1], x-1, y-1)))
+}
+
+func fade(t float64) float64 {
+	return t * t * t * (t*(t*6-15) + 10)
+}
+
+func lerp(t, a, b float64) float64 {
+	return a + t*(b-a)
+}
+
+func grad(hash int, x, y float64) float64 {
+	h := hash & 15
+	grad := 1.0 + float64(h&7) // Gradient value 1.0, 2.0, ..., 8.0
+	if (h & 8) != 0 {
+		grad = -grad
+	}
+	// This is not the standard grad function.
+	// Standard Improved Perlin uses vectors (1,1), (-1,1), etc.
+	// Let's use the standard switch based one.
+
+	switch h & 0xF {
+	case 0x0: return  x + y
+	case 0x1: return -x + y
+	case 0x2: return  x - y
+	case 0x3: return -x - y
+	case 0x4: return  x
+	case 0x5: return -x
+	case 0x6: return  x
+	case 0x7: return -x
+	case 0x8: return  y
+	case 0x9: return -y
+	case 0xA: return  y
+	case 0xB: return -y
+	case 0xC: return  y + x
+	case 0xD: return -y + x
+	case 0xE: return  y - x
+	case 0xF: return -y - x
+	default: return 0 // never happens
+	}
+}
+
+// Configuration options
 
 // Seed configures the seed for the noise generator.
 type Seed struct {
@@ -107,7 +200,7 @@ func SetFrequency(v float64) func(any) {
 	}
 }
 
-// NoiseAlpha configures the alpha (persistence) for Perlin noise.
+// NoiseAlpha configures the persistence for Perlin noise.
 type NoiseAlpha struct {
 	NoiseAlpha float64
 }
@@ -128,7 +221,7 @@ func SetNoiseAlpha(v float64) func(any) {
 	}
 }
 
-// NoiseBeta configures the beta (lacunarity) for Perlin noise.
+// NoiseBeta configures the lacunarity for Perlin noise.
 type NoiseBeta struct {
 	NoiseBeta float64
 }
@@ -149,7 +242,7 @@ func SetNoiseBeta(v float64) func(any) {
 	}
 }
 
-// NoiseN configures the number of iterations (octaves) for Perlin noise.
+// NoiseN configures the number of octaves for Perlin noise.
 type NoiseN struct {
 	NoiseN int
 }
@@ -176,10 +269,9 @@ func NewPerlinNoise(ops ...func(any)) image.Image {
 		Null: Null{
 			bounds: image.Rect(0, 0, 255, 255),
 		},
-		noiseType: PerlinNoise,
 		seed:      1,
-		alpha:     2,
-		beta:      2,
+		alpha:     0.5, // Persistence (usually < 1)
+		beta:      2.0, // Lacunarity (usually > 1)
 		n:         3,
 		frequency: 0.1,
 		color1:    color.Black,
@@ -188,32 +280,18 @@ func NewPerlinNoise(ops ...func(any)) image.Image {
 	for _, op := range ops {
 		op(p)
 	}
-	p.perlinGen = perlin.NewPerlin(p.alpha, p.beta, int32(p.n), p.seed)
-	return p
-}
-
-// NewSimplexNoise creates a new OpenSimplex noise pattern.
-func NewSimplexNoise(ops ...func(any)) image.Image {
-	p := &Noise{
-		Null: Null{
-			bounds: image.Rect(0, 0, 255, 255),
-		},
-		noiseType: OpenSimplexNoise,
-		seed:      1,
-		frequency: 0.1,
-		color1:    color.Black,
-		color2:    color.White,
-	}
-	for _, op := range ops {
-		op(p)
-	}
-	p.simplexGen = opensimplex.New(p.seed)
+	// Init perlin immediately? Or lazy?
+	// Lazy is safer for options setting seed.
+	// But let's init here if seed is final, or re-init if seed changes?
+	// The options are applied before this return.
+	p.initPerlin()
 	return p
 }
 
 // Implement option interfaces
 func (n *Noise) SetSeed(v int64) {
 	n.seed = v
+	n.initPerlin() // Re-init if seed changes
 }
 
 func (n *Noise) SetFrequency(v float64) {

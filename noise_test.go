@@ -37,34 +37,6 @@ func TestPerlinNoise_SeedDifference(t *testing.T) {
 	}
 }
 
-func TestSimplexNoise_Consistency(t *testing.T) {
-	n1 := NewSimplexNoise(SetSeed(123), SetFrequency(0.1))
-	n2 := NewSimplexNoise(SetSeed(123), SetFrequency(0.1))
-
-	c1 := n1.At(10, 10)
-	c2 := n2.At(10, 10)
-
-	if c1 != c2 {
-		t.Errorf("Expected same color for same seed, got %v and %v", c1, c2)
-	}
-}
-
-func TestSimplexNoise_SeedDifference(t *testing.T) {
-	n1 := NewSimplexNoise(SetSeed(123), SetFrequency(0.1))
-	n2 := NewSimplexNoise(SetSeed(456), SetFrequency(0.1))
-
-	same := true
-	for i := 0; i < 5; i++ {
-		if n1.At(i, i) != n2.At(i, i) {
-			same = false
-			break
-		}
-	}
-	if same {
-		t.Errorf("Expected different colors for different seeds")
-	}
-}
-
 func TestNoise_Options(t *testing.T) {
 	// Test that options are applied
 	n := NewPerlinNoise(

@@ -212,15 +212,19 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
+### PerlinNoise Pattern
 
 
 
-![Gopher Pattern](gopher.png)
+![PerlinNoise Pattern](perlin_noise.png)
 
 ```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
+	i := NewPerlinNoise(
+		SetNoiseColorLow(color.Black),
+		SetNoiseColorHigh(color.White),
+		SetFrequency(0.1),
+	)
+	f, err := os.Create(PerlinNoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -235,19 +239,15 @@ These patterns are designed to be:
 ```
 
 
-### PerlinNoise Pattern
+### Gopher Pattern
 
 
 
-![PerlinNoise Pattern](perlin_noise.png)
+![Gopher Pattern](gopher.png)
 
 ```go
-	i := NewPerlinNoise(
-		SetNoiseColorLow(color.Black),
-		SetNoiseColorHigh(color.White),
-		SetFrequency(0.1),
-	)
-	f, err := os.Create(PerlinNoiseOutputFilename)
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -278,33 +278,6 @@ These patterns are designed to be:
 	i := NewAnd([]image.Image{g, h})
 
 	f, err := os.Create(AndOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### SimplexNoise Pattern
-
-
-
-![SimplexNoise Pattern](simplex_noise.png)
-
-```go
-	i := NewSimplexNoise(
-		SetNoiseColorLow(color.Black),
-		SetNoiseColorHigh(color.White),
-		SetFrequency(0.1),
-	)
-	f, err := os.Create(SimplexNoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
