@@ -52,6 +52,29 @@ These patterns are designed to be:
 ```
 
 
+### Null Pattern
+
+
+
+![Null Pattern](null.png)
+
+```go
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Voronoi Pattern
 
 
@@ -73,29 +96,6 @@ These patterns are designed to be:
 
 	i := NewVoronoi(points, colors)
 	f, err := os.Create(VoronoiOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Null Pattern
-
-
-
-![Null Pattern](null.png)
-
-```go
-	i := NewNull()
-	f, err := os.Create(NullOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -299,14 +299,26 @@ These patterns are designed to be:
 ```
 
 
-### MathsMandelbrot Pattern
+### Gopher Pattern
 
 
 
-![MathsMandelbrot Pattern](maths_mandelbrot.png)
+![Gopher Pattern](gopher.png)
 
 ```go
-	// See GenerateMathsMandelbrot for implementation details
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
@@ -340,26 +352,25 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
+### MathsMandelbrot Pattern
 
 
 
-![Gopher Pattern](gopher.png)
+![MathsMandelbrot Pattern](maths_mandelbrot.png)
 
 ```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
+	// See GenerateMathsMandelbrot for implementation details
+```
+
+
+### MathsJulia Pattern
+
+
+
+![MathsJulia Pattern](maths_julia.png)
+
+```go
+	// See GenerateMathsJulia for implementation details
 ```
 
 
@@ -388,17 +399,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-```
-
-
-### MathsJulia Pattern
-
-
-
-![MathsJulia Pattern](maths_julia.png)
-
-```go
-	// See GenerateMathsJulia for implementation details
 ```
 
 
@@ -441,6 +441,17 @@ These patterns are designed to be:
 ```
 
 
+### MathsWaves Pattern
+
+
+
+![MathsWaves Pattern](maths_waves.png)
+
+```go
+	// See GenerateMathsWaves for implementation details
+```
+
+
 ### BooleanNot Pattern
 
 
@@ -469,17 +480,6 @@ These patterns are designed to be:
 ```
 
 
-### MathsWaves Pattern
-
-
-
-![MathsWaves Pattern](maths_waves.png)
-
-```go
-	// See GenerateMathsWaves for implementation details
-```
-
-
 ### Circle Pattern
 
 
@@ -503,29 +503,6 @@ These patterns are designed to be:
 		}
 	}()
 	if err = png.Encode(f, c); err != nil {
-		panic(err)
-	}
-```
-
-
-### Quantize Pattern
-
-
-
-![Quantize Pattern](quantize.png)
-
-```go
-	i := NewQuantize(NewGopher(), 4)
-	f, err := os.Create(QuantizeOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
 ```
@@ -586,6 +563,29 @@ These patterns are designed to be:
 ```
 
 
+### Quantize Pattern
+
+
+
+![Quantize Pattern](quantize.png)
+
+```go
+	i := NewQuantize(NewGopher(), 4)
+	f, err := os.Create(QuantizeOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### ModuloStripe Pattern
 
 
@@ -604,6 +604,21 @@ These patterns are designed to be:
 	}
 	defer f.Close()
 	png.Encode(f, p)
+```
+
+
+### RadialGradient Pattern
+
+
+
+![RadialGradient Pattern](radial_gradient.png)
+
+```go
+	// Radial Gradient
+	NewRadialGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
 ```
 
 
@@ -630,17 +645,17 @@ These patterns are designed to be:
 ```
 
 
-### RadialGradient Pattern
+### ConicGradient Pattern
 
 
 
-![RadialGradient Pattern](radial_gradient.png)
+![ConicGradient Pattern](conic_gradient.png)
 
 ```go
-	// Radial Gradient
-	NewRadialGradient(
-		SetStartColor(color.RGBA{255, 0, 0, 255}),
-		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	// Conic Gradient
+	NewConicGradient(
+		SetStartColor(color.RGBA{255, 0, 255, 255}),
+		SetEndColor(color.RGBA{0, 255, 255, 255}),
 	)
 ```
 
@@ -663,21 +678,6 @@ These patterns are designed to be:
 	}
 	defer f.Close()
 	png.Encode(f, p)
-```
-
-
-### ConicGradient Pattern
-
-
-
-![ConicGradient Pattern](conic_gradient.png)
-
-```go
-	// Conic Gradient
-	NewConicGradient(
-		SetStartColor(color.RGBA{255, 0, 255, 255}),
-		SetEndColor(color.RGBA{0, 255, 255, 255}),
-	)
 ```
 
 
