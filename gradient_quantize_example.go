@@ -3,17 +3,42 @@ package pattern
 import (
 	"image"
 	"image/color"
+	"image/png"
+	"os"
 )
 
-func GenerateGradientQuantization(ops ...func(any)) image.Image {
+var GradientQuantizationOutputFilename = "gradient_quantize.png"
+var GradientQuantizationZoomLevels = []int{}
+const GradientQuantizationOrder = 36
+
+func ExampleNewGradientQuantization() {
 	grad := NewLinearGradient(
 		SetStartColor(color.Black),
 		SetEndColor(color.White),
 	)
-	// Quantize to 4 levels
-	return NewQuantize(grad, 4, ops...)
+	p := NewQuantize(grad, 4)
+	f, err := os.Create(GradientQuantizationOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	png.Encode(f, p)
 }
 
-func GenerateGradientQuantizationReferences() (map[string]image.Image, []string) {
+func GenerateGradientQuantization(b image.Rectangle) image.Image {
+	grad := NewLinearGradient(
+		SetStartColor(color.Black),
+		SetEndColor(color.White),
+		SetBounds(b),
+	)
+	return NewQuantize(grad, 4, SetBounds(b))
+}
+
+func GenerateGradientQuantizationReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return nil, nil
+}
+
+func init() {
+	RegisterGenerator("GradientQuantization", GenerateGradientQuantization)
+	RegisterReferences("GradientQuantization", GenerateGradientQuantizationReferences)
 }

@@ -3,16 +3,41 @@ package pattern
 import (
 	"image"
 	"image/color"
+	"image/png"
+	"os"
 )
 
-func GenerateConcentricRings(ops ...func(any)) image.Image {
+var ConcentricRingsOutputFilename = "concentric_rings.png"
+var ConcentricRingsZoomLevels = []int{}
+const ConcentricRingsOrder = 32
+
+func ExampleNewConcentricRings() {
+	p := NewConcentricRings([]color.Color{
+		color.Black,
+		color.White,
+		color.RGBA{255, 0, 0, 255},
+	})
+	f, err := os.Create(ConcentricRingsOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	png.Encode(f, p)
+}
+
+func GenerateConcentricRings(b image.Rectangle) image.Image {
 	return NewConcentricRings([]color.Color{
 		color.Black,
 		color.White,
 		color.RGBA{255, 0, 0, 255},
-	}, ops...)
+	}, SetBounds(b))
 }
 
-func GenerateConcentricRingsReferences() (map[string]image.Image, []string) {
+func GenerateConcentricRingsReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return nil, nil
+}
+
+func init() {
+	RegisterGenerator("ConcentricRings", GenerateConcentricRings)
+	RegisterReferences("ConcentricRings", GenerateConcentricRingsReferences)
 }
