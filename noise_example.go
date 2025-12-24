@@ -45,7 +45,22 @@ func GenerateNoiseReferences() (map[string]func(image.Rectangle) image.Image, []
 		"Hash2": func(b image.Rectangle) image.Image {
 			return NewNoise(SetBounds(b), SetNoiseAlgorithm(&HashNoise{Seed: 67890}))
 		},
-	}, []string{"Crypto", "Hash", "Hash2"}
+		"Perlin": func(b image.Rectangle) image.Image {
+			return NewNoise(SetBounds(b), SetNoiseAlgorithm(&PerlinNoise{Seed: 1}))
+		},
+		"Perlin_Octaves": func(b image.Rectangle) image.Image {
+			return NewNoise(SetBounds(b), SetNoiseAlgorithm(&PerlinNoise{
+				Seed:    1,
+				Octaves: 5,
+			}))
+		},
+		"Perlin_HighFreq": func(b image.Rectangle) image.Image {
+			return NewNoise(SetBounds(b), SetNoiseAlgorithm(&PerlinNoise{
+				Seed:      1,
+				Frequency: 0.1,
+			}))
+		},
+	}, []string{"Crypto", "Hash", "Hash2", "Perlin", "Perlin_Octaves", "Perlin_HighFreq"}
 }
 
 func init() {
