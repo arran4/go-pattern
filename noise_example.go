@@ -7,12 +7,12 @@ import (
 )
 
 var NoiseOutputFilename = "noise.png"
-var NoiseZoomLevels = []int{2}
+var NoiseZoomLevels = []int{} // Zooming is unnecessary for noise
 
 const NoiseOrder = 20
 
 // Noise Pattern
-// Generates random noise using various algorithms (Crypto, Uniform, Pi).
+// Generates random noise using various algorithms (Crypto, Hash).
 func ExampleNewNoise() {
 	// Create a noise pattern with default (Crypto) algorithm
 	i := NewNoise()
@@ -39,13 +39,13 @@ func GenerateNoiseReferences() (map[string]func(image.Rectangle) image.Image, []
 		"Crypto": func(b image.Rectangle) image.Image {
 			return NewNoise(SetBounds(b), SetNoiseAlgorithm(&CryptoNoise{}))
 		},
-		"Uniform": func(b image.Rectangle) image.Image {
-			return NewNoise(SetBounds(b), SetNoiseAlgorithm(&UniformNoise{Seed: 12345}))
+		"Hash": func(b image.Rectangle) image.Image {
+			return NewNoise(SetBounds(b), SetNoiseAlgorithm(&HashNoise{Seed: 12345}))
 		},
-		"Pi": func(b image.Rectangle) image.Image {
-			return NewNoise(SetBounds(b), SetNoiseAlgorithm(&PiNoise{Stride: 30}))
+		"Hash2": func(b image.Rectangle) image.Image {
+			return NewNoise(SetBounds(b), SetNoiseAlgorithm(&HashNoise{Seed: 67890}))
 		},
-	}, []string{"Crypto", "Uniform", "Pi"}
+	}, []string{"Crypto", "Hash", "Hash2"}
 }
 
 func init() {
