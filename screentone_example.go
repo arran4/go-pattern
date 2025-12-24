@@ -34,7 +34,34 @@ func ExampleNewScreenTone() {
 }
 
 func GenerateScreenTone(b image.Rectangle) image.Image {
-	return NewScreenTone(SetBounds(b))
+	v1 := NewScreenTone(
+		SetBounds(b),
+		SetRadius(3),
+		SetSpacing(10),
+		SetAngle(45),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+
+	v2 := NewScreenTone(
+		SetBounds(b),
+		SetRadius(3),
+		SetSpacing(10),
+		SetAngle(15),
+		SetFillColor(color.RGBA{255, 0, 0, 255}),
+		SetSpaceColor(color.White),
+	)
+
+	v3 := NewScreenTone(
+		SetBounds(b),
+		SetRadius(5),
+		SetSpacing(12),
+		SetAngle(75),
+		SetFillColor(color.RGBA{0, 0, 255, 255}),
+		SetSpaceColor(color.White),
+	)
+
+	return stitchImagesForDemo(v1, v2, v3)
 }
 
 func init() {
