@@ -129,28 +129,28 @@ func NewDemoGridBounded(ops ...func(any)) image.Image {
 func NewDemoGridAdvanced(ops ...func(any)) image.Image {
 	gopher := NewGopher()
 	// 1. Scaled Gopher (Small)
-	smallGopher := NewScale(gopher, ScaleToRatio(0.2))
+	smallGopher := NewScale(gopher, ScaleToRatio(0.1)) // Smaller
 
 	// 2. Cropped Gopher (Head only)
 	// Gopher is roughly 500x700. Head is at top.
 	head := NewCrop(gopher, image.Rect(100, 50, 400, 350))
-	smallHead := NewScale(head, ScaleToRatio(0.3))
+	smallHead := NewScale(head, ScaleToRatio(0.2)) // Smaller
 
 	// 3. Tiled Gopher
-	// Tile a small gopher into a 100x100 box
+	// Tile a small gopher into a 50x50 box
 	tinyGopher := NewScale(gopher, ScaleToSize(20, 30))
-	tiled := NewTile(tinyGopher, image.Rect(0, 0, 100, 100))
+	tiled := NewTile(tinyGopher, image.Rect(0, 0, 50, 50)) // Smaller
 
 	// 4. Text Label
 	// White background for visibility
-	txt := NewText("Hello Grid", TextSize(18), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
+	txt := NewText("Grid", TextSize(16), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
 
-	// Center the text in a 150x50 box
-	centeredTxt := NewCenter(txt, 150, 50, image.NewUniform(color.White))
+	// Center the text in a 70x30 box
+	centeredTxt := NewCenter(txt, 70, 30, image.NewUniform(color.White))
 
 	// 5. Padding with Checker background
 	checker := NewChecker(color.RGBA{200, 200, 200, 255}, color.White)
-	padded := NewPadding(smallGopher, PaddingMargin(20), PaddingBackground(checker))
+	padded := NewPadding(smallGopher, PaddingMargin(5), PaddingBackground(checker))
 
 	args := []any{
 		Row(Cell(centeredTxt), Cell(padded)),

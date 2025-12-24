@@ -46,6 +46,8 @@ func (g *Grid) Bounds() image.Rectangle {
 
 func (g *Grid) SetBounds(b image.Rectangle) {
 	g.bounds = b
+	g.fixedWidth = b.Dx()
+	g.fixedHeight = b.Dy()
 }
 
 func (g *Grid) At(x, y int) color.Color {

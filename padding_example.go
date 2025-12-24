@@ -31,7 +31,8 @@ func BootstrapPaddingReferences() (map[string]func(image.Rectangle) image.Image,
 			return NewDemoPaddingBounded(SetBounds(bounds))
 		},
 		"Centered": func(bounds image.Rectangle) image.Image {
-			return NewDemoPaddingCentered(SetBounds(bounds))
+			// Ignore bounds passed from bootstrap to prevent overwriting centering logic
+			return NewDemoPaddingCentered()
 		},
 	}, []string{"Color", "Bounded", "Centered"}
 }
@@ -60,8 +61,8 @@ func NewDemoPaddingBounded(ops ...func(any)) image.Image {
 }
 
 func NewDemoPaddingCentered(ops ...func(any)) image.Image {
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.1)) // Smaller for demo
 
-	// Center the gopher in a 200x200 box with a light background
-	return NewCenter(gopher, 200, 200, image.NewUniform(color.RGBA{240, 240, 240, 255}))
+	// Center the gopher in a 100x100 box (fits in 150x150 bootstrap box)
+	return NewCenter(gopher, 100, 100, image.NewUniform(color.RGBA{240, 240, 240, 255}))
 }
