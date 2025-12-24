@@ -61,7 +61,7 @@ func GenerateRect(b image.Rectangle) image.Image {
 	// Background: Red Rect
 	// Padding makes the border
 	inner := NewHorizontalLine(
-		SetBounds(image.Rect(0, 0, b.Dx()-20, b.Dy()-20)),
+		SetBounds(image.Rect(0, 0, b.Dx()-40, b.Dy()-40)),
 		SetLineSize(5),
 		SetSpaceSize(5),
 		SetLineColor(color.Black),
@@ -72,7 +72,7 @@ func GenerateRect(b image.Rectangle) image.Image {
 
 	v2 := NewPadding(
 		inner,
-		PaddingMargin(10),
+		PaddingMargin(20),
 		PaddingBackground(border),
 		PaddingBoundary(b),
 	)
@@ -95,16 +95,16 @@ func ExampleRect_border_demo() {
 	bg := NewRect(SetFillColor(color.RGBA{255, 0, 0, 255}))
 
 	// Apply Padding with background
-	// 10px margin around the 100x100 inner image.
-	// Resulting size: 120x120.
+	// 20px margin around the 100x100 inner image.
+	// Resulting size: 140x140.
 	p := NewPadding(
 		inner,
-		PaddingMargin(10),
+		PaddingMargin(20),
 		PaddingBackground(bg),
 	)
 
 	fmt.Printf("%v", p.Bounds())
-	// Output: (0,0)-(120,120)
+	// Output: (0,0)-(140,140)
 }
 
 func init() {
