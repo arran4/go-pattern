@@ -546,6 +546,29 @@ These patterns are designed to be:
 ```
 
 
+### EdgeDetect Pattern
+
+
+
+![EdgeDetect Pattern](edgedetect.png)
+
+```go
+	i := NewDemoEdgeDetect()
+	f, err := os.Create(EdgeDetectOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 
 ## License
 
