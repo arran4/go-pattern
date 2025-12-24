@@ -148,12 +148,12 @@ func PaddingCenterBox(bounds image.Rectangle) PaddingOption {
 }
 
 // Let's modify config to support alignment mode when bounds are set.
-const (
-	alignNone = iota
-	alignCenter
-	alignTopLeft
-	// ...
-)
+// const (
+// 	alignNone = iota
+// 	alignCenter
+// 	alignTopLeft
+// 	// ...
+// )
 
 func NewPadding(img image.Image, opts ...PaddingOption) image.Image {
 	cfg := &paddingConfig{
