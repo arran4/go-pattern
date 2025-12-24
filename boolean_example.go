@@ -7,28 +7,6 @@ import (
 	"os"
 )
 
-// Helpers for consistent demo inputs
-// Black lines on White background ("Ink on Paper")
-func demoHorizontal(b image.Rectangle) image.Image {
-	return NewHorizontalLine(
-		SetLineSize(10),
-		SetSpaceSize(10),
-		SetLineColor(color.Black),
-		SetSpaceColor(color.White),
-		SetBounds(b),
-	)
-}
-
-func demoVertical(b image.Rectangle) image.Image {
-	return NewVerticalLine(
-		SetLineSize(10),
-		SetSpaceSize(10),
-		SetLineColor(color.Black),
-		SetSpaceColor(color.White),
-		SetBounds(b),
-	)
-}
-
 func demoGopher(b image.Rectangle) image.Image {
 	return NewGopher()
 }
