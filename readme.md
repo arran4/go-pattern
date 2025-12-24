@@ -57,6 +57,199 @@ These patterns are designed to be:
 ```
 
 
+### HorizontalLine Pattern
+
+
+
+![HorizontalLine Pattern](horizontal_line.png)
+
+```go
+	i := NewHorizontalLine(
+		SetLineSize(5),
+		SetSpaceSize(5),
+		SetLineColor(color.RGBA{255, 0, 0, 255}),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(HorizontalLineOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### VerticalLine Pattern
+
+
+
+![VerticalLine Pattern](vertical_line.png)
+
+```go
+	i := NewVerticalLine(
+		SetLineSize(5),
+		SetSpaceSize(5),
+		SetLineColor(color.RGBA{0, 0, 255, 255}),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(VerticalLineOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Gopher Pattern
+
+
+
+![Gopher Pattern](gopher.png)
+
+```go
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### And Pattern
+
+
+
+![And Pattern](boolean_and.png)
+
+```go
+	// Gopher AND Horizontal Stripes
+	g := NewGopher()
+	// Line: Black (Alpha 1). Space: White (Alpha 1).
+	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
+
+	// Default uses component-wise min if no TrueColor/FalseColor set.
+	i := NewAnd([]image.Image{g, h})
+
+	f, err := os.Create(AndOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Or Pattern
+
+
+
+![Or Pattern](boolean_or.png)
+
+```go
+	g := NewGopher()
+	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
+
+	// OR(Gopher, Stripes) -> Max(Gopher, Stripes)
+	i := NewOr([]image.Image{g, v})
+
+	f, err := os.Create(OrOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Xor Pattern
+
+
+
+![Xor Pattern](boolean_xor.png)
+
+```go
+	g := NewGopher()
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
+
+	// XOR(Gopher, Stripes)
+	i := NewXor([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 255, 0, 255}), SetFalseColor(color.Transparent))
+
+	f, err := os.Create(XorOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Not Pattern
+
+
+
+![Not Pattern](boolean_not.png)
+
+```go
+	g := NewGopher()
+
+	// Not Gopher.
+	// Default component-wise: Invert colors.
+	i := NewNot(g)
+
+	f, err := os.Create(NotOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### SimpleZoom Pattern
 
 
@@ -89,29 +282,6 @@ These patterns are designed to be:
 ```go
 	i := NewTransposed(NewDemoNull(), 10, 10)
 	f, err := os.Create(TransposedOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Gopher Pattern
-
-
-
-![Gopher Pattern](gopher.png)
-
-```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
