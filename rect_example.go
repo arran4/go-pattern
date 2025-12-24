@@ -54,9 +54,10 @@ func ExampleRect_bounded() {
 }
 
 func GenerateRect(b image.Rectangle) image.Image {
+	// 1. Solid Fill
 	v1 := NewDemoRect(SetBounds(b), SetFillColor(color.RGBA{255, 0, 0, 255}))
 
-	// Border Demo (using Padding composition)
+	// 2. Composition Border (Padding + Background Rect)
 	// Inner image: Horizontal Lines
 	// Background: Red Rect
 	// Padding makes the border
@@ -68,17 +69,16 @@ func GenerateRect(b image.Rectangle) image.Image {
 		SetSpaceColor(color.White),
 	)
 
-	border := NewRect(SetFillColor(color.RGBA{255, 0, 0, 255}))
-
+	borderBg := NewRect(SetFillColor(color.RGBA{100, 0, 0, 255})) // Dark Red
 	v2 := NewPadding(
 		inner,
 		PaddingMargin(20),
-		PaddingBackground(border),
+		PaddingBackground(borderBg),
 		PaddingBoundary(b),
 	)
 
-	// Built-in Border Demo (New!)
-	// Rect with Fill=Blue, Line=Green(10px)
+	// 3. Stroked Rect (Fill + Line)
+	// Blue Fill, Green Border
 	v3 := NewDemoRect(
 		SetBounds(b),
 		SetFillColor(color.RGBA{0, 0, 255, 255}),
@@ -86,8 +86,8 @@ func GenerateRect(b image.Rectangle) image.Image {
 		SetLineSize(10),
 	)
 
-	// Image Border Demo
-	// Rect with Fill=Yellow, Line=Gopher(15px)
+	// 4. Image Stroke (Fill + Image Line)
+	// Yellow Fill, Gopher Border
 	gopher := NewGopher()
 	v4 := NewDemoRect(
 		SetBounds(b),
@@ -96,7 +96,26 @@ func GenerateRect(b image.Rectangle) image.Image {
 		SetLineSize(20),
 	)
 
-	return stitchImagesForDemo(v1, v2, v3, v4)
+	// 5. Transparent Frame (No Fill, Solid Line)
+	// Magenta Border
+	v5 := NewDemoRect(
+		SetBounds(b),
+		SetFillColor(color.Transparent),
+		SetLineColor(color.RGBA{255, 0, 255, 255}),
+		SetLineSize(15),
+	)
+
+	// 6. Pattern Frame (No Fill, Pattern Line)
+	// Checker Border
+	checker := NewChecker(color.Black, color.White)
+	v6 := NewDemoRect(
+		SetBounds(b),
+		SetFillColor(color.Transparent),
+		SetLineImageSource(checker),
+		SetLineSize(25),
+	)
+
+	return stitchImagesForDemo(v1, v2, v3, v4, v5, v6)
 }
 
 func ExampleRect_stroked() {
