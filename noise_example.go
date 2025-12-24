@@ -14,8 +14,8 @@ const NoiseOrder = 20
 // Noise Pattern
 // Generates random noise using various algorithms (Crypto, Hash).
 func ExampleNewNoise() {
-	// Create a noise pattern with default (Crypto) algorithm
-	i := NewNoise()
+	// Create a noise pattern with a seeded algorithm (Hash) for stability
+	i := NewNoise(NoiseSeed(1))
 	f, err := os.Create(NoiseOutputFilename)
 	if err != nil {
 		panic(err)

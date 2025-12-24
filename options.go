@@ -447,50 +447,6 @@ func SetAngle(v float64) func(any) {
 	}
 }
 
-// FillColor configures the fill color of a pattern.
-type FillColor struct {
-	FillColor color.Color
-}
-
-func (s *FillColor) SetFillColor(v color.Color) {
-	s.FillColor = v
-}
-
-type hasFillColor interface {
-	SetFillColor(color.Color)
-}
-
-// SetFillColor creates an option to set the fill color.
-func SetFillColor(v color.Color) func(any) {
-	return func(i any) {
-		if h, ok := i.(hasFillColor); ok {
-			h.SetFillColor(v)
-		}
-	}
-}
-
-// Angle configures a single angle in degrees.
-type Angle struct {
-	Angle float64
-}
-
-func (s *Angle) SetAngle(v float64) {
-	s.Angle = v
-}
-
-type hasAngle interface {
-	SetAngle(float64)
-}
-
-// SetAngle creates an option to set the angle.
-func SetAngle(v float64) func(any) {
-	return func(i any) {
-		if h, ok := i.(hasAngle); ok {
-			h.SetAngle(v)
-		}
-	}
-}
-
 // Angles configures a list of angles in degrees.
 type Angles struct {
 	Angles []float64
