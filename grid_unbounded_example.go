@@ -8,6 +8,9 @@ import (
 var (
 	GridUnboundedOutputFilename = "grid_unbounded.png"
 	GridUnboundedZoomLevels     = []int{}
+)
+
+const (
 	GridUnboundedOrder          = 7
 	GridUnboundedBaseLabel      = "Unbounded"
 )
@@ -56,7 +59,7 @@ func ExampleNewGridUnbounded(ops ...func(any)) image.Image {
 	zero := 0
 
 	b := &boundedGopher{
-		Image: NewScale(NewGopher(), ScaleSize(100, 100)),
+		Image: NewScale(NewGopher(), ScaleToSize(100, 100)),
 		bounds: Bounds{
 			Left:   &Range{Low: &zero, High: &zero},
 			Right:  &Range{Low: &hundred, High: &hundred},
@@ -93,7 +96,7 @@ func NewDemoGridFlexible(ops ...func(any)) image.Image {
 	fifty := 50
 	zero := 0
 	b := &boundedGopher{
-		Image: NewScale(NewGopher(), ScaleSize(50, 50)),
+		Image: NewScale(NewGopher(), ScaleToSize(50, 50)),
 		bounds: Bounds{
 			Left:   &Range{Low: &zero, High: &zero},
 			Right:  &Range{Low: &fifty, High: &fifty},

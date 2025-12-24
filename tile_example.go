@@ -6,7 +6,7 @@ import (
 
 var (
 	TileOutputFilename = "tile.png"
-	TileZoomLevels     = []int{2}
+	TileZoomLevels     = []int{}
 	TileOrder          = 6
 	TileBaseLabel      = "Tile"
 )
@@ -27,7 +27,7 @@ func BootstrapTileReferences() (map[string]func(image.Rectangle) image.Image, []
 }
 
 func ExampleNewTile(ops ...func(any)) image.Image {
-	gopher := NewScale(NewGopher(), ScaleFactor(0.25))
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
 	// Tile the gopher in a 200x200 area
 	return NewTile(gopher, image.Rect(0, 0, 200, 200))
 }

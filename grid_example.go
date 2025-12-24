@@ -45,7 +45,7 @@ func BootstrapGridReferences() (map[string]func(image.Rectangle) image.Image, []
 func ExampleNewGrid(ops ...func(any)) image.Image {
 	// Example 1: Simple 2x2 grid with Gophers
 	// Shrink the Gopher so it fits better
-	gopher := NewScale(NewGopher(), ScaleFactor(0.25))
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
 
 	args := []any{
 		Row(Cell(gopher), Cell(gopher)),
@@ -60,7 +60,7 @@ func ExampleNewGrid(ops ...func(any)) image.Image {
 }
 
 func NewDemoGridColumns(ops ...func(any)) image.Image {
-	gopher := NewScale(NewGopher(), ScaleFactor(0.25))
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
 
 	args := []any{
 		Column(Cell(gopher), Cell(gopher)),
@@ -75,7 +75,7 @@ func NewDemoGridColumns(ops ...func(any)) image.Image {
 }
 
 func NewDemoGridFixed(ops ...func(any)) image.Image {
-	gopher := NewScale(NewGopher(), ScaleFactor(0.25))
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
 
 	args := []any{
 		FixedSize(400, 400),
@@ -100,7 +100,7 @@ func (b *boundedGopher) PatternBounds() Bounds {
 }
 
 func NewDemoGridBounded(ops ...func(any)) image.Image {
-	gopher := NewScale(NewGopher(), ScaleFactor(0.25))
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
 
 	// Create a bounded version that claims to be larger
 	zero := 0
@@ -129,24 +129,25 @@ func NewDemoGridBounded(ops ...func(any)) image.Image {
 func NewDemoGridAdvanced(ops ...func(any)) image.Image {
 	gopher := NewGopher()
 	// 1. Scaled Gopher (Small)
-	smallGopher := NewScale(gopher, ScaleFactor(0.2))
+	smallGopher := NewScale(gopher, ScaleToRatio(0.2))
 
 	// 2. Cropped Gopher (Head only)
 	// Gopher is roughly 500x700. Head is at top.
 	head := NewCrop(gopher, image.Rect(100, 50, 400, 350))
-	smallHead := NewScale(head, ScaleFactor(0.3))
+	smallHead := NewScale(head, ScaleToRatio(0.3))
 
 	// 3. Tiled Gopher
 	// Tile a small gopher into a 100x100 box
-	tinyGopher := NewScale(gopher, ScaleSize(20, 30))
+	tinyGopher := NewScale(gopher, ScaleToSize(20, 30))
 	tiled := NewTile(tinyGopher, image.Rect(0, 0, 100, 100))
 
 	// 4. Text Label
-	txt := NewText("Hello Grid", 24, color.Black, nil)
+	// White background for visibility
+	txt := NewText("Hello Grid", TextSize(24), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
 
 	// 5. Padding with Checker background
 	checker := NewChecker(color.RGBA{200, 200, 200, 255}, color.White)
-	padded := NewPadding(smallGopher, 20, checker)
+	padded := NewPadding(smallGopher, PaddingMargin(20), PaddingBackground(checker))
 
 	args := []any{
 		Row(Cell(txt), Cell(padded)),

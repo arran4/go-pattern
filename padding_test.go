@@ -11,7 +11,7 @@ func TestPadding(t *testing.T) {
 	img.Set(0, 0, color.White)
 
 	padding := 5
-	p := NewPadding(img, padding, nil)
+	p := NewPadding(img, PaddingMargin(padding))
 
 	expectedW := 10 + 2*padding
 	// expectedH := 10 + 2*padding
@@ -40,7 +40,7 @@ func TestPaddingWithBackground(t *testing.T) {
 	img := image.NewRGBA(image.Rect(0, 0, 10, 10))
 	bg := image.NewUniform(color.Black)
 
-	p := NewPadding(img, 5, bg)
+	p := NewPadding(img, PaddingMargin(5), PaddingBackground(bg))
 
 	// Check (0,0) -> Black
 	r, g, b, _ := p.At(0, 0).RGBA()
