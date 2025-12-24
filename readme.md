@@ -11,16 +11,26 @@ These patterns are designed to be:
 ## Patterns
 
 
-### Tile Pattern
+### Null Pattern
 
 
 
-![Tile Pattern](tile.png)
+![Null Pattern](null.png)
 
 ```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
@@ -59,26 +69,16 @@ These patterns are designed to be:
 ```
 
 
-### Null Pattern
+### Tile Pattern
 
 
 
-![Null Pattern](null.png)
+![Tile Pattern](tile.png)
 
 ```go
-	i := NewNull()
-	f, err := os.Create(NullOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
+	// Tile the gopher in a 200x200 area
+	return NewTile(gopher, image.Rect(0, 0, 200, 200))
 ```
 
 
@@ -275,40 +275,6 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
-
-
-
-![Gopher Pattern](gopher.png)
-
-```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### MathsMandelbrot Pattern
-
-
-
-![MathsMandelbrot Pattern](maths_mandelbrot.png)
-
-```go
-	// See GenerateMathsMandelbrot for implementation details
-```
-
-
 ### And Pattern
 
 
@@ -325,6 +291,29 @@ These patterns are designed to be:
 	i := NewAnd([]image.Image{g, h})
 
 	f, err := os.Create(AndOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Gopher Pattern
+
+
+
+![Gopher Pattern](gopher.png)
+
+```go
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -363,14 +352,14 @@ These patterns are designed to be:
 ```
 
 
-### MathsJulia Pattern
+### MathsMandelbrot Pattern
 
 
 
-![MathsJulia Pattern](maths_julia.png)
+![MathsMandelbrot Pattern](maths_mandelbrot.png)
 
 ```go
-	// See GenerateMathsJulia for implementation details
+	// See GenerateMathsMandelbrot for implementation details
 ```
 
 
@@ -402,14 +391,14 @@ These patterns are designed to be:
 ```
 
 
-### MathsSine Pattern
+### MathsJulia Pattern
 
 
 
-![MathsSine Pattern](maths_sine.png)
+![MathsJulia Pattern](maths_julia.png)
 
 ```go
-	// See GenerateMathsSine for implementation details
+	// See GenerateMathsJulia for implementation details
 ```
 
 
@@ -438,6 +427,17 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### MathsSine Pattern
+
+
+
+![MathsSine Pattern](maths_sine.png)
+
+```go
+	// See GenerateMathsSine for implementation details
 ```
 
 
@@ -508,29 +508,6 @@ These patterns are designed to be:
 ```
 
 
-### SimpleZoom Pattern
-
-
-
-![SimpleZoom Pattern](simplezoom.png)
-
-```go
-	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
-	f, err := os.Create(SimpleZoomOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### LinearGradient Pattern
 
 
@@ -569,15 +546,15 @@ These patterns are designed to be:
 ```
 
 
-### Transposed Pattern
+### SimpleZoom Pattern
 
 
 
-![Transposed Pattern](transposed.png)
+![SimpleZoom Pattern](simplezoom.png)
 
 ```go
-	i := NewTransposed(NewDemoNull(), 10, 10)
-	f, err := os.Create(TransposedOutputFilename)
+	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
+	f, err := os.Create(SimpleZoomOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -607,6 +584,29 @@ These patterns are designed to be:
 ```
 
 
+### Transposed Pattern
+
+
+
+![Transposed Pattern](transposed.png)
+
+```go
+	i := NewTransposed(NewDemoNull(), 10, 10)
+	f, err := os.Create(TransposedOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### ConicGradient Pattern
 
 
@@ -622,28 +622,6 @@ These patterns are designed to be:
 ```
 
 
-### SierpinskiTriangle Pattern
-
-
-
-![SierpinskiTriangle Pattern](sierpinski_triangle.png)
-
-```go
-	// See GenerateSierpinskiTriangle for implementation details
-```
-
-
-### SierpinskiCarpet Pattern
-
-
-
-![SierpinskiCarpet Pattern](sierpinski_carpet.png)
-
-```go
-	// See GenerateSierpinskiCarpet for implementation details
-```
-
-
 ### EdgeDetect Pattern
 
 
@@ -653,6 +631,53 @@ These patterns are designed to be:
 ```go
 	i := NewDemoEdgeDetect()
 	f, err := os.Create(EdgeDetectOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### ErrorDiffusion Pattern
+
+
+
+![ErrorDiffusion Pattern](dither_errordiffusion.png)
+
+```go
+	// Standard example
+	i := NewDemoErrorDiffusion()
+	f, err := os.Create(ErrorDiffusionOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### OrderedDither Pattern
+
+
+
+![OrderedDither Pattern](dither_ordered.png)
+
+```go
+	i := NewDemoOrderedDither()
+	f, err := os.Create(OrderedDitherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
