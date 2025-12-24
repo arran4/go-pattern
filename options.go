@@ -27,6 +27,139 @@ func SetSpaceSize(v int) func(any) {
 	}
 }
 
+// Center configures the center point of a pattern.
+type Center struct {
+	CenterX, CenterY int
+}
+
+func (c *Center) SetCenter(x, y int) {
+	c.CenterX = x
+	c.CenterY = y
+}
+
+type hasCenter interface {
+	SetCenter(int, int)
+}
+
+// SetCenter creates an option to set the center.
+func SetCenter(x, y int) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasCenter); ok {
+			h.SetCenter(x, y)
+		}
+	}
+}
+
+// SpaceImageSource configures an image source for spaces in a pattern.
+type SpaceImageSource struct {
+	SpaceImageSource image.Image
+}
+
+func (s *SpaceImageSource) SetSpaceImageSource(v image.Image) {
+	s.SpaceImageSource = v
+}
+
+type hasSpaceImageSource interface {
+	SetSpaceImageSource(image.Image)
+}
+
+// SetSpaceImageSource creates an option to set the space image source.
+func SetSpaceImageSource(v image.Image) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasSpaceImageSource); ok {
+			h.SetSpaceImageSource(v)
+		}
+	}
+}
+
+// MinRadius configures the minimum radius.
+type MinRadius struct {
+	MinRadius float64
+}
+
+func (s *MinRadius) SetMinRadius(v float64) {
+	s.MinRadius = v
+}
+
+type hasMinRadius interface {
+	SetMinRadius(float64)
+}
+
+// SetMinRadius creates an option to set the minimum radius.
+func SetMinRadius(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasMinRadius); ok {
+			h.SetMinRadius(v)
+		}
+	}
+}
+
+// MaxRadius configures the maximum radius.
+type MaxRadius struct {
+	MaxRadius float64
+}
+
+func (s *MaxRadius) SetMaxRadius(v float64) {
+	s.MaxRadius = v
+}
+
+type hasMaxRadius interface {
+	SetMaxRadius(float64)
+}
+
+// SetMaxRadius creates an option to set the maximum radius.
+func SetMaxRadius(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasMaxRadius); ok {
+			h.SetMaxRadius(v)
+		}
+	}
+}
+
+// Density configures the density of a pattern.
+type Density struct {
+	Density float64
+}
+
+func (s *Density) SetDensity(v float64) {
+	s.Density = v
+}
+
+type hasDensity interface {
+	SetDensity(float64)
+}
+
+// SetDensity creates an option to set the density.
+func SetDensity(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasDensity); ok {
+			h.SetDensity(v)
+		}
+	}
+}
+
+// Phase configures the phase/offset of a pattern.
+type Phase struct {
+	Phase float64
+}
+
+func (s *Phase) SetPhase(v float64) {
+	s.Phase = v
+}
+
+type hasPhase interface {
+	SetPhase(float64)
+}
+
+// SetPhase creates an option to set the phase.
+func SetPhase(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasPhase); ok {
+			h.SetPhase(v)
+		}
+	}
+}
+
 // Radius configures the radius of circles/dots in a pattern.
 type Radius struct {
 	Radius int
@@ -89,6 +222,28 @@ func SetFillColor(v color.Color) func(any) {
 	return func(i any) {
 		if h, ok := i.(hasFillColor); ok {
 			h.SetFillColor(v)
+		}
+	}
+}
+
+// FillImageSource configures an image source for fill in a pattern.
+type FillImageSource struct {
+	FillImageSource image.Image
+}
+
+func (s *FillImageSource) SetFillImageSource(v image.Image) {
+	s.FillImageSource = v
+}
+
+type hasFillImageSource interface {
+	SetFillImageSource(image.Image)
+}
+
+// SetFillImageSource creates an option to set the fill image source.
+func SetFillImageSource(v image.Image) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasFillImageSource); ok {
+			h.SetFillImageSource(v)
 		}
 	}
 }
@@ -266,6 +421,94 @@ func SetFalseColor(v color.Color) func(any) {
 	return func(i any) {
 		if h, ok := i.(hasFalseColor); ok {
 			h.SetFalseColor(v)
+		}
+	}
+}
+
+// Angle configures an angle option.
+type Angle struct {
+	Angle float64
+}
+
+func (s *Angle) SetAngle(v float64) {
+	s.Angle = v
+}
+
+type hasAngle interface {
+	SetAngle(float64)
+}
+
+// SetAngle creates an option to set the angle.
+func SetAngle(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasAngle); ok {
+			h.SetAngle(v)
+		}
+	}
+}
+
+// FillColor configures the fill color of a pattern.
+type FillColor struct {
+	FillColor color.Color
+}
+
+func (s *FillColor) SetFillColor(v color.Color) {
+	s.FillColor = v
+}
+
+type hasFillColor interface {
+	SetFillColor(color.Color)
+}
+
+// SetFillColor creates an option to set the fill color.
+func SetFillColor(v color.Color) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasFillColor); ok {
+			h.SetFillColor(v)
+		}
+	}
+}
+
+// Angle configures a single angle in degrees.
+type Angle struct {
+	Angle float64
+}
+
+func (s *Angle) SetAngle(v float64) {
+	s.Angle = v
+}
+
+type hasAngle interface {
+	SetAngle(float64)
+}
+
+// SetAngle creates an option to set the angle.
+func SetAngle(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasAngle); ok {
+			h.SetAngle(v)
+		}
+	}
+}
+
+// Angles configures a list of angles in degrees.
+type Angles struct {
+	Angles []float64
+}
+
+func (s *Angles) SetAngles(v []float64) {
+	s.Angles = v
+}
+
+type hasAngles interface {
+	SetAngles([]float64)
+}
+
+// SetAngles creates an option to set the angles.
+func SetAngles(v ...float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasAngles); ok {
+			h.SetAngles(v)
 		}
 	}
 }
