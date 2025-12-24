@@ -143,14 +143,15 @@ These patterns are designed to be:
 ![And Pattern](boolean_and.png)
 
 ```go
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	// Gopher AND Horizontal Stripes
+	g := NewGopher()
+	// Line: Black (Alpha 1). Space: Transparent (Alpha 0).
+	hAlpha := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black))
 
-	// Use PredicateInk so Logic operates on Black lines.
-	// Black=True, White=False.
-	// AND(Black, Black) = Black.
-	// Result should be Black (Ink). So we need SetTrueColor(Black).
-	i := NewAnd([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
+	// AND(Gopher, Stripes)
+	// Both Present -> 1.0.
+	// ResultColor -> Cyan?
+	i := NewAnd([]image.Image{g, hAlpha}, SetTrueColor(color.RGBA{0, 255, 255, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(AndOutputFilename)
 	if err != nil {
@@ -174,10 +175,12 @@ These patterns are designed to be:
 ![Or Pattern](boolean_or.png)
 
 ```go
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	g := NewGopher()
+	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black))
 
-	i := NewOr([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
+	// OR(Gopher, Stripes)
+	// Either Present -> 1.0 (Magenta)
+	i := NewOr([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 0, 255, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(OrOutputFilename)
 	if err != nil {
@@ -201,10 +204,14 @@ These patterns are designed to be:
 ![Xor Pattern](boolean_xor.png)
 
 ```go
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	g := NewGopher()
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 
-	i := NewXor([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
+	// XOR(Gopher, Stripes)
+	// One present, but not both.
+	// Gopher cuts out stripes. Stripes cut out Gopher.
+	// Yellow.
+	i := NewXor([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 255, 0, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(XorOutputFilename)
 	if err != nil {
@@ -228,9 +235,13 @@ These patterns are designed to be:
 ![Not Pattern](boolean_not.png)
 
 ```go
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	g := NewGopher()
 
-	i := NewNot(h, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
+	// Not Gopher.
+	// Gopher -> Alpha 1. Not -> 0 (Transparent).
+	// Empty -> Alpha 0. Not -> 1 (TrueColor).
+	// Result: Box of TrueColor with Gopher cut out.
+	i := NewNot(g, SetTrueColor(color.RGBA{0, 255, 0, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(NotOutputFilename)
 	if err != nil {

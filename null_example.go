@@ -7,7 +7,7 @@ import (
 )
 
 var NullOutputFilename = "null.png"
-var NullZoomLevels = []int{2, 4}
+var NullZoomLevels = []int{}
 
 const NullOrder = 0
 

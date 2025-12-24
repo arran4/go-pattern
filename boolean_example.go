@@ -11,8 +11,8 @@ import (
 // Black lines on White background ("Ink on Paper")
 func demoHorizontal(b image.Rectangle) image.Image {
 	return NewHorizontalLine(
-		SetLineSize(20),
-		SetSpaceSize(20),
+		SetLineSize(10),
+		SetSpaceSize(10),
 		SetLineColor(color.Black),
 		SetSpaceColor(color.White),
 		SetBounds(b),
@@ -21,12 +21,16 @@ func demoHorizontal(b image.Rectangle) image.Image {
 
 func demoVertical(b image.Rectangle) image.Image {
 	return NewVerticalLine(
-		SetLineSize(20),
-		SetSpaceSize(20),
+		SetLineSize(10),
+		SetSpaceSize(10),
 		SetLineColor(color.Black),
 		SetSpaceColor(color.White),
 		SetBounds(b),
 	)
+}
+
+func demoGopher(b image.Rectangle) image.Image {
+	return NewGopher()
 }
 
 // PredicateInk returns 1.0 for Black (ink), 0.0 for White (paper).
@@ -42,6 +46,16 @@ func PredicateInk(c color.Color) float64 {
 	return 1.0 - v
 }
 
+// PredicateAnyAlpha returns 1.0 if there is any alpha (opaque), 0.0 if transparent.
+// Use average with threshold.
+func PredicateAnyAlpha(c color.Color) float64 {
+	_, _, _, a := c.RGBA()
+	if a > 0 {
+		return 1.0
+	}
+	return 0.0
+}
+
 // AND Pattern
 
 var AndOutputFilename = "boolean_and.png"
@@ -49,14 +63,15 @@ var AndZoomLevels = []int{}
 const AndOrder = 20
 
 func ExampleNewAnd() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	// Gopher AND Horizontal Stripes
+	g := NewGopher()
+	// Line: Black (Alpha 1). Space: Transparent (Alpha 0).
+	hAlpha := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black))
 
-	// Use PredicateInk so Logic operates on Black lines.
-	// Black=True, White=False.
-	// AND(Black, Black) = Black.
-	// Result should be Black (Ink). So we need SetTrueColor(Black).
-	i := NewAnd([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
+	// AND(Gopher, Stripes)
+	// Both Present -> 1.0.
+	// ResultColor -> Cyan?
+	i := NewAnd([]image.Image{g, hAlpha}, SetTrueColor(color.RGBA{0, 255, 255, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(AndOutputFilename)
 	if err != nil {
@@ -73,20 +88,22 @@ func ExampleNewAnd() {
 }
 
 func GenerateAnd(b image.Rectangle) image.Image {
+	hAlpha := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetBounds(b))
 	return NewAnd(
-		[]image.Image{demoHorizontal(b), demoVertical(b)},
-		SetPredicate(PredicateInk),
-		SetTrueColor(color.Black),
-		SetFalseColor(color.White),
+		[]image.Image{demoGopher(b), hAlpha},
+		SetTrueColor(color.RGBA{0, 255, 255, 255}), // Cyan Gopher Stripes
+		SetFalseColor(color.Transparent),
 		SetBounds(b),
 	)
 }
 
 func GenerateAndReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
-		"Horizontal": demoHorizontal,
-		"Vertical":   demoVertical,
-	}, []string{"Horizontal", "Vertical"}
+		"Gopher": demoGopher,
+		"Stripes": func(b image.Rectangle) image.Image {
+			return NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetBounds(b))
+		},
+	}, []string{"Gopher", "Stripes"}
 }
 
 
@@ -97,10 +114,12 @@ var OrZoomLevels = []int{}
 const OrOrder = 21
 
 func ExampleNewOr() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	g := NewGopher()
+	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black))
 
-	i := NewOr([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
+	// OR(Gopher, Stripes)
+	// Either Present -> 1.0 (Magenta)
+	i := NewOr([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 0, 255, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(OrOutputFilename)
 	if err != nil {
@@ -117,20 +136,22 @@ func ExampleNewOr() {
 }
 
 func GenerateOr(b image.Rectangle) image.Image {
+	vAlpha := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetBounds(b))
 	return NewOr(
-		[]image.Image{demoHorizontal(b), demoVertical(b)},
-		SetPredicate(PredicateInk),
-		SetTrueColor(color.Black),
-		SetFalseColor(color.White),
+		[]image.Image{demoGopher(b), vAlpha},
+		SetTrueColor(color.RGBA{255, 0, 255, 255}), // Magenta Gopher blocked by Stripes
+		SetFalseColor(color.Transparent),
 		SetBounds(b),
 	)
 }
 
 func GenerateOrReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
-		"Horizontal": demoHorizontal,
-		"Vertical":   demoVertical,
-	}, []string{"Horizontal", "Vertical"}
+		"Gopher": demoGopher,
+		"Stripes": func(b image.Rectangle) image.Image {
+			return NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetBounds(b))
+		},
+	}, []string{"Gopher", "Stripes"}
 }
 
 
@@ -141,10 +162,14 @@ var XorZoomLevels = []int{}
 const XorOrder = 22
 
 func ExampleNewXor() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
-	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	g := NewGopher()
+	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 
-	i := NewXor([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
+	// XOR(Gopher, Stripes)
+	// One present, but not both.
+	// Gopher cuts out stripes. Stripes cut out Gopher.
+	// Yellow.
+	i := NewXor([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 255, 0, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(XorOutputFilename)
 	if err != nil {
@@ -161,20 +186,22 @@ func ExampleNewXor() {
 }
 
 func GenerateXor(b image.Rectangle) image.Image {
+	vAlpha := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetBounds(b))
 	return NewXor(
-		[]image.Image{demoHorizontal(b), demoVertical(b)},
-		SetPredicate(PredicateInk),
-		SetTrueColor(color.Black),
-		SetFalseColor(color.White),
+		[]image.Image{demoGopher(b), vAlpha},
+		SetTrueColor(color.RGBA{255, 255, 0, 255}),
+		SetFalseColor(color.Transparent),
 		SetBounds(b),
 	)
 }
 
 func GenerateXorReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
-		"Horizontal": demoHorizontal,
-		"Vertical":   demoVertical,
-	}, []string{"Horizontal", "Vertical"}
+		"Gopher": demoGopher,
+		"Stripes": func(b image.Rectangle) image.Image {
+			return NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetBounds(b))
+		},
+	}, []string{"Gopher", "Stripes"}
 }
 
 
@@ -185,9 +212,13 @@ var NotZoomLevels = []int{}
 const NotOrder = 23
 
 func ExampleNewNot() {
-	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
+	g := NewGopher()
 
-	i := NewNot(h, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
+	// Not Gopher.
+	// Gopher -> Alpha 1. Not -> 0 (Transparent).
+	// Empty -> Alpha 0. Not -> 1 (TrueColor).
+	// Result: Box of TrueColor with Gopher cut out.
+	i := NewNot(g, SetTrueColor(color.RGBA{0, 255, 0, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(NotOutputFilename)
 	if err != nil {
@@ -205,18 +236,17 @@ func ExampleNewNot() {
 
 func GenerateNot(b image.Rectangle) image.Image {
 	return NewNot(
-		demoHorizontal(b),
-		SetPredicate(PredicateInk),
-		SetTrueColor(color.Black),
-		SetFalseColor(color.White),
+		demoGopher(b),
+		SetTrueColor(color.RGBA{0, 255, 0, 255}),
+		SetFalseColor(color.Transparent),
 		SetBounds(b),
 	)
 }
 
 func GenerateNotReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
-		"Horizontal": demoHorizontal,
-	}, []string{"Horizontal"}
+		"Gopher": demoGopher,
+	}, []string{"Gopher"}
 }
 
 func init() {
