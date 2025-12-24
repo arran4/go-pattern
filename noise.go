@@ -61,6 +61,23 @@ func SetNoiseAlgorithm(algo NoiseAlgorithm) func(any) {
 	}
 }
 
+// NoiseSeed sets the seed for the noise algorithm.
+// If the current algorithm is CryptoNoise, it switches to HashNoise.
+func NoiseSeed(seed int64) func(any) {
+	return func(i any) {
+		if n, ok := i.(*Noise); ok {
+			switch algo := n.algo.(type) {
+			case *CryptoNoise:
+				n.algo = &HashNoise{Seed: seed}
+			case *HashNoise:
+				algo.Seed = seed
+			case *PerlinNoise:
+				algo.Seed = seed
+			}
+		}
+	}
+}
+
 // --- Algorithms ---
 
 // CryptoNoise uses crypto/rand.
