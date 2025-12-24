@@ -11,6 +11,19 @@ These patterns are designed to be:
 ## Patterns
 
 
+### Tile Pattern
+
+
+
+![Tile Pattern](tile.png)
+
+```go
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
+	// Tile the gopher in a 200x200 area
+	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+```
+
+
 ### Polka Pattern
 
 
@@ -25,6 +38,20 @@ These patterns are designed to be:
 		SetSpaceColor(color.White),
 	)
 	f, err := os.Create(PolkaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Null Pattern
 
 
@@ -45,19 +72,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-```
-
-
-### Tile Pattern
-
-
-
-![Tile Pattern](tile.png)
-
-```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
 ```
 
 
@@ -93,15 +107,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-
-
-
-![Tile Pattern](tile.png)
-
-```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
 ```
 
 
@@ -270,15 +275,27 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
+### MathsMandelbrot Pattern
 
 
 
-![Gopher Pattern](gopher.png)
+![MathsMandelbrot Pattern](maths_mandelbrot.png)
 
 ```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
+	// See GenerateMathsMandelbrot for implementation details
+```
+
+
+### Noise Pattern
+
+
+
+![Noise Pattern](noise.png)
+
+```go
+	// Create a noise pattern with default (Crypto) algorithm
+	i := NewNoise()
+	f, err := os.Create(NoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -293,16 +310,15 @@ These patterns are designed to be:
 ```
 
 
-### Noise Pattern
+### Gopher Pattern
 
 
 
-![Noise Pattern](noise.png)
+![Gopher Pattern](gopher.png)
 
 ```go
-	// Create a noise pattern with default (Crypto) algorithm
-	i := NewNoise()
-	f, err := os.Create(NoiseOutputFilename)
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -375,6 +391,28 @@ These patterns are designed to be:
 ```
 
 
+### MathsJulia Pattern
+
+
+
+![MathsJulia Pattern](maths_julia.png)
+
+```go
+	// See GenerateMathsJulia for implementation details
+```
+
+
+### MathsSine Pattern
+
+
+
+![MathsSine Pattern](maths_sine.png)
+
+```go
+	// See GenerateMathsSine for implementation details
+```
+
+
 ### Xor Pattern
 
 
@@ -431,6 +469,17 @@ These patterns are designed to be:
 ```
 
 
+### MathsWaves Pattern
+
+
+
+![MathsWaves Pattern](maths_waves.png)
+
+```go
+	// See GenerateMathsWaves for implementation details
+```
+
+
 ### Circle Pattern
 
 
@@ -459,29 +508,6 @@ These patterns are designed to be:
 ```
 
 
-### SimpleZoom Pattern
-
-
-
-![SimpleZoom Pattern](simplezoom.png)
-
-```go
-	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
-	f, err := os.Create(SimpleZoomOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### LinearGradient Pattern
 
 
@@ -494,6 +520,9 @@ These patterns are designed to be:
 		SetStartColor(color.RGBA{255, 0, 0, 255}),
 		SetEndColor(color.RGBA{0, 0, 255, 255}),
 	)
+```
+
+
 ### Quantize Pattern
 
 
@@ -517,15 +546,15 @@ These patterns are designed to be:
 ```
 
 
-### Transposed Pattern
+### SimpleZoom Pattern
 
 
 
-![Transposed Pattern](transposed.png)
+![SimpleZoom Pattern](simplezoom.png)
 
 ```go
-	i := NewTransposed(NewDemoNull(), 10, 10)
-	f, err := os.Create(TransposedOutputFilename)
+	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
+	f, err := os.Create(SimpleZoomOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -560,10 +589,39 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### RadialGradient Pattern
+
+
+
+![RadialGradient Pattern](radial_gradient.png)
+
+```go
+	// Radial Gradient
+	NewRadialGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
 ```
 
 
 ### ConicGradient Pattern
+
+
+
+![ConicGradient Pattern](conic_gradient.png)
+
+```go
+	// Conic Gradient
+	NewConicGradient(
+		SetStartColor(color.RGBA{255, 0, 255, 255}),
+		SetEndColor(color.RGBA{0, 255, 255, 255}),
+	)
+```
+
+
 ### EdgeDetect Pattern
 
 
@@ -573,6 +631,53 @@ These patterns are designed to be:
 ```go
 	i := NewDemoEdgeDetect()
 	f, err := os.Create(EdgeDetectOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### ErrorDiffusion Pattern
+
+
+
+![ErrorDiffusion Pattern](dither_errordiffusion.png)
+
+```go
+	// Standard example
+	i := NewDemoErrorDiffusion()
+	f, err := os.Create(ErrorDiffusionOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### OrderedDither Pattern
+
+
+
+![OrderedDither Pattern](dither_ordered.png)
+
+```go
+	i := NewDemoOrderedDither()
+	f, err := os.Create(OrderedDitherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
