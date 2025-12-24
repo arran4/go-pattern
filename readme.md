@@ -149,7 +149,8 @@ These patterns are designed to be:
 	// Use PredicateInk so Logic operates on Black lines.
 	// Black=True, White=False.
 	// AND(Black, Black) = Black.
-	i := NewAnd([]image.Image{h, v}, SetPredicate(PredicateInk))
+	// Result should be Black (Ink). So we need SetTrueColor(Black).
+	i := NewAnd([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
 
 	f, err := os.Create(AndOutputFilename)
 	if err != nil {
@@ -176,7 +177,7 @@ These patterns are designed to be:
 	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	i := NewOr([]image.Image{h, v}, SetPredicate(PredicateInk))
+	i := NewOr([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
 
 	f, err := os.Create(OrOutputFilename)
 	if err != nil {
@@ -203,7 +204,7 @@ These patterns are designed to be:
 	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	i := NewXor([]image.Image{h, v}, SetPredicate(PredicateInk))
+	i := NewXor([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
 
 	f, err := os.Create(XorOutputFilename)
 	if err != nil {
@@ -229,7 +230,7 @@ These patterns are designed to be:
 ```go
 	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	i := NewNot(h, SetPredicate(PredicateInk))
+	i := NewNot(h, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
 
 	f, err := os.Create(NotOutputFilename)
 	if err != nil {

@@ -55,7 +55,8 @@ func ExampleNewAnd() {
 	// Use PredicateInk so Logic operates on Black lines.
 	// Black=True, White=False.
 	// AND(Black, Black) = Black.
-	i := NewAnd([]image.Image{h, v}, SetPredicate(PredicateInk))
+	// Result should be Black (Ink). So we need SetTrueColor(Black).
+	i := NewAnd([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
 
 	f, err := os.Create(AndOutputFilename)
 	if err != nil {
@@ -75,6 +76,8 @@ func GenerateAnd(b image.Rectangle) image.Image {
 	return NewAnd(
 		[]image.Image{demoHorizontal(b), demoVertical(b)},
 		SetPredicate(PredicateInk),
+		SetTrueColor(color.Black),
+		SetFalseColor(color.White),
 		SetBounds(b),
 	)
 }
@@ -97,7 +100,7 @@ func ExampleNewOr() {
 	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	i := NewOr([]image.Image{h, v}, SetPredicate(PredicateInk))
+	i := NewOr([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
 
 	f, err := os.Create(OrOutputFilename)
 	if err != nil {
@@ -117,6 +120,8 @@ func GenerateOr(b image.Rectangle) image.Image {
 	return NewOr(
 		[]image.Image{demoHorizontal(b), demoVertical(b)},
 		SetPredicate(PredicateInk),
+		SetTrueColor(color.Black),
+		SetFalseColor(color.White),
 		SetBounds(b),
 	)
 }
@@ -139,7 +144,7 @@ func ExampleNewXor() {
 	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	i := NewXor([]image.Image{h, v}, SetPredicate(PredicateInk))
+	i := NewXor([]image.Image{h, v}, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
 
 	f, err := os.Create(XorOutputFilename)
 	if err != nil {
@@ -159,6 +164,8 @@ func GenerateXor(b image.Rectangle) image.Image {
 	return NewXor(
 		[]image.Image{demoHorizontal(b), demoVertical(b)},
 		SetPredicate(PredicateInk),
+		SetTrueColor(color.Black),
+		SetFalseColor(color.White),
 		SetBounds(b),
 	)
 }
@@ -180,7 +187,7 @@ const NotOrder = 23
 func ExampleNewNot() {
 	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	i := NewNot(h, SetPredicate(PredicateInk))
+	i := NewNot(h, SetPredicate(PredicateInk), SetTrueColor(color.Black), SetFalseColor(color.White))
 
 	f, err := os.Create(NotOutputFilename)
 	if err != nil {
@@ -200,6 +207,8 @@ func GenerateNot(b image.Rectangle) image.Image {
 	return NewNot(
 		demoHorizontal(b),
 		SetPredicate(PredicateInk),
+		SetTrueColor(color.Black),
+		SetFalseColor(color.White),
 		SetBounds(b),
 	)
 }
