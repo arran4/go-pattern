@@ -226,6 +226,28 @@ func SetFillColor(v color.Color) func(any) {
 	}
 }
 
+// FillImageSource configures an image source for fill in a pattern.
+type FillImageSource struct {
+	FillImageSource image.Image
+}
+
+func (s *FillImageSource) SetFillImageSource(v image.Image) {
+	s.FillImageSource = v
+}
+
+type hasFillImageSource interface {
+	SetFillImageSource(image.Image)
+}
+
+// SetFillImageSource creates an option to set the fill image source.
+func SetFillImageSource(v image.Image) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasFillImageSource); ok {
+			h.SetFillImageSource(v)
+		}
+	}
+}
+
 // LineSize configures the thickness of lines in a pattern.
 type LineSize struct {
 	LineSize int
@@ -399,6 +421,94 @@ func SetFalseColor(v color.Color) func(any) {
 	return func(i any) {
 		if h, ok := i.(hasFalseColor); ok {
 			h.SetFalseColor(v)
+		}
+	}
+}
+
+// Angle configures an angle option.
+type Angle struct {
+	Angle float64
+}
+
+func (s *Angle) SetAngle(v float64) {
+	s.Angle = v
+}
+
+type hasAngle interface {
+	SetAngle(float64)
+}
+
+// SetAngle creates an option to set the angle.
+func SetAngle(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasAngle); ok {
+			h.SetAngle(v)
+		}
+	}
+}
+
+// FillColor configures the fill color of a pattern.
+type FillColor struct {
+	FillColor color.Color
+}
+
+func (s *FillColor) SetFillColor(v color.Color) {
+	s.FillColor = v
+}
+
+type hasFillColor interface {
+	SetFillColor(color.Color)
+}
+
+// SetFillColor creates an option to set the fill color.
+func SetFillColor(v color.Color) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasFillColor); ok {
+			h.SetFillColor(v)
+		}
+	}
+}
+
+// Angle configures a single angle in degrees.
+type Angle struct {
+	Angle float64
+}
+
+func (s *Angle) SetAngle(v float64) {
+	s.Angle = v
+}
+
+type hasAngle interface {
+	SetAngle(float64)
+}
+
+// SetAngle creates an option to set the angle.
+func SetAngle(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasAngle); ok {
+			h.SetAngle(v)
+		}
+	}
+}
+
+// Angles configures a list of angles in degrees.
+type Angles struct {
+	Angles []float64
+}
+
+func (s *Angles) SetAngles(v []float64) {
+	s.Angles = v
+}
+
+type hasAngles interface {
+	SetAngles([]float64)
+}
+
+// SetAngles creates an option to set the angles.
+func SetAngles(v ...float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasAngles); ok {
+			h.SetAngles(v)
 		}
 	}
 }
