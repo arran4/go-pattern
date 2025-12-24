@@ -275,6 +275,7 @@ These patterns are designed to be:
 ```
 
 
+### And Pattern
 ### Noise Pattern
 
 
@@ -314,11 +315,18 @@ These patterns are designed to be:
 
 
 
-![Gopher Pattern](gopher.png)
+![And Pattern](boolean_and.png)
 
 ```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
+	// Gopher AND Horizontal Stripes
+	g := NewGopher()
+	// Line: Black (Alpha 1). Space: White (Alpha 1).
+	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
+
+	// Default uses component-wise min if no TrueColor/FalseColor set.
+	i := NewAnd([]image.Image{g, h})
+
+	f, err := os.Create(AndOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -333,22 +341,15 @@ These patterns are designed to be:
 ```
 
 
-### And Pattern
+### Gopher Pattern
 
 
 
-![And Pattern](boolean_and.png)
+![Gopher Pattern](gopher.png)
 
 ```go
-	// Gopher AND Horizontal Stripes
-	g := NewGopher()
-	// Line: Black (Alpha 1). Space: White (Alpha 1).
-	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
-
-	// Default uses component-wise min if no TrueColor/FalseColor set.
-	i := NewAnd([]image.Image{g, h})
-
-	f, err := os.Create(AndOutputFilename)
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -592,6 +593,38 @@ These patterns are designed to be:
 ```
 
 
+### Mirror Pattern
+
+
+
+![Mirror Pattern](mirror.png)
+
+```go
+	i := NewMirror(NewDemoMirrorInput(image.Rect(0, 0, 40, 40)), true, false)
+	f, err := os.Create(MirrorOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Rotate Pattern
+
+
+
+![Rotate Pattern](rotate.png)
+
+```go
+	i := NewRotate(NewDemoRotateInput(image.Rect(0, 0, 40, 60)), 90)
+	f, err := os.Create(RotateOutputFilename)
 ### RadialGradient Pattern
 
 
