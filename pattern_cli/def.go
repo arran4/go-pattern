@@ -111,6 +111,21 @@ func registerCommands(fm dsl.FuncMap) {
 		return pattern.NewNull(), nil
 	}
 
+	fm["circle"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) < 2 {
+			return nil, fmt.Errorf("circle requires 2 color arguments (line, space)")
+		}
+		c1, err := parseColor(args[0])
+		if err != nil {
+			return nil, err
+		}
+		c2, err := parseColor(args[1])
+		if err != nil {
+			return nil, err
+		}
+		return pattern.NewCircle(pattern.SetLineColor(c1), pattern.SetSpaceColor(c2)), nil
+	}
+
 	fm["save"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
 			return nil, fmt.Errorf("save requires an input image")
