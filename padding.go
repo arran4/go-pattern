@@ -52,13 +52,6 @@ func (p *Padding) At(x, y int) color.Color {
 
 		if pt.In(p.img.Bounds()) {
 			return p.img.At(lx, ly)
-		} else {
-			// If unbounded logic, maybe we still return At?
-			// But standard Image behavior is zero outside bounds.
-			// If we want to support Unbounded, the input image should probably report large bounds.
-			// Or we assume `At` works.
-			// Let's stick to standard behavior: If point is in bounds, return color.
-			// If p.img is "Unbounded" (infinite), it should return large bounds.
 		}
 	}
 
