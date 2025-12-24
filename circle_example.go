@@ -56,8 +56,16 @@ func GenerateCircle(b image.Rectangle) image.Image {
 		SetSpaceColor(color.RGBA{200, 200, 200, 255}), // Gray Background
 		SetBounds(b),
 	)
+	// Circle with Image Fill and Border
+	v4 := NewCircle(
+		SetLineSize(5),
+		SetLineColor(color.RGBA{255, 0, 0, 255}), // Red Border
+		SetFillImageSource(checker),
+		SetSpaceColor(color.White),
+		SetBounds(b),
+	)
 
-	return stitchImagesForDemo(v1, v2, v3)
+	return stitchImagesForDemo(v1, v2, v3, v4)
 }
 
 func GenerateCircleReferences() (map[string]func(image.Rectangle) image.Image, []string) {
@@ -83,7 +91,16 @@ func GenerateCircleReferences() (map[string]func(image.Rectangle) image.Image, [
 				SetBounds(b),
 			)
 		},
-	}, []string{"RedCircle", "TransparentBackground", "ImageFill"}
+		"ImageFillWithBorder": func(b image.Rectangle) image.Image {
+			return NewCircle(
+				SetLineSize(5),
+				SetLineColor(color.RGBA{0, 255, 0, 255}), // Green Border
+				SetFillImageSource(NewChecker(color.Black, color.White)),
+				SetSpaceColor(color.Transparent),
+				SetBounds(b),
+			)
+		},
+	}, []string{"RedCircle", "TransparentBackground", "ImageFill", "ImageFillWithBorder"}
 }
 
 func init() {
