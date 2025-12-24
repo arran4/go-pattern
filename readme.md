@@ -11,15 +11,6 @@ These patterns are designed to be:
 ## Patterns
 
 
-### Null Pattern
-
-
-
-![Null Pattern](null.png)
-
-```go
-	i := NewNull()
-	f, err := os.Create(NullOutputFilename)
 ### Polka Pattern
 
 
@@ -49,15 +40,6 @@ These patterns are designed to be:
 
 
 ### Tile Pattern
-
-
-
-![Tile Pattern](tile.png)
-
-```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
 
 
 
@@ -203,62 +185,6 @@ These patterns are designed to be:
 
 
 ### HorizontalLine Pattern
-
-
-
-![HorizontalLine Pattern](horizontal_line.png)
-
-```go
-	i := NewHorizontalLine(
-		SetLineSize(5),
-		SetSpaceSize(5),
-		SetLineColor(color.RGBA{255, 0, 0, 255}),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(HorizontalLineOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### VerticalLine Pattern
-
-
-
-![VerticalLine Pattern](vertical_line.png)
-
-```go
-	i := NewVerticalLine(
-		SetLineSize(5),
-		SetSpaceSize(5),
-		SetLineColor(color.RGBA{0, 0, 255, 255}),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(VerticalLineOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Gopher Pattern
 
 
 
