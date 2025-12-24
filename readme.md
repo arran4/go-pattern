@@ -11,43 +11,6 @@ These patterns are designed to be:
 ## Patterns
 
 
-### Polka Pattern
-
-
-
-![Polka Pattern](polka.png)
-
-```go
-	i := NewPolka(
-		SetRadius(10),
-		SetSpacing(40),
-		SetFillColor(color.Black),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(PolkaOutputFilename)
-### Null Pattern
-
-
-
-![Null Pattern](null.png)
-
-```go
-	i := NewNull()
-	f, err := os.Create(NullOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### Tile Pattern
 
 
@@ -93,15 +56,57 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### Null Pattern
 
 
 
-![Tile Pattern](tile.png)
+![Null Pattern](null.png)
 
 ```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Polka Pattern
+
+
+
+![Polka Pattern](polka.png)
+
+```go
+	i := NewPolka(
+		SetRadius(10),
+		SetSpacing(40),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(PolkaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
@@ -293,27 +298,14 @@ These patterns are designed to be:
 ```
 
 
-### Noise Pattern
+### MathsMandelbrot Pattern
 
 
 
-![Noise Pattern](noise.png)
+![MathsMandelbrot Pattern](maths_mandelbrot.png)
 
 ```go
-	// Create a noise pattern with default (Crypto) algorithm
-	i := NewNoise()
-	f, err := os.Create(NoiseOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
+	// See GenerateMathsMandelbrot for implementation details
 ```
 
 
@@ -347,6 +339,41 @@ These patterns are designed to be:
 ```
 
 
+### Noise Pattern
+
+
+
+![Noise Pattern](noise.png)
+
+```go
+	// Create a noise pattern with default (Crypto) algorithm
+	i := NewNoise()
+	f, err := os.Create(NoiseOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### MathsJulia Pattern
+
+
+
+![MathsJulia Pattern](maths_julia.png)
+
+```go
+	// See GenerateMathsJulia for implementation details
+```
+
+
 ### Or Pattern
 
 
@@ -372,6 +399,17 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### MathsSine Pattern
+
+
+
+![MathsSine Pattern](maths_sine.png)
+
+```go
+	// See GenerateMathsSine for implementation details
 ```
 
 
@@ -428,6 +466,17 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### MathsWaves Pattern
+
+
+
+![MathsWaves Pattern](maths_waves.png)
+
+```go
+	// See GenerateMathsWaves for implementation details
 ```
 
 
@@ -494,6 +543,9 @@ These patterns are designed to be:
 		SetStartColor(color.RGBA{255, 0, 0, 255}),
 		SetEndColor(color.RGBA{0, 0, 255, 255}),
 	)
+```
+
+
 ### Quantize Pattern
 
 
@@ -540,30 +592,58 @@ These patterns are designed to be:
 ```
 
 
-### Transposed Pattern
+### RadialGradient Pattern
 
 
 
-![Transposed Pattern](transposed.png)
+![RadialGradient Pattern](radial_gradient.png)
 
 ```go
-	i := NewTransposed(NewDemoNull(), 10, 10)
-	f, err := os.Create(TransposedOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
+	// Radial Gradient
+	NewRadialGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
 ```
 
 
 ### ConicGradient Pattern
+
+
+
+![ConicGradient Pattern](conic_gradient.png)
+
+```go
+	// Conic Gradient
+	NewConicGradient(
+		SetStartColor(color.RGBA{255, 0, 255, 255}),
+		SetEndColor(color.RGBA{0, 255, 255, 255}),
+	)
+```
+
+
+### SierpinskiTriangle Pattern
+
+
+
+![SierpinskiTriangle Pattern](sierpinski_triangle.png)
+
+```go
+	// See GenerateSierpinskiTriangle for implementation details
+```
+
+
+### SierpinskiCarpet Pattern
+
+
+
+![SierpinskiCarpet Pattern](sierpinski_carpet.png)
+
+```go
+	// See GenerateSierpinskiCarpet for implementation details
+```
+
+
 ### EdgeDetect Pattern
 
 
