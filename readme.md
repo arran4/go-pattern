@@ -11,19 +11,6 @@ These patterns are designed to be:
 ## Patterns
 
 
-### Tile Pattern
-
-
-
-![Tile Pattern](tile.png)
-
-```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
-```
-
-
 ### Null Pattern
 
 
@@ -47,6 +34,19 @@ These patterns are designed to be:
 ```
 
 
+### Tile Pattern
+
+
+
+![Tile Pattern](tile.png)
+
+```go
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
+	// Tile the gopher in a 200x200 area
+	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+```
+
+
 ### Checker Pattern
 
 
@@ -56,62 +56,6 @@ These patterns are designed to be:
 ```go
 	i := NewChecker(color.Black, color.White)
 	f, err := os.Create(CheckerOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### HorizontalLine Pattern
-
-
-
-![HorizontalLine Pattern](horizontal_line.png)
-
-```go
-	i := NewHorizontalLine(
-		SetLineSize(5),
-		SetSpaceSize(5),
-		SetLineColor(color.RGBA{255, 0, 0, 255}),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(HorizontalLineOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### VerticalLine Pattern
-
-
-
-![VerticalLine Pattern](vertical_line.png)
-
-```go
-	i := NewVerticalLine(
-		SetLineSize(5),
-		SetSpaceSize(5),
-		SetLineColor(color.RGBA{0, 0, 255, 255}),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(VerticalLineOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -212,6 +156,62 @@ These patterns are designed to be:
 ```
 
 
+### HorizontalLine Pattern
+
+
+
+![HorizontalLine Pattern](horizontal_line.png)
+
+```go
+	i := NewHorizontalLine(
+		SetLineSize(5),
+		SetSpaceSize(5),
+		SetLineColor(color.RGBA{255, 0, 0, 255}),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(HorizontalLineOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### VerticalLine Pattern
+
+
+
+![VerticalLine Pattern](vertical_line.png)
+
+```go
+	i := NewVerticalLine(
+		SetLineSize(5),
+		SetSpaceSize(5),
+		SetLineColor(color.RGBA{0, 0, 255, 255}),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(VerticalLineOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Gopher Pattern
 
 
@@ -221,6 +221,33 @@ These patterns are designed to be:
 ```go
 	i := NewGopher()
 	f, err := os.Create(GopherOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### PerlinNoise Pattern
+
+
+
+![PerlinNoise Pattern](perlin_noise.png)
+
+```go
+	i := NewPerlinNoise(
+		SetNoiseColorLow(color.Black),
+		SetNoiseColorHigh(color.White),
+		SetFrequency(0.1),
+	)
+	f, err := os.Create(PerlinNoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -251,6 +278,33 @@ These patterns are designed to be:
 	i := NewAnd([]image.Image{g, h})
 
 	f, err := os.Create(AndOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### SimplexNoise Pattern
+
+
+
+![SimplexNoise Pattern](simplex_noise.png)
+
+```go
+	i := NewSimplexNoise(
+		SetNoiseColorLow(color.Black),
+		SetNoiseColorHigh(color.White),
+		SetFrequency(0.1),
+	)
+	f, err := os.Create(SimplexNoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
