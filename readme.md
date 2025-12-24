@@ -146,12 +146,6 @@ These patterns are designed to be:
 	// Gopher AND Horizontal Stripes
 	g := NewGopher()
 	// Line: Black (Alpha 1). Space: White (Alpha 1).
-	// With Color Logic:
-	// And(Gopher, Stripes) -> Min(Gopher, Stripes)
-	// Stripes: Black lines, White spaces.
-	// Where Space(White): Min(Gopher, White) -> Gopher.
-	// Where Line(Black): Min(Gopher, Black) -> Black.
-	// Result: Gopher visible through stripes.
 	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
 
 	// Default uses component-wise min if no TrueColor/FalseColor set.
@@ -183,11 +177,6 @@ These patterns are designed to be:
 	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
 
 	// OR(Gopher, Stripes) -> Max(Gopher, Stripes)
-	// Stripes: Black lines, White spaces.
-	// Where Space(White): Max(Gopher, White) -> White.
-	// Where Line(Black): Max(Gopher, Black) -> Gopher.
-	// Result: Gopher visible where Lines are Black. Masked White where Spaces are White.
-	// This is effectively "Gopher masked by stripes (inverted)".
 	i := NewOr([]image.Image{g, v})
 
 	f, err := os.Create(OrOutputFilename)
@@ -216,7 +205,6 @@ These patterns are designed to be:
 	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 
 	// XOR(Gopher, Stripes)
-	// Use explicit colors to preserve the "Yellow" demo requested.
 	i := NewXor([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 255, 0, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(XorOutputFilename)

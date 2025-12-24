@@ -3,7 +3,6 @@ package pattern
 import (
 	"image"
 	"image/color"
-	"image/draw"
 	"image/png"
 	"os"
 )
@@ -105,37 +104,7 @@ func GenerateVerticalLine(b image.Rectangle) image.Image {
 	return stitchImagesForDemo(v1, v2)
 }
 
-func stitchImagesForDemo(images ...image.Image) image.Image {
-	if len(images) == 0 {
-		return nil
-	}
-
-	width := 0
-	height := 0
-	for _, img := range images {
-		b := img.Bounds()
-		width += b.Dx()
-		if b.Dy() > height {
-			height = b.Dy()
-		}
-	}
-	padding := 10
-	width += padding * (len(images) - 1)
-
-	out := image.NewRGBA(image.Rect(0, 0, width, height))
-	// Transparent background or White? White is better for docs.
-	draw.Draw(out, out.Bounds(), &image.Uniform{color.White}, image.Point{}, draw.Src)
-
-	x := 0
-	for _, img := range images {
-		b := img.Bounds()
-		r := image.Rect(x, 0, x+b.Dx(), b.Dy())
-		draw.Draw(out, r, img, b.Min, draw.Over)
-		x += b.Dx() + padding
-	}
-
-	return out
-}
+// stitchImagesForDemo is defined in boolean_example.go (shared via package scope)
 
 func init() {
 	RegisterGenerator("HorizontalLine", GenerateHorizontalLine)
