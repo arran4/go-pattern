@@ -7,6 +7,113 @@ import (
 	"sync"
 )
 
+// Ensure BayerDither implements the image.Image interface.
+var _ image.Image = (*BayerDither)(nil)
+
+// BayerDither applies ordered dithering using a Bayer matrix.
+type BayerDither struct {
+	Null
+	Input   image.Image
+	Matrix  []uint8
+	Size    int // 2, 4, 8
+	Palette []color.Color
+}
+
+// Standard Bayer Matrices
+var (
+	Bayer2x2 = []uint8{
+		0, 2,
+		3, 1,
+	}
+	// 4x4 derived from 2x2
+	Bayer4x4 = []uint8{
+		0, 8, 2, 10,
+		12, 4, 14, 6,
+		3, 11, 1, 9,
+		15, 7, 13, 5,
+	}
+)
+
+func (p *BayerDither) At(x, y int) color.Color {
+	if p.Input == nil {
+		return color.RGBA{}
+	}
+	c := p.Input.At(x, y)
+
+	// Get matrix value
+	mx := x % p.Size
+	if mx < 0 { mx += p.Size }
+	my := y % p.Size
+	if my < 0 { my += p.Size }
+
+	threshold := p.Matrix[my*p.Size + mx]
+
+	// Normalize threshold to 0-255?
+	// Matrix values are 0..(size*size)-1.
+	// We want to compare with pixel intensity.
+	// Normalized threshold = (value + 0.5) / (size*size)
+
+	n := p.Size * p.Size
+	normT := float64(threshold) / float64(n)
+
+	// Dither each channel? User said "apply to grayscale or per-channel".
+	// Let's do per-channel.
+
+	r, g, b, a := c.RGBA()
+
+	// Convert 16-bit color to float 0-1
+	fr := float64(r) / 65535.0
+	fg := float64(g) / 65535.0
+	fb := float64(b) / 65535.0
+
+	// Apply dither
+	// If val < threshold, it becomes darker?
+	// Usually: val + (threshold - 0.5) ??
+	// Or simply: if val > threshold ? 1 : 0 (for binary).
+	// For multi-level palette?
+
+	// If no palette is provided, we assume binary (black/white) or just thresholding?
+	// The user mentions "Ordered dithering matrix".
+	// Standard ordered dither on truecolor images is usually:
+	// c_out = closest_palette_color(c_in + spread * (threshold - 0.5))
+
+	// If we just want 1-bit per channel:
+	dr := 0.0; if fr > normT { dr = 1.0 }
+	dg := 0.0; if fg > normT { dg = 1.0 }
+	db := 0.0; if fb > normT { db = 1.0 }
+
+	return color.RGBA{
+		R: uint8(dr * 255),
+		G: uint8(dg * 255),
+		B: uint8(db * 255),
+		A: uint8(a >> 8),
+	}
+}
+
+// NewBayerDither creates a new BayerDither pattern.
+func NewBayerDither(input image.Image, size int, ops ...func(any)) image.Image {
+	var mat []uint8
+	if size == 4 {
+		mat = Bayer4x4
+	} else {
+		size = 2
+		mat = Bayer2x2
+	}
+
+	p := &BayerDither{
+		Null: Null{
+			bounds: image.Rect(0, 0, 255, 255),
+		},
+		Input: input,
+		Matrix: mat,
+		Size: size,
+	}
+	for _, op := range ops {
+		op(p)
+	}
+	return p
+}
+
 // DiffusionKernel represents the error diffusion kernel.
 // It consists of a list of weights applied to neighboring pixels.
 type DiffusionKernel struct {
@@ -170,24 +277,24 @@ func SetGamma(v float64) func(any) {
 
 // EdgeAwareness configures the strength of edge-aware diffusion.
 type EdgeAwareness struct {
-    EdgeAwareness float64
+	EdgeAwareness float64
 }
 
 func (e *EdgeAwareness) SetEdgeAwareness(v float64) {
-    e.EdgeAwareness = v
+	e.EdgeAwareness = v
 }
 
 type hasEdgeAwareness interface {
-    SetEdgeAwareness(float64)
+	SetEdgeAwareness(float64)
 }
 
 // SetEdgeAwareness creates an option to set edge awareness.
 func SetEdgeAwareness(v float64) func(any) {
-    return func(i any) {
-        if h, ok := i.(hasEdgeAwareness); ok {
-            h.SetEdgeAwareness(v)
-        }
-    }
+	return func(i any) {
+		if h, ok := i.(hasEdgeAwareness); ok {
+			h.SetEdgeAwareness(v)
+		}
+	}
 }
 
 // NewErrorDiffusion creates a new ErrorDiffusion pattern.
@@ -227,7 +334,7 @@ func (e *ErrorDiffusion) SetGamma(v float64) {
 }
 
 func (e *ErrorDiffusion) SetEdgeAwareness(v float64) {
-    e.edgeAwareness = v
+	e.edgeAwareness = v
 }
 
 func (e *ErrorDiffusion) At(x, y int) color.Color {
@@ -308,51 +415,51 @@ func (e *ErrorDiffusion) compute() {
 			errG := oldG - newG
 			errB := oldB - newB
 
-            // Luminance of current pixel for edge detection
-            lum := 0.299*oldR + 0.587*oldG + 0.114*oldB
+			// Luminance of current pixel for edge detection
+			lum := 0.299*oldR + 0.587*oldG + 0.114*oldB
 
-            // First pass: Calculate total valid weight sum to conserve energy
-            totalWeight := 0.0
-            type neighbor struct {
-                idx int
-                weight float64
-            }
-            var neighbors []neighbor
+			// First pass: Calculate total valid weight sum to conserve energy
+			totalWeight := 0.0
+			type neighbor struct {
+				idx int
+				weight float64
+			}
+			var neighbors []neighbor
 
-            for _, item := range e.kernel.Items {
+			for _, item := range e.kernel.Items {
 				dx := item.DX * direction
 				dy := item.DY
 				nx, ny := x+dx, y+dy
 				if nx >= 0 && nx < w && ny >= 0 && ny < h {
 					nidx := (ny*w + nx) * 4
-                    weight := item.Weight
+					weight := item.Weight
 
-                    if e.edgeAwareness > 0 {
-                        nLum := 0.299*pixels[nidx] + 0.587*pixels[nidx+1] + 0.114*pixels[nidx+2]
-                        diff := math.Abs(lum - nLum)
-                        edgeStrength := diff * 2.0 // Scale diff (0-1) to be more aggressive
-                        if edgeStrength > 1 { edgeStrength = 1 }
-                        weight = weight * (1.0 - (e.edgeAwareness * edgeStrength))
-                    }
-                    totalWeight += weight
-                    neighbors = append(neighbors, neighbor{nidx, weight})
+					if e.edgeAwareness > 0 {
+						nLum := 0.299*pixels[nidx] + 0.587*pixels[nidx+1] + 0.114*pixels[nidx+2]
+						diff := math.Abs(lum - nLum)
+						edgeStrength := diff * 2.0 // Scale diff (0-1) to be more aggressive
+						if edgeStrength > 1 { edgeStrength = 1 }
+						weight = weight * (1.0 - (e.edgeAwareness * edgeStrength))
+					}
+					totalWeight += weight
+					neighbors = append(neighbors, neighbor{nidx, weight})
 				}
-            }
+			}
 
-            // Second pass: Distribute error normalized
-            if totalWeight > 0 {
-                for _, n := range neighbors {
-                    // Normalized weight
-                    w := n.weight / totalWeight
-                    pixels[n.idx] += errR * w
-                    pixels[n.idx+1] += errG * w
-                    pixels[n.idx+2] += errB * w
-                }
-            } else {
-                 // If totalWeight is 0 (all edges blocked completely),
-                 // we cannot distribute error. It is lost.
-                 // This usually only happens if edgeAwareness is 1.0 and all neighbors are very different.
-            }
+			// Second pass: Distribute error normalized
+			if totalWeight > 0 {
+				for _, n := range neighbors {
+					// Normalized weight
+					w := n.weight / totalWeight
+					pixels[n.idx] += errR * w
+					pixels[n.idx+1] += errG * w
+					pixels[n.idx+2] += errB * w
+				}
+			} else {
+				// If totalWeight is 0 (all edges blocked completely),
+				// we cannot distribute error. It is lost.
+				// This usually only happens if edgeAwareness is 1.0 and all neighbors are very different.
+			}
 		}
 	}
 }

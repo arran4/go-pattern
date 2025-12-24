@@ -17,6 +17,10 @@ const (
 	OpOr
 	OpXor
 	OpNot
+	OpBitwiseAnd
+	OpBitwiseOr
+	OpBitwiseXor
+	OpBitwiseNot
 )
 
 // ColorPredicate converts a color to a fuzzy value between 0.0 and 1.0.
@@ -43,6 +47,11 @@ func (bi *BooleanImage) At(x, y int) color.Color {
 	// Check if we should use Component-wise Color Logic.
 	// This happens if TrueColor and FalseColor are both nil (or transparent zero value).
 	useColorLogic := isZeroColor(bi.TrueColor.TrueColor) && isZeroColor(bi.FalseColor.FalseColor)
+
+	// Force color logic for Bitwise ops regardless of True/False color (as they operate directly on colors)
+	if bi.Op >= OpBitwiseAnd {
+		useColorLogic = true
+	}
 
 	if useColorLogic {
 		return bi.atColorLogic(x, y)
@@ -95,8 +104,12 @@ func (bi *BooleanImage) At(x, y int) color.Color {
 	// But if we remove that initialization to support auto-detection, we need defaults here.
 	tc := bi.TrueColor.TrueColor
 	fc := bi.FalseColor.FalseColor
-	if tc == nil { tc = color.White }
-	if fc == nil { fc = color.Black }
+	if tc == nil {
+		tc = color.White
+	}
+	if fc == nil {
+		fc = color.Black
+	}
 
 	return interpolateColor(fc, tc, val)
 }
@@ -117,7 +130,9 @@ func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
 				minC = minColor(minC, c)
 			}
 		}
-		if minC == nil { return color.RGBA{} }
+		if minC == nil {
+			return color.RGBA{}
+		}
 		return minC
 	case OpOr:
 		// Component-wise Max
@@ -133,7 +148,9 @@ func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
 				maxC = maxColor(maxC, c)
 			}
 		}
-		if maxC == nil { return color.RGBA{} }
+		if maxC == nil {
+			return color.RGBA{}
+		}
 		return maxC
 	case OpXor:
 		// Component-wise AbsDiff
@@ -149,6 +166,69 @@ func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
 	case OpNot:
 		if len(bi.Inputs) > 0 && bi.Inputs[0] != nil {
 			return invertColor(bi.Inputs[0].At(x, y))
+		}
+		return color.RGBA{}
+	case OpBitwiseAnd:
+		var res color.Color
+		for i, input := range bi.Inputs {
+			if input == nil {
+				continue
+			}
+			c := input.At(x, y)
+			if i == 0 || res == nil {
+				res = c
+			} else {
+				res = bitwiseAndColor(res, c)
+			}
+		}
+		if res == nil {
+			return color.RGBA{}
+		}
+		return res
+	case OpBitwiseOr:
+		var res color.Color
+		for i, input := range bi.Inputs {
+			if input == nil {
+				continue
+			}
+			c := input.At(x, y)
+			if i == 0 || res == nil {
+				res = c
+			} else {
+				res = bitwiseOrColor(res, c)
+			}
+		}
+		if res == nil {
+			return color.RGBA{}
+		}
+		return res
+	case OpBitwiseXor:
+		if len(bi.Inputs) < 2 {
+			if len(bi.Inputs) == 1 && bi.Inputs[0] != nil {
+				return bi.Inputs[0].At(x, y)
+			}
+			return color.RGBA{}
+		}
+		// Chain XOR? Usually XOR is binary, but associative.
+		var res color.Color
+		for i, input := range bi.Inputs {
+			if input == nil {
+				continue
+			}
+			c := input.At(x, y)
+			if i == 0 || res == nil {
+				res = c
+			} else {
+				res = bitwiseXorColor(res, c)
+			}
+		}
+		if res == nil {
+			return color.RGBA{}
+		}
+		return res
+	case OpBitwiseNot:
+		if len(bi.Inputs) > 0 && bi.Inputs[0] != nil {
+			return bitwiseNotColor(bi.Inputs[0].At(x, y))
 		}
 		return color.RGBA{}
 	}
@@ -198,37 +278,84 @@ func absDiffColor(c1, c2 color.Color) color.Color {
 
 func invertColor(c color.Color) color.Color {
 	r, g, b, a := c.RGBA()
-	// Invert R,G,B. Preserve Alpha? Or Invert Alpha?
-	// Standard image processing usually preserves Alpha or premultiplies.
-	// If we invert pre-multiplied RGBA, it's tricky.
-	// Let's assume simpler inversion: 0xFFFF - v.
 	return color.RGBA64{
 		R: uint16(0xFFFF - r),
 		G: uint16(0xFFFF - g),
 		B: uint16(0xFFFF - b),
-		A: uint16(a), // Preserve Alpha?
-		// User wants "Resemblance to original".
-		// If original is opaque, Alpha is FFFF. Result Alpha FFFF.
-		// If original is transparent, Alpha 0. Result Alpha 0.
-		// Colors inverted.
+		A: uint16(a),
 	}
 }
 
+// Bitwise helpers
+func bitwiseAndColor(c1, c2 color.Color) color.Color {
+	n1 := color.NRGBA64Model.Convert(c1).(color.NRGBA64)
+	n2 := color.NRGBA64Model.Convert(c2).(color.NRGBA64)
+
+	return color.RGBA64Model.Convert(color.NRGBA64{
+		R: n1.R & n2.R,
+		G: n1.G & n2.G,
+		B: n1.B & n2.B,
+		A: n1.A & n2.A,
+	})
+}
+
+func bitwiseOrColor(c1, c2 color.Color) color.Color {
+	n1 := color.NRGBA64Model.Convert(c1).(color.NRGBA64)
+	n2 := color.NRGBA64Model.Convert(c2).(color.NRGBA64)
+
+	return color.RGBA64Model.Convert(color.NRGBA64{
+		R: n1.R | n2.R,
+		G: n1.G | n2.G,
+		B: n1.B | n2.B,
+		A: n1.A | n2.A,
+	})
+}
+
+func bitwiseXorColor(c1, c2 color.Color) color.Color {
+	n1 := color.NRGBA64Model.Convert(c1).(color.NRGBA64)
+	n2 := color.NRGBA64Model.Convert(c2).(color.NRGBA64)
+
+	return color.RGBA64Model.Convert(color.NRGBA64{
+		R: n1.R ^ n2.R,
+		G: n1.G ^ n2.G,
+		B: n1.B ^ n2.B,
+		A: n1.A ^ n2.A,
+	})
+}
+
+func bitwiseNotColor(c color.Color) color.Color {
+	n := color.NRGBA64Model.Convert(c).(color.NRGBA64)
+	return color.RGBA64Model.Convert(color.NRGBA64{
+		R: ^n.R,
+		G: ^n.G,
+		B: ^n.B,
+		A: n.A, // Do not invert alpha? User said "full 8-bit variation". If we NOT alpha, transparency flips.
+		// Usually bitwise NOT on an image implies color inversion.
+		// InvertColor above did 0xFFFF - r.
+		// Here we do ^R. Which is essentially the same for 16-bit.
+	})
+}
+
 func min(a, b uint32) uint32 {
-	if a < b { return a }
+	if a < b {
+		return a
+	}
 	return b
 }
 
 func max(a, b uint32) uint32 {
-	if a > b { return a }
+	if a > b {
+		return a
+	}
 	return b
 }
 
 func absDiff(a, b uint32) uint32 {
-	if a > b { return a - b }
+	if a > b {
+		return a - b
+	}
 	return b - a
 }
-
 
 func interpolateColor(c0, c1 color.Color, t float64) color.Color {
 	if t <= 0 {
@@ -286,7 +413,7 @@ func PredicateAverageGrayAbove(threshold uint8) ColorPredicate {
 	t := uint32(threshold)
 	return func(c color.Color) float64 {
 		r, g, b, _ := c.RGBA()
-		avg := (r + g + b) / 3
+		avg := (r+g+b) / 3
 		if (avg >> 8) >= t {
 			return 1.0
 		}
@@ -425,6 +552,69 @@ func NewNot(input image.Image, ops ...func(any)) image.Image {
 	}
 	// Defaults are nil
 
+	for _, op := range ops {
+		op(p)
+	}
+	return p
+}
+
+// NewBitwiseAnd creates a new Bitwise And pattern.
+func NewBitwiseAnd(inputs []image.Image, ops ...func(any)) image.Image {
+	p := &And{
+		BooleanImage: BooleanImage{
+			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:        OpBitwiseAnd,
+			Inputs:    inputs,
+		},
+	}
+	for _, op := range ops {
+		op(p)
+	}
+	return p
+}
+
+// NewBitwiseOr creates a new Bitwise Or pattern.
+func NewBitwiseOr(inputs []image.Image, ops ...func(any)) image.Image {
+	p := &Or{
+		BooleanImage: BooleanImage{
+			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:        OpBitwiseOr,
+			Inputs:    inputs,
+		},
+	}
+	for _, op := range ops {
+		op(p)
+	}
+	return p
+}
+
+// NewBitwiseXor creates a new Bitwise Xor pattern.
+func NewBitwiseXor(inputs []image.Image, ops ...func(any)) image.Image {
+	if len(inputs) != 2 {
+		panic(fmt.Sprintf("BitwiseXor requires exactly 2 inputs, got %d", len(inputs)))
+	}
+	p := &Xor{
+		BooleanImage: BooleanImage{
+			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:        OpBitwiseXor,
+			Inputs:    inputs,
+		},
+	}
+	for _, op := range ops {
+		op(p)
+	}
+	return p
+}
+
+// NewBitwiseNot creates a new Bitwise Not pattern.
+func NewBitwiseNot(input image.Image, ops ...func(any)) image.Image {
+	p := &Not{
+		BooleanImage: BooleanImage{
+			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:        OpBitwiseNot,
+			Inputs:    []image.Image{input},
+		},
+	}
 	for _, op := range ops {
 		op(p)
 	}
