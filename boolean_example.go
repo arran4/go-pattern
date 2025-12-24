@@ -43,13 +43,17 @@ const AndOrder = 20
 func ExampleNewAnd() {
 	// Gopher AND Horizontal Stripes
 	g := NewGopher()
-	// Line: Black (Alpha 1). Space: Transparent (Alpha 0).
-	hAlpha := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black))
+	// Line: Black (Alpha 1). Space: White (Alpha 1).
+	// With Color Logic:
+	// And(Gopher, Stripes) -> Min(Gopher, Stripes)
+	// Stripes: Black lines, White spaces.
+	// Where Space(White): Min(Gopher, White) -> Gopher.
+	// Where Line(Black): Min(Gopher, Black) -> Black.
+	// Result: Gopher visible through stripes.
+	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	// AND(Gopher, Stripes)
-	// Both Present -> 1.0.
-	// ResultColor -> Cyan?
-	i := NewAnd([]image.Image{g, hAlpha}, SetTrueColor(color.RGBA{0, 255, 255, 255}), SetFalseColor(color.Transparent))
+	// Default uses component-wise min if no TrueColor/FalseColor set.
+	i := NewAnd([]image.Image{g, h})
 
 	f, err := os.Create(AndOutputFilename)
 	if err != nil {
@@ -66,11 +70,9 @@ func ExampleNewAnd() {
 }
 
 func GenerateAnd(b image.Rectangle) image.Image {
-	hAlpha := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetBounds(b))
+	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White), SetBounds(b))
 	return NewAnd(
-		[]image.Image{demoGopher(b), hAlpha},
-		SetTrueColor(color.RGBA{0, 255, 255, 255}), // Cyan Gopher Stripes
-		SetFalseColor(color.Transparent),
+		[]image.Image{demoGopher(b), h},
 		SetBounds(b),
 	)
 }
@@ -79,7 +81,7 @@ func GenerateAndReferences() (map[string]func(image.Rectangle) image.Image, []st
 	return map[string]func(image.Rectangle) image.Image{
 		"Gopher": demoGopher,
 		"Stripes": func(b image.Rectangle) image.Image {
-			return NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetBounds(b))
+			return NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White), SetBounds(b))
 		},
 	}, []string{"Gopher", "Stripes"}
 }
@@ -93,11 +95,15 @@ const OrOrder = 21
 
 func ExampleNewOr() {
 	g := NewGopher()
-	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black))
+	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	// OR(Gopher, Stripes)
-	// Either Present -> 1.0 (Magenta)
-	i := NewOr([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 0, 255, 255}), SetFalseColor(color.Transparent))
+	// OR(Gopher, Stripes) -> Max(Gopher, Stripes)
+	// Stripes: Black lines, White spaces.
+	// Where Space(White): Max(Gopher, White) -> White.
+	// Where Line(Black): Max(Gopher, Black) -> Gopher.
+	// Result: Gopher visible where Lines are Black. Masked White where Spaces are White.
+	// This is effectively "Gopher masked by stripes (inverted)".
+	i := NewOr([]image.Image{g, v})
 
 	f, err := os.Create(OrOutputFilename)
 	if err != nil {
@@ -114,11 +120,9 @@ func ExampleNewOr() {
 }
 
 func GenerateOr(b image.Rectangle) image.Image {
-	vAlpha := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetBounds(b))
+	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White), SetBounds(b))
 	return NewOr(
-		[]image.Image{demoGopher(b), vAlpha},
-		SetTrueColor(color.RGBA{255, 0, 255, 255}), // Magenta Gopher blocked by Stripes
-		SetFalseColor(color.Transparent),
+		[]image.Image{demoGopher(b), v},
 		SetBounds(b),
 	)
 }
@@ -127,7 +131,7 @@ func GenerateOrReferences() (map[string]func(image.Rectangle) image.Image, []str
 	return map[string]func(image.Rectangle) image.Image{
 		"Gopher": demoGopher,
 		"Stripes": func(b image.Rectangle) image.Image {
-			return NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetBounds(b))
+			return NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White), SetBounds(b))
 		},
 	}, []string{"Gopher", "Stripes"}
 }
@@ -144,9 +148,7 @@ func ExampleNewXor() {
 	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 
 	// XOR(Gopher, Stripes)
-	// One present, but not both.
-	// Gopher cuts out stripes. Stripes cut out Gopher.
-	// Yellow.
+	// Use explicit colors to preserve the "Yellow" demo requested.
 	i := NewXor([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 255, 0, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(XorOutputFilename)
@@ -193,10 +195,8 @@ func ExampleNewNot() {
 	g := NewGopher()
 
 	// Not Gopher.
-	// Gopher -> Alpha 1. Not -> 0 (Transparent).
-	// Empty -> Alpha 0. Not -> 1 (TrueColor).
-	// Result: Box of TrueColor with Gopher cut out.
-	i := NewNot(g, SetTrueColor(color.RGBA{0, 255, 0, 255}), SetFalseColor(color.Transparent))
+	// Default component-wise: Invert colors.
+	i := NewNot(g)
 
 	f, err := os.Create(NotOutputFilename)
 	if err != nil {
@@ -215,8 +215,6 @@ func ExampleNewNot() {
 func GenerateNot(b image.Rectangle) image.Image {
 	return NewNot(
 		demoGopher(b),
-		SetTrueColor(color.RGBA{0, 255, 0, 255}),
-		SetFalseColor(color.Transparent),
 		SetBounds(b),
 	)
 }

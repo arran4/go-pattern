@@ -113,38 +113,6 @@ These patterns are designed to be:
 ```
 
 
-### And Pattern
-
-
-
-![And Pattern](boolean_and.png)
-
-```go
-	// Gopher AND Horizontal Stripes
-	g := NewGopher()
-	// Line: Black (Alpha 1). Space: Transparent (Alpha 0).
-	hAlpha := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black))
-
-	// AND(Gopher, Stripes)
-	// Both Present -> 1.0.
-	// ResultColor -> Cyan?
-	i := NewAnd([]image.Image{g, hAlpha}, SetTrueColor(color.RGBA{0, 255, 255, 255}), SetFalseColor(color.Transparent))
-
-	f, err := os.Create(AndOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### Gopher Pattern
 
 
@@ -168,6 +136,42 @@ These patterns are designed to be:
 ```
 
 
+### And Pattern
+
+
+
+![And Pattern](boolean_and.png)
+
+```go
+	// Gopher AND Horizontal Stripes
+	g := NewGopher()
+	// Line: Black (Alpha 1). Space: White (Alpha 1).
+	// With Color Logic:
+	// And(Gopher, Stripes) -> Min(Gopher, Stripes)
+	// Stripes: Black lines, White spaces.
+	// Where Space(White): Min(Gopher, White) -> Gopher.
+	// Where Line(Black): Min(Gopher, Black) -> Black.
+	// Result: Gopher visible through stripes.
+	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
+
+	// Default uses component-wise min if no TrueColor/FalseColor set.
+	i := NewAnd([]image.Image{g, h})
+
+	f, err := os.Create(AndOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Or Pattern
 
 
@@ -176,11 +180,15 @@ These patterns are designed to be:
 
 ```go
 	g := NewGopher()
-	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black))
+	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	// OR(Gopher, Stripes)
-	// Either Present -> 1.0 (Magenta)
-	i := NewOr([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 0, 255, 255}), SetFalseColor(color.Transparent))
+	// OR(Gopher, Stripes) -> Max(Gopher, Stripes)
+	// Stripes: Black lines, White spaces.
+	// Where Space(White): Max(Gopher, White) -> White.
+	// Where Line(Black): Max(Gopher, Black) -> Gopher.
+	// Result: Gopher visible where Lines are Black. Masked White where Spaces are White.
+	// This is effectively "Gopher masked by stripes (inverted)".
+	i := NewOr([]image.Image{g, v})
 
 	f, err := os.Create(OrOutputFilename)
 	if err != nil {
@@ -208,9 +216,7 @@ These patterns are designed to be:
 	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 
 	// XOR(Gopher, Stripes)
-	// One present, but not both.
-	// Gopher cuts out stripes. Stripes cut out Gopher.
-	// Yellow.
+	// Use explicit colors to preserve the "Yellow" demo requested.
 	i := NewXor([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 255, 0, 255}), SetFalseColor(color.Transparent))
 
 	f, err := os.Create(XorOutputFilename)
@@ -238,10 +244,8 @@ These patterns are designed to be:
 	g := NewGopher()
 
 	// Not Gopher.
-	// Gopher -> Alpha 1. Not -> 0 (Transparent).
-	// Empty -> Alpha 0. Not -> 1 (TrueColor).
-	// Result: Box of TrueColor with Gopher cut out.
-	i := NewNot(g, SetTrueColor(color.RGBA{0, 255, 0, 255}), SetFalseColor(color.Transparent))
+	// Default component-wise: Invert colors.
+	i := NewNot(g)
 
 	f, err := os.Create(NotOutputFilename)
 	if err != nil {

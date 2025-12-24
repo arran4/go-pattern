@@ -34,9 +34,21 @@ type BooleanImage struct {
 
 func (bi *BooleanImage) At(x, y int) color.Color {
 	if len(bi.Inputs) == 0 {
-		return bi.FalseColor.FalseColor
+		if bi.FalseColor.FalseColor != nil {
+			return bi.FalseColor.FalseColor
+		}
+		return color.RGBA{}
 	}
 
+	// Check if we should use Component-wise Color Logic.
+	// This happens if TrueColor and FalseColor are both nil (or transparent zero value).
+	useColorLogic := isZeroColor(bi.TrueColor.TrueColor) && isZeroColor(bi.FalseColor.FalseColor)
+
+	if useColorLogic {
+		return bi.atColorLogic(x, y)
+	}
+
+	// Fuzzy Logic with Map
 	var val float64
 
 	switch bi.Op {
@@ -63,9 +75,6 @@ func (bi *BooleanImage) At(x, y int) color.Color {
 			}
 		}
 	case OpXor:
-		// XOR for fuzzy logic: |a - b|
-		// Xor is restricted to 2 inputs by construction for the Xor type.
-		// But BooleanImage can handle more generically if we wanted, but we'll stick to binary for now.
 		val = 0.0
 		if len(bi.Inputs) >= 1 && bi.Inputs[0] != nil {
 			val = bi.Predicate(bi.Inputs[0].At(x, y))
@@ -81,8 +90,145 @@ func (bi *BooleanImage) At(x, y int) color.Color {
 	}
 
 	// Interpolate between FalseColor and TrueColor based on val
-	return interpolateColor(bi.FalseColor.FalseColor, bi.TrueColor.TrueColor, val)
+	// If colors are nil/zero, defaults (Black/White) should be used?
+	// New constructors initialized them to Black/White.
+	// But if we remove that initialization to support auto-detection, we need defaults here.
+	tc := bi.TrueColor.TrueColor
+	fc := bi.FalseColor.FalseColor
+	if tc == nil { tc = color.White }
+	if fc == nil { fc = color.Black }
+
+	return interpolateColor(fc, tc, val)
 }
+
+func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
+	switch bi.Op {
+	case OpAnd:
+		// Component-wise Min
+		var minC color.Color
+		for i, input := range bi.Inputs {
+			if input == nil {
+				continue
+			}
+			c := input.At(x, y)
+			if i == 0 || minC == nil {
+				minC = c
+			} else {
+				minC = minColor(minC, c)
+			}
+		}
+		if minC == nil { return color.RGBA{} }
+		return minC
+	case OpOr:
+		// Component-wise Max
+		var maxC color.Color
+		for i, input := range bi.Inputs {
+			if input == nil {
+				continue
+			}
+			c := input.At(x, y)
+			if i == 0 || maxC == nil {
+				maxC = c
+			} else {
+				maxC = maxColor(maxC, c)
+			}
+		}
+		if maxC == nil { return color.RGBA{} }
+		return maxC
+	case OpXor:
+		// Component-wise AbsDiff
+		if len(bi.Inputs) < 2 {
+			if len(bi.Inputs) == 1 && bi.Inputs[0] != nil {
+				return bi.Inputs[0].At(x, y)
+			}
+			return color.RGBA{}
+		}
+		c1 := bi.Inputs[0].At(x, y)
+		c2 := bi.Inputs[1].At(x, y)
+		return absDiffColor(c1, c2)
+	case OpNot:
+		if len(bi.Inputs) > 0 && bi.Inputs[0] != nil {
+			return invertColor(bi.Inputs[0].At(x, y))
+		}
+		return color.RGBA{}
+	}
+	return color.RGBA{}
+}
+
+func isZeroColor(c color.Color) bool {
+	if c == nil {
+		return true
+	}
+	r, g, b, a := c.RGBA()
+	return r == 0 && g == 0 && b == 0 && a == 0
+}
+
+func minColor(c1, c2 color.Color) color.Color {
+	r1, g1, b1, a1 := c1.RGBA()
+	r2, g2, b2, a2 := c2.RGBA()
+	return color.RGBA64{
+		R: uint16(min(r1, r2)),
+		G: uint16(min(g1, g2)),
+		B: uint16(min(b1, b2)),
+		A: uint16(min(a1, a2)),
+	}
+}
+
+func maxColor(c1, c2 color.Color) color.Color {
+	r1, g1, b1, a1 := c1.RGBA()
+	r2, g2, b2, a2 := c2.RGBA()
+	return color.RGBA64{
+		R: uint16(max(r1, r2)),
+		G: uint16(max(g1, g2)),
+		B: uint16(max(b1, b2)),
+		A: uint16(max(a1, a2)),
+	}
+}
+
+func absDiffColor(c1, c2 color.Color) color.Color {
+	r1, g1, b1, a1 := c1.RGBA()
+	r2, g2, b2, a2 := c2.RGBA()
+	return color.RGBA64{
+		R: uint16(absDiff(r1, r2)),
+		G: uint16(absDiff(g1, g2)),
+		B: uint16(absDiff(b1, b2)),
+		A: uint16(absDiff(a1, a2)),
+	}
+}
+
+func invertColor(c color.Color) color.Color {
+	r, g, b, a := c.RGBA()
+	// Invert R,G,B. Preserve Alpha? Or Invert Alpha?
+	// Standard image processing usually preserves Alpha or premultiplies.
+	// If we invert pre-multiplied RGBA, it's tricky.
+	// Let's assume simpler inversion: 0xFFFF - v.
+	return color.RGBA64{
+		R: uint16(0xFFFF - r),
+		G: uint16(0xFFFF - g),
+		B: uint16(0xFFFF - b),
+		A: uint16(a), // Preserve Alpha?
+		// User wants "Resemblance to original".
+		// If original is opaque, Alpha is FFFF. Result Alpha FFFF.
+		// If original is transparent, Alpha 0. Result Alpha 0.
+		// Colors inverted.
+	}
+}
+
+func min(a, b uint32) uint32 {
+	if a < b { return a }
+	return b
+}
+
+func max(a, b uint32) uint32 {
+	if a > b { return a }
+	return b
+}
+
+func absDiff(a, b uint32) uint32 {
+	if a > b { return a - b }
+	return b - a
+}
+
 
 func interpolateColor(c0, c1 color.Color, t float64) color.Color {
 	if t <= 0 {
@@ -220,8 +366,7 @@ func NewAnd(inputs []image.Image, ops ...func(any)) image.Image {
 			Predicate: DefaultPredicate,
 		},
 	}
-	p.TrueColor.TrueColor = color.White
-	p.FalseColor.FalseColor = color.Black
+	// Defaults are nil (zero) to allow Color Logic
 
 	for _, op := range ops {
 		op(p)
@@ -239,8 +384,7 @@ func NewOr(inputs []image.Image, ops ...func(any)) image.Image {
 			Predicate: DefaultPredicate,
 		},
 	}
-	p.TrueColor.TrueColor = color.White
-	p.FalseColor.FalseColor = color.Black
+	// Defaults are nil
 
 	for _, op := range ops {
 		op(p)
@@ -251,8 +395,6 @@ func NewOr(inputs []image.Image, ops ...func(any)) image.Image {
 // NewXor creates a new Xor pattern. It enforces exactly 2 inputs.
 func NewXor(inputs []image.Image, ops ...func(any)) image.Image {
 	if len(inputs) != 2 {
-		// Enforcing strict input count as requested.
-		// Panic is appropriate here as it's likely a configuration error.
 		panic(fmt.Sprintf("Xor requires exactly 2 inputs, got %d", len(inputs)))
 	}
 	p := &Xor{
@@ -263,8 +405,7 @@ func NewXor(inputs []image.Image, ops ...func(any)) image.Image {
 			Predicate: DefaultPredicate,
 		},
 	}
-	p.TrueColor.TrueColor = color.White
-	p.FalseColor.FalseColor = color.Black
+	// Defaults are nil
 
 	for _, op := range ops {
 		op(p)
@@ -282,8 +423,7 @@ func NewNot(input image.Image, ops ...func(any)) image.Image {
 			Predicate: DefaultPredicate,
 		},
 	}
-	p.TrueColor.TrueColor = color.White
-	p.FalseColor.FalseColor = color.Black
+	// Defaults are nil
 
 	for _, op := range ops {
 		op(p)
@@ -297,12 +437,6 @@ func NewDemoAnd(ops ...func(any)) image.Image {
 	// Demo needs some inputs. We can create some default lines.
 	h := NewHorizontalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
-	// Using Black lines on transparent background.
-	// Input 1: Black Lines (A=1) / Transparent (A=0).
-	// Input 2: Black Lines (A=1) / Transparent (A=0).
-	// Predicate: FuzzyAlpha.
-	// AND: If both are Lines -> 1.0 (White). If one is Space -> 0.0 (Black).
-	// So intersection will be White, rest Black.
 	return NewAnd([]image.Image{h, v}, ops...)
 }
 
