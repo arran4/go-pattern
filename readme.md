@@ -39,6 +39,29 @@ These patterns are designed to be:
 ```
 
 
+### Null Pattern
+
+
+
+![Null Pattern](null.png)
+
+```go
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Tile Pattern
 
 
@@ -73,29 +96,6 @@ These patterns are designed to be:
 
 	i := NewVoronoi(points, colors)
 	f, err := os.Create(VoronoiOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Null Pattern
-
-
-
-![Null Pattern](null.png)
-
-```go
-	i := NewNull()
-	f, err := os.Create(NullOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -275,6 +275,17 @@ These patterns are designed to be:
 ```
 
 
+### MathsMandelbrot Pattern
+
+
+
+![MathsMandelbrot Pattern](maths_mandelbrot.png)
+
+```go
+	// See GenerateMathsMandelbrot for implementation details
+```
+
+
 ### Noise Pattern
 
 
@@ -285,29 +296,6 @@ These patterns are designed to be:
 	// Create a noise pattern with default (Crypto) algorithm
 	i := NewNoise()
 	f, err := os.Create(NoiseOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Gopher Pattern
-
-
-
-![Gopher Pattern](gopher.png)
-
-```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -352,14 +340,37 @@ These patterns are designed to be:
 ```
 
 
-### MathsMandelbrot Pattern
+### Gopher Pattern
 
 
 
-![MathsMandelbrot Pattern](maths_mandelbrot.png)
+![Gopher Pattern](gopher.png)
 
 ```go
-	// See GenerateMathsMandelbrot for implementation details
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### MathsJulia Pattern
+
+
+
+![MathsJulia Pattern](maths_julia.png)
+
+```go
+	// See GenerateMathsJulia for implementation details
 ```
 
 
@@ -388,17 +399,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-```
-
-
-### MathsJulia Pattern
-
-
-
-![MathsJulia Pattern](maths_julia.png)
-
-```go
-	// See GenerateMathsJulia for implementation details
 ```
 
 
@@ -441,17 +441,6 @@ These patterns are designed to be:
 ```
 
 
-### MathsWaves Pattern
-
-
-
-![MathsWaves Pattern](maths_waves.png)
-
-```go
-	// See GenerateMathsWaves for implementation details
-```
-
-
 ### Not Pattern
 
 
@@ -477,6 +466,17 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### MathsWaves Pattern
+
+
+
+![MathsWaves Pattern](maths_waves.png)
+
+```go
+	// See GenerateMathsWaves for implementation details
 ```
 
 
@@ -508,15 +508,15 @@ These patterns are designed to be:
 ```
 
 
-### Quantize Pattern
+### SimpleZoom Pattern
 
 
 
-![Quantize Pattern](quantize.png)
+![SimpleZoom Pattern](simplezoom.png)
 
 ```go
-	i := NewQuantize(NewGopher(), 4)
-	f, err := os.Create(QuantizeOutputFilename)
+	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
+	f, err := os.Create(SimpleZoomOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -531,15 +531,15 @@ These patterns are designed to be:
 ```
 
 
-### SimpleZoom Pattern
+### Quantize Pattern
 
 
 
-![SimpleZoom Pattern](simplezoom.png)
+![Quantize Pattern](quantize.png)
 
 ```go
-	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
-	f, err := os.Create(SimpleZoomOutputFilename)
+	i := NewQuantize(NewGopher(), 4)
+	f, err := os.Create(QuantizeOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -569,15 +569,18 @@ These patterns are designed to be:
 ```
 
 
-### Transposed Pattern
+### Bayer2x2Dither Pattern
 
 
 
-![Transposed Pattern](transposed.png)
+![Bayer2x2Dither Pattern](bayer2x2.png)
 
 ```go
-	i := NewTransposed(NewDemoNull(), 10, 10)
-	f, err := os.Create(TransposedOutputFilename)
+	// Black and White Palette
+	palette := []color.Color{color.Black, color.White}
+	i := NewBayer2x2Dither(NewGopher(), palette)
+
+	f, err := os.Create(Bayer2x2DitherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -592,18 +595,15 @@ These patterns are designed to be:
 ```
 
 
-### Bayer2x2Dither Pattern
+### Transposed Pattern
 
 
 
-![Bayer2x2Dither Pattern](bayer2x2.png)
+![Transposed Pattern](transposed.png)
 
 ```go
-	// Black and White Palette
-	palette := []color.Color{color.Black, color.White}
-	i := NewBayer2x2Dither(NewGopher(), palette)
-
-	f, err := os.Create(Bayer2x2DitherOutputFilename)
+	i := NewTransposed(NewDemoNull(), 10, 10)
+	f, err := os.Create(TransposedOutputFilename)
 	if err != nil {
 		panic(err)
 	}
