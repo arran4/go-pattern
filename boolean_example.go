@@ -66,13 +66,13 @@ func stitchImagesForDemo(images ...image.Image) image.Image {
 	return out
 }
 
-// AND Pattern
+// BooleanAnd Pattern
 
-var AndOutputFilename = "boolean_and.png"
-var AndZoomLevels = []int{}
-const AndOrder = 20
+var BooleanAndOutputFilename = "boolean_and.png"
+var BooleanAndZoomLevels = []int{}
+const BooleanAndOrder = 20
 
-func ExampleNewAnd() {
+func ExampleNewBooleanAnd() {
 	// Gopher AND Horizontal Stripes
 	g := NewGopher()
 	// Line: Black (Alpha 1). Space: White (Alpha 1).
@@ -81,7 +81,7 @@ func ExampleNewAnd() {
 	// Default uses component-wise min if no TrueColor/FalseColor set.
 	i := NewAnd([]image.Image{g, h})
 
-	f, err := os.Create(AndOutputFilename)
+	f, err := os.Create(BooleanAndOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -95,7 +95,7 @@ func ExampleNewAnd() {
 	}
 }
 
-func GenerateAnd(b image.Rectangle) image.Image {
+func GenerateBooleanAnd(b image.Rectangle) image.Image {
 	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White), SetBounds(b))
 
 	// Variant 1: Component-wise Min (Default)
@@ -112,7 +112,7 @@ func GenerateAnd(b image.Rectangle) image.Image {
 	return stitchImagesForDemo(v1, v2)
 }
 
-func GenerateAndReferences() (map[string]func(image.Rectangle) image.Image, []string) {
+func GenerateBooleanAndReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
 		"Gopher": demoGopher,
 		"Stripes": func(b image.Rectangle) image.Image {
@@ -122,20 +122,20 @@ func GenerateAndReferences() (map[string]func(image.Rectangle) image.Image, []st
 }
 
 
-// OR Pattern
+// BooleanOr Pattern
 
-var OrOutputFilename = "boolean_or.png"
-var OrZoomLevels = []int{}
-const OrOrder = 21
+var BooleanOrOutputFilename = "boolean_or.png"
+var BooleanOrZoomLevels = []int{}
+const BooleanOrOrder = 21
 
-func ExampleNewOr() {
+func ExampleNewBooleanOr() {
 	g := NewGopher()
 	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
 
 	// OR(Gopher, Stripes) -> Max(Gopher, Stripes)
 	i := NewOr([]image.Image{g, v})
 
-	f, err := os.Create(OrOutputFilename)
+	f, err := os.Create(BooleanOrOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -149,7 +149,7 @@ func ExampleNewOr() {
 	}
 }
 
-func GenerateOr(b image.Rectangle) image.Image {
+func GenerateBooleanOr(b image.Rectangle) image.Image {
 	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White), SetBounds(b))
 
 	// Variant 1: Component-wise Max (Default)
@@ -166,7 +166,7 @@ func GenerateOr(b image.Rectangle) image.Image {
 	return stitchImagesForDemo(v1, v2)
 }
 
-func GenerateOrReferences() (map[string]func(image.Rectangle) image.Image, []string) {
+func GenerateBooleanOrReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
 		"Gopher": demoGopher,
 		"Stripes": func(b image.Rectangle) image.Image {
@@ -176,20 +176,20 @@ func GenerateOrReferences() (map[string]func(image.Rectangle) image.Image, []str
 }
 
 
-// XOR Pattern
+// BooleanXor Pattern
 
-var XorOutputFilename = "boolean_xor.png"
-var XorZoomLevels = []int{}
-const XorOrder = 22
+var BooleanXorOutputFilename = "boolean_xor.png"
+var BooleanXorZoomLevels = []int{}
+const BooleanXorOrder = 22
 
-func ExampleNewXor() {
+func ExampleNewBooleanXor() {
 	g := NewGopher()
 	v := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black))
 
 	// XOR(Gopher, Stripes)
 	i := NewXor([]image.Image{g, v}, SetTrueColor(color.RGBA{255, 255, 0, 255}), SetFalseColor(color.Transparent))
 
-	f, err := os.Create(XorOutputFilename)
+	f, err := os.Create(BooleanXorOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -203,7 +203,7 @@ func ExampleNewXor() {
 	}
 }
 
-func GenerateXor(b image.Rectangle) image.Image {
+func GenerateBooleanXor(b image.Rectangle) image.Image {
 	vAlpha := NewVerticalLine(SetLineSize(20), SetSpaceSize(20), SetLineColor(color.Black), SetBounds(b))
 
 	// Variant 1: Component-wise AbsDiff (Default)
@@ -224,7 +224,7 @@ func GenerateXor(b image.Rectangle) image.Image {
 	return stitchImagesForDemo(v1, v2)
 }
 
-func GenerateXorReferences() (map[string]func(image.Rectangle) image.Image, []string) {
+func GenerateBooleanXorReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
 		"Gopher": demoGopher,
 		"Stripes": func(b image.Rectangle) image.Image {
@@ -234,20 +234,20 @@ func GenerateXorReferences() (map[string]func(image.Rectangle) image.Image, []st
 }
 
 
-// NOT Pattern
+// BooleanNot Pattern
 
-var NotOutputFilename = "boolean_not.png"
-var NotZoomLevels = []int{}
-const NotOrder = 23
+var BooleanNotOutputFilename = "boolean_not.png"
+var BooleanNotZoomLevels = []int{}
+const BooleanNotOrder = 23
 
-func ExampleNewNot() {
+func ExampleNewBooleanNot() {
 	g := NewGopher()
 
 	// Not Gopher.
 	// Default component-wise: Invert colors.
 	i := NewNot(g)
 
-	f, err := os.Create(NotOutputFilename)
+	f, err := os.Create(BooleanNotOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -261,7 +261,7 @@ func ExampleNewNot() {
 	}
 }
 
-func GenerateNot(b image.Rectangle) image.Image {
+func GenerateBooleanNot(b image.Rectangle) image.Image {
 	// Variant 1: Inverted colors (Default)
 	v1 := NewNot(demoGopher(b), SetBounds(b))
 
@@ -276,22 +276,22 @@ func GenerateNot(b image.Rectangle) image.Image {
 	return stitchImagesForDemo(v1, v2)
 }
 
-func GenerateNotReferences() (map[string]func(image.Rectangle) image.Image, []string) {
+func GenerateBooleanNotReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
 		"Gopher": demoGopher,
 	}, []string{"Gopher"}
 }
 
 func init() {
-	RegisterGenerator("And", GenerateAnd)
-	RegisterReferences("And", GenerateAndReferences)
+	RegisterGenerator("BooleanAnd", GenerateBooleanAnd)
+	RegisterReferences("BooleanAnd", GenerateBooleanAndReferences)
 
-	RegisterGenerator("Or", GenerateOr)
-	RegisterReferences("Or", GenerateOrReferences)
+	RegisterGenerator("BooleanOr", GenerateBooleanOr)
+	RegisterReferences("BooleanOr", GenerateBooleanOrReferences)
 
-	RegisterGenerator("Xor", GenerateXor)
-	RegisterReferences("Xor", GenerateXorReferences)
+	RegisterGenerator("BooleanXor", GenerateBooleanXor)
+	RegisterReferences("BooleanXor", GenerateBooleanXorReferences)
 
-	RegisterGenerator("Not", GenerateNot)
-	RegisterReferences("Not", GenerateNotReferences)
+	RegisterGenerator("BooleanNot", GenerateBooleanNot)
+	RegisterReferences("BooleanNot", GenerateBooleanNotReferences)
 }
