@@ -212,6 +212,62 @@ These patterns are designed to be:
 ```
 
 
+### Gopher Pattern
+
+
+
+![HorizontalLine Pattern](horizontal_line.png)
+
+```go
+	i := NewHorizontalLine(
+		SetLineSize(5),
+		SetSpaceSize(5),
+		SetLineColor(color.RGBA{255, 0, 0, 255}),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(HorizontalLineOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### VerticalLine Pattern
+
+
+
+![VerticalLine Pattern](vertical_line.png)
+
+```go
+	i := NewVerticalLine(
+		SetLineSize(5),
+		SetSpaceSize(5),
+		SetLineColor(color.RGBA{0, 0, 255, 255}),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(VerticalLineOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### And Pattern
 
 
@@ -386,6 +442,29 @@ These patterns are designed to be:
 ```go
 	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
 	f, err := os.Create(SimpleZoomOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Quantize Pattern
+
+
+
+![Quantize Pattern](quantize.png)
+
+```go
+	i := NewQuantize(NewGopher(), 4)
+	f, err := os.Create(QuantizeOutputFilename)
 	if err != nil {
 		panic(err)
 	}
