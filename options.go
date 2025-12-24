@@ -159,3 +159,25 @@ func SetFalseColor(v color.Color) func(any) {
 		}
 	}
 }
+
+// FillColor configures the fill color of a pattern.
+type FillColor struct {
+	FillColor color.Color
+}
+
+func (s *FillColor) SetFillColor(v color.Color) {
+	s.FillColor = v
+}
+
+type hasFillColor interface {
+	SetFillColor(color.Color)
+}
+
+// SetFillColor creates an option to set the fill color.
+func SetFillColor(v color.Color) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasFillColor); ok {
+			h.SetFillColor(v)
+		}
+	}
+}
