@@ -107,6 +107,20 @@ func registerCommands(fm dsl.FuncMap) {
 		return pattern.NewTransposed(input, x, y), nil
 	}
 
+	fm["quantize"] = func(args []string, input image.Image) (image.Image, error) {
+		if input == nil {
+			return nil, fmt.Errorf("quantize requires an input image")
+		}
+		if len(args) < 1 {
+			return nil, fmt.Errorf("quantize requires a levels argument")
+		}
+		levels, err := strconv.Atoi(args[0])
+		if err != nil {
+			return nil, fmt.Errorf("invalid levels: %v", err)
+		}
+		return pattern.NewQuantize(input, levels), nil
+	}
+
 	fm["null"] = func(args []string, input image.Image) (image.Image, error) {
 		return pattern.NewNull(), nil
 	}

@@ -367,26 +367,16 @@ func addBorder(img image.Image) image.Image {
 	return dst
 }
 
-func drawLabel(img draw.Image, label string, x, y int) {
+func loadFontFace() (font.Face, error) {
 	f, err := opentype.Parse(goregular.TTF)
 	if err != nil {
-		log.Fatalf("failed to parse font: %v", err)
+		return nil, err
 	}
-	face, err := opentype.NewFace(f, &opentype.FaceOptions{
+	return opentype.NewFace(f, &opentype.FaceOptions{
 		Size:    24,
 		DPI:     72,
 		Hinting: font.HintingNone,
 	})
-	if err != nil {
-		log.Fatalf("failed to create face: %v", err)
-	}
-	d := &font.Drawer{
-		Dst:  img,
-		Src:  image.NewUniform(color.Black),
-		Face: face,
-		Dot:  fixed.P(x, y),
-	}
-	d.DrawString(label)
 }
 
 type LabelledGenerator struct {
@@ -439,15 +429,6 @@ func (p *PatternDemo) Generate() image.Image {
 			items = append(items, item{baseImg, baseLabel})
 		}
 	}
-	// The original logic had: if generator != nil { ... } else if len(Inputs) > 0 { ... }
-	// In the original Transposed example, Generator was nil? No, `main.go` logic used `Inputs` and `Transformers`.
-	// Since we are refactoring, we might lose the `Transformers` logic unless we reconstructed it.
-	// But `BootstrapTransposedReferences` returned a map of generators.
-	// So we can just display those generators.
-	// For Transposed, we now have "Original" and "Transposed" as generators in `Inputs`.
-	// So we don't need `Transformers` logic if the generators already do the transformation.
-	// The `BootstrapTransposedReferences` I wrote earlier creates a `NewTransposed` from scratch.
-	// So displaying them via `Inputs` is sufficient.
 
 	// 4. Zooms
 	if baseImg != nil {
@@ -463,18 +444,52 @@ func (p *PatternDemo) Generate() image.Image {
 		return image.NewRGBA(b)
 	}
 
-	totalW := n*sz + (n+1)*padding
+	face, err := loadFontFace()
+	if err != nil {
+		log.Fatalf("failed to load font: %v", err)
+	}
+
+	// Measure widths
+	var itemWidths []int
+	totalW := padding // Initial padding
+	for _, it := range items {
+		d := &font.Drawer{Face: face}
+		w := d.MeasureString(it.label).Ceil()
+
+		iw := sz
+		if w > sz {
+			iw = w // expand cell if text is wider
+		}
+		itemWidths = append(itemWidths, iw)
+		totalW += iw + padding
+	}
+
 	totalH := sz + 2*padding + labelHeight
 
 	dst := image.NewRGBA(image.Rect(0, 0, totalW, totalH))
 	white := image.NewUniform(color.White)
 	draw.Draw(dst, dst.Bounds(), white, image.Point{}, draw.Src) // background
 
+	currentX := padding
 	for i, it := range items {
-		xOffset := padding + i*(sz+padding)
-		drawLabel(dst, it.label, xOffset+5, padding+20)
-		r := image.Rect(xOffset, padding+labelHeight, xOffset+sz, padding+labelHeight+sz)
+		iw := itemWidths[i]
+
+		// Draw Label
+		d := &font.Drawer{
+			Dst:  dst,
+			Src:  image.NewUniform(color.Black),
+			Face: face,
+		}
+		labelW := d.MeasureString(it.label).Ceil()
+		d.Dot = fixed.P(currentX+(iw-labelW)/2, padding+20) // Center align
+		d.DrawString(it.label)
+
+		// Draw Image (Centered in iw)
+		imgX := currentX + (iw - sz)/2
+		r := image.Rect(imgX, padding+labelHeight, imgX+sz, padding+labelHeight+sz)
 		draw.Draw(dst, r, it.img, b.Min, draw.Src)
+
+		currentX += iw + padding
 	}
 
 	return dst
