@@ -30,10 +30,10 @@ func ExampleNewChecker() {
 	}
 }
 
-func BootstrapChecker(b image.Rectangle) image.Image {
+func GenerateChecker(b image.Rectangle) image.Image {
 	return NewDemoChecker(SetBounds(b))
 }
 
 func init() {
-	RegisterGenerator("Checker", BootstrapChecker)
+	RegisterGenerator("Checker", GenerateChecker)
 }

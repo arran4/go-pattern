@@ -10,10 +10,10 @@ import (
 var SimpleZoomOutputFilename = "simplezoom.png"
 var SimpleZoomZoomLevels = []int{2, 4}
 
-const SimpleZoomOrder = 2
+const SimpleZoomOrder = 30
 
-// Simple Zoom Pattern
-// Zooms in on an underlying image.
+// SimpleZoom Pattern
+// Scales an input pattern by a factor.
 func ExampleNewSimpleZoom() {
 	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
 	f, err := os.Create(SimpleZoomOutputFilename)
@@ -30,10 +30,12 @@ func ExampleNewSimpleZoom() {
 	}
 }
 
-func BootstrapSimpleZoom(b image.Rectangle) image.Image {
-	return NewDemoChecker(SetBounds(b))
+func GenerateSimpleZoom(b image.Rectangle) image.Image {
+	// SimpleZoom needs an input image.
+	// We can use a Checker pattern as the input for the demo.
+	return NewDemoSimpleZoom(NewChecker(color.Black, color.White), SetBounds(b))
 }
 
 func init() {
-	RegisterGenerator("SimpleZoom", BootstrapSimpleZoom)
+	RegisterGenerator("SimpleZoom", GenerateSimpleZoom)
 }

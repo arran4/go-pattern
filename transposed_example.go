@@ -2,18 +2,18 @@ package pattern
 
 import (
 	"image"
+	"image/color"
 	"image/png"
 	"os"
 )
 
 var TransposedOutputFilename = "transposed.png"
-var TransposedZoomLevels = []int{}
+var TransposedZoomLevels = []int{2, 4}
 
-const TransposedOrder = 3
-const TransposedBaseLabel = "Transposed"
+const TransposedOrder = 31
 
 // Transposed Pattern
-// Transposes the X and Y coordinates of an underlying image.
+// Transposes the coordinates of an input pattern.
 func ExampleNewTransposed() {
 	i := NewTransposed(NewDemoNull(), 10, 10)
 	f, err := os.Create(TransposedOutputFilename)
@@ -30,23 +30,22 @@ func ExampleNewTransposed() {
 	}
 }
 
-func BootstrapTransposed(b image.Rectangle) image.Image {
-	return nil
+func demoTransposedInput(b image.Rectangle) image.Image {
+	// The original demo used NewSimpleZoom(NewChecker..., 20)
+	return NewSimpleZoom(NewChecker(color.Black, color.White, SetBounds(b)), 20, SetBounds(b))
 }
 
-func BootstrapTransposedReferences() (map[string]func(image.Rectangle) image.Image, []string) {
+func GenerateTransposed(b image.Rectangle) image.Image {
+	return NewTransposed(demoTransposedInput(b), 10, 10, SetBounds(b))
+}
+
+func GenerateTransposedReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
-		"Original": func(b image.Rectangle) image.Image {
-			return NewSimpleZoom(NewDemoChecker(SetBounds(b)), 10, SetBounds(b))
-		},
-		"Transposed": func(b image.Rectangle) image.Image {
-			base := NewSimpleZoom(NewDemoChecker(SetBounds(b)), 10, SetBounds(b))
-			return NewTransposed(base, 5, 5, SetBounds(b))
-		},
-	}, []string{"Original", "Transposed"}
+		"Input": demoTransposedInput,
+	}, []string{"Input"}
 }
 
 func init() {
-	RegisterGenerator("Transposed", BootstrapTransposed)
-	RegisterReferences("Transposed", BootstrapTransposedReferences)
+	RegisterGenerator("Transposed", GenerateTransposed)
+	RegisterReferences("Transposed", GenerateTransposedReferences)
 }
