@@ -8,7 +8,7 @@ import (
 )
 
 var MirrorOutputFilename = "mirror.png"
-var MirrorZoomLevels = []int{2, 4}
+var MirrorZoomLevels = []int{}
 
 const MirrorOrder = 32
 
@@ -32,26 +32,17 @@ func ExampleNewMirror() {
 
 func NewDemoMirrorInput(b image.Rectangle) image.Image {
 	// Create an asymmetric image to demonstrate mirroring.
-	return NewText("Go", TextSize(40), TextColorColor(color.Black))
+	// Use white background to ensure visibility.
+	return NewText("Go", TextSize(80), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
 }
 
 func GenerateMirror(b image.Rectangle) image.Image {
 	input := NewDemoMirrorInput(b)
 	// We want to show Original, Mirror H, Mirror V, Mirror HV
 	// Create a 2x2 grid.
-	// Since Grid expects components, we can build it.
-
-	// Helper to add bounds to an image if needed, though NewGrid handles layout.
-	// But Mirror needs to know the bounds of the input to mirror correctly?
-	// Mirror uses img.Bounds().
-	// Text image has fixed bounds (0,0, w, h).
-
 	return NewGrid(
-		2, 2,
-		NewDemoMirrorInput(b), // Original
-		NewMirror(input, true, false), // Mirror H
-		NewMirror(input, false, true), // Mirror V
-		NewMirror(input, true, true), // Mirror HV
+		Row(input, NewMirror(input, true, false)),
+		Row(NewMirror(input, false, true), NewMirror(input, true, true)),
 	)
 }
 

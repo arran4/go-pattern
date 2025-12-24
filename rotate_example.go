@@ -2,12 +2,13 @@ package pattern
 
 import (
 	"image"
+	"image/color"
 	"image/png"
 	"os"
 )
 
 var RotateOutputFilename = "rotate.png"
-var RotateZoomLevels = []int{2, 4}
+var RotateZoomLevels = []int{}
 
 const RotateOrder = 33
 
@@ -30,12 +31,17 @@ func ExampleNewRotate() {
 }
 
 func NewDemoRotateInput(b image.Rectangle) image.Image {
-    // Asymmetric input: Width != Height to see rotation effect on bounds.
-    return NewSimpleZoom(NewGopher(), 2)
+	// Asymmetric input: Width != Height to see rotation effect on bounds.
+	// Use white background.
+	return NewText("Go", TextSize(80), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
 }
 
 func GenerateRotate(b image.Rectangle) image.Image {
-	return NewRotate(NewDemoRotateInput(b), 90, SetBounds(b))
+	input := NewDemoRotateInput(b)
+	return NewGrid(
+		Row(input, NewRotate(input, 90)),
+		Row(NewRotate(input, 180), NewRotate(input, 270)),
+	)
 }
 
 func GenerateRotateReferences() (map[string]func(image.Rectangle) image.Image, []string) {
