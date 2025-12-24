@@ -224,3 +224,70 @@ func NewCenter(img image.Image, width, height int, bg image.Image) image.Image {
 		PaddingBoundary(image.Rect(0, 0, width, height)),
 	)
 }
+
+// NewAligned returns an image padded to the specified width and height,
+// with the inner image aligned according to xAlign and yAlign (0.0 to 1.0).
+// 0.0 means Top/Left, 0.5 means Center, 1.0 means Bottom/Right.
+// Optional padding arguments can be provided:
+// - 1 arg: padding for all sides
+// - 2 args: horizontal, vertical padding
+// - 4 args: left, top, right, bottom padding
+func NewAligned(img image.Image, width, height int, xAlign, yAlign float64, bg image.Image, padding ...int) image.Image {
+	b := img.Bounds()
+
+	pl, pt, pr, pb := 0, 0, 0, 0
+	if len(padding) > 0 {
+		if len(padding) == 1 {
+			pl, pt, pr, pb = padding[0], padding[0], padding[0], padding[0]
+		} else if len(padding) == 2 {
+			pl, pr = padding[0], padding[0]
+			pt, pb = padding[1], padding[1]
+		} else if len(padding) == 4 {
+			pl = padding[0]
+			pt = padding[1]
+			pr = padding[2]
+			pb = padding[3]
+		}
+	}
+
+	// Calculate available space for alignment
+	// The image effectively takes up (width + pl + pr) x (height + pt + pb)?
+	// No, we want to place 'img' inside 'width x height' box, respecting padding 'pl, pt, pr, pb'.
+	// Effectively, we align 'img' inside the rectangle defined by margins (pl, pt) and (width-pr, height-pb).
+
+	availW := width - b.Dx() - pl - pr
+	availH := height - b.Dy() - pt - pb
+
+	// Calculate relative offset within the available space
+	relX := int(float64(availW) * xAlign)
+	relY := int(float64(availH) * yAlign)
+
+	if relX < 0 {
+		relX = 0
+	} // Or allow negative if image is bigger than safe area? Let's clamp for now.
+	if relY < 0 {
+		relY = 0
+	}
+
+	// Final margins
+	mx := pl + relX
+	my := pt + relY
+
+	// Right/Bottom margins fill the rest
+	mr := width - b.Dx() - mx
+	mb := height - b.Dy() - my
+
+	if mr < 0 {
+		mr = 0
+	}
+	if mb < 0 {
+		mb = 0
+	}
+
+	return NewPadding(img,
+		PaddingTop(my), PaddingLeft(mx),
+		PaddingBottom(mb), PaddingRight(mr),
+		PaddingBackground(bg),
+		PaddingBoundary(image.Rect(0, 0, width, height)),
+	)
+}
