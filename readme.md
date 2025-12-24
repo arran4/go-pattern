@@ -34,31 +34,16 @@ These patterns are designed to be:
 ```
 
 
-### Polka Pattern
+### Tile Pattern
 
 
 
-![Polka Pattern](polka.png)
+![Tile Pattern](tile.png)
 
 ```go
-	i := NewPolka(
-		SetRadius(10),
-		SetSpacing(40),
-		SetFillColor(color.Black),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(PolkaOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
+	// Tile the gopher in a 200x200 area
+	return NewTile(gopher, image.Rect(0, 0, 200, 200))
 ```
 
 
@@ -97,16 +82,31 @@ These patterns are designed to be:
 ```
 
 
-### Tile Pattern
+### Polka Pattern
 
 
 
-![Tile Pattern](tile.png)
+![Polka Pattern](polka.png)
 
 ```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+	i := NewPolka(
+		SetRadius(10),
+		SetSpacing(40),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(PolkaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
@@ -275,22 +275,16 @@ These patterns are designed to be:
 ```
 
 
-### And Pattern
+### Noise Pattern
 
 
 
-![And Pattern](boolean_and.png)
+![Noise Pattern](noise.png)
 
 ```go
-	// Gopher AND Horizontal Stripes
-	g := NewGopher()
-	// Line: Black (Alpha 1). Space: White (Alpha 1).
-	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
-
-	// Default uses component-wise min if no TrueColor/FalseColor set.
-	i := NewAnd([]image.Image{g, h})
-
-	f, err := os.Create(AndOutputFilename)
+	// Create a noise pattern with default (Crypto) algorithm
+	i := NewNoise()
+	f, err := os.Create(NoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -302,6 +296,17 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### MathsMandelbrot Pattern
+
+
+
+![MathsMandelbrot Pattern](maths_mandelbrot.png)
+
+```go
+	// See GenerateMathsMandelbrot for implementation details
 ```
 
 
@@ -328,27 +333,22 @@ These patterns are designed to be:
 ```
 
 
-### MathsMandelbrot Pattern
+### And Pattern
 
 
 
-![MathsMandelbrot Pattern](maths_mandelbrot.png)
-
-```go
-	// See GenerateMathsMandelbrot for implementation details
-```
-
-
-### Noise Pattern
-
-
-
-![Noise Pattern](noise.png)
+![And Pattern](boolean_and.png)
 
 ```go
-	// Create a noise pattern with default (Crypto) algorithm
-	i := NewNoise()
-	f, err := os.Create(NoiseOutputFilename)
+	// Gopher AND Horizontal Stripes
+	g := NewGopher()
+	// Line: Black (Alpha 1). Space: White (Alpha 1).
+	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
+
+	// Default uses component-wise min if no TrueColor/FalseColor set.
+	i := NewAnd([]image.Image{g, h})
+
+	f, err := os.Create(AndOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -402,17 +402,6 @@ These patterns are designed to be:
 ```
 
 
-### MathsSine Pattern
-
-
-
-![MathsSine Pattern](maths_sine.png)
-
-```go
-	// See GenerateMathsSine for implementation details
-```
-
-
 ### Xor Pattern
 
 
@@ -441,14 +430,14 @@ These patterns are designed to be:
 ```
 
 
-### MathsWaves Pattern
+### MathsSine Pattern
 
 
 
-![MathsWaves Pattern](maths_waves.png)
+![MathsSine Pattern](maths_sine.png)
 
 ```go
-	// See GenerateMathsWaves for implementation details
+	// See GenerateMathsSine for implementation details
 ```
 
 
@@ -477,6 +466,17 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### MathsWaves Pattern
+
+
+
+![MathsWaves Pattern](maths_waves.png)
+
+```go
+	// See GenerateMathsWaves for implementation details
 ```
 
 
@@ -559,6 +559,21 @@ These patterns are designed to be:
 ```
 
 
+### LinearGradient Pattern
+
+
+
+![LinearGradient Pattern](linear_gradient.png)
+
+```go
+	// Linear Gradient (Horizontal)
+	NewLinearGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
+```
+
+
 ### SimpleZoom Pattern
 
 
@@ -579,21 +594,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-```
-
-
-### LinearGradient Pattern
-
-
-
-![LinearGradient Pattern](linear_gradient.png)
-
-```go
-	// Linear Gradient (Horizontal)
-	NewLinearGradient(
-		SetStartColor(color.RGBA{255, 0, 0, 255}),
-		SetEndColor(color.RGBA{0, 0, 255, 255}),
-	)
 ```
 
 
