@@ -143,7 +143,7 @@ func NewDemoGridAdvanced(ops ...func(any)) image.Image {
 
 	// 4. Text Label
 	// White background for visibility
-	txt := NewText("Hello Grid", TextSize(24), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
+	txt := NewText("Hello Grid", TextSize(18), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
 
 	// Center the text in a 150x50 box
 	centeredTxt := NewCenter(txt, 150, 50, image.NewUniform(color.White))
