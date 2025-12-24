@@ -160,6 +160,50 @@ func SetSpaceColor(v color.Color) func(any) {
 	}
 }
 
+// StartColor configures the start color for a gradient.
+type StartColor struct {
+	StartColor color.Color
+}
+
+func (s *StartColor) SetStartColor(v color.Color) {
+	s.StartColor = v
+}
+
+type hasStartColor interface {
+	SetStartColor(color.Color)
+}
+
+// SetStartColor creates an option to set the start color.
+func SetStartColor(v color.Color) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasStartColor); ok {
+			h.SetStartColor(v)
+		}
+	}
+}
+
+// EndColor configures the end color for a gradient.
+type EndColor struct {
+	EndColor color.Color
+}
+
+func (s *EndColor) SetEndColor(v color.Color) {
+	s.EndColor = v
+}
+
+type hasEndColor interface {
+	SetEndColor(color.Color)
+}
+
+// SetEndColor creates an option to set the end color.
+func SetEndColor(v color.Color) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasEndColor); ok {
+			h.SetEndColor(v)
+		}
+	}
+}
+
 // LineImageSource configures an image source for lines in a pattern.
 type LineImageSource struct {
 	LineImageSource image.Image
