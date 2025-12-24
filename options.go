@@ -313,3 +313,47 @@ func SetFillColor(v color.Color) func(any) {
 		}
 	}
 }
+
+// Angle configures a single angle in degrees.
+type Angle struct {
+	Angle float64
+}
+
+func (s *Angle) SetAngle(v float64) {
+	s.Angle = v
+}
+
+type hasAngle interface {
+	SetAngle(float64)
+}
+
+// SetAngle creates an option to set the angle.
+func SetAngle(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasAngle); ok {
+			h.SetAngle(v)
+		}
+	}
+}
+
+// Angles configures a list of angles in degrees.
+type Angles struct {
+	Angles []float64
+}
+
+func (s *Angles) SetAngles(v []float64) {
+	s.Angles = v
+}
+
+type hasAngles interface {
+	SetAngles([]float64)
+}
+
+// SetAngles creates an option to set the angles.
+func SetAngles(v ...float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasAngles); ok {
+			h.SetAngles(v)
+		}
+	}
+}
