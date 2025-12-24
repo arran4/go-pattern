@@ -6,13 +6,13 @@ import (
 	"os"
 )
 
-var XorPatternOutputFilename = "xor_pattern.png"
-var XorPatternZoomLevels = []int{}
-const XorPatternOrder = 30
+var XorGridOutputFilename = "xor_pattern.png"
+var XorGridZoomLevels = []int{}
+const XorGridOrder = 30
 
-func ExampleNewXorPattern() {
+func ExampleNewXorGrid() {
 	p := NewXorPattern()
-	f, err := os.Create(XorPatternOutputFilename)
+	f, err := os.Create(XorGridOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -20,15 +20,15 @@ func ExampleNewXorPattern() {
 	png.Encode(f, p)
 }
 
-func GenerateXorPattern(b image.Rectangle) image.Image {
+func GenerateXorGrid(b image.Rectangle) image.Image {
 	return NewXorPattern(SetBounds(b))
 }
 
-func GenerateXorPatternReferences() (map[string]func(image.Rectangle) image.Image, []string) {
+func GenerateXorGridReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return nil, nil
 }
 
 func init() {
-	RegisterGenerator("XorPattern", GenerateXorPattern)
-	RegisterReferences("XorPattern", GenerateXorPatternReferences)
+	RegisterGenerator("XorGrid", GenerateXorGrid)
+	RegisterReferences("XorGrid", GenerateXorGridReferences)
 }

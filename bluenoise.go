@@ -27,8 +27,13 @@ var _ image.Image = (*BlueNoise)(nil)
 // We will implement a simplified generator that tries to maintain separation.
 type BlueNoise struct {
 	Null
+	Seed int64
 	Values []uint8
 	once      sync.Once
+}
+
+func (p *BlueNoise) SetSeed(v int64) {
+	p.Seed = v
 }
 
 func (p *BlueNoise) generate() {
@@ -37,7 +42,7 @@ func (p *BlueNoise) generate() {
 		p.Values = make([]uint8, w*h)
 
 		// Initialize with random noise
-		rnd := rand.New(rand.NewSource(1))
+		rnd := rand.New(rand.NewSource(p.Seed))
 		for i := range p.Values {
 			p.Values[i] = uint8(rnd.Intn(256))
 		}
@@ -100,9 +105,32 @@ func NewBlueNoise(ops ...func(any)) image.Image {
 		Null: Null{
 			bounds: image.Rect(0, 0, 64, 64), // Default size
 		},
+		Seed: 1, // Default seed
 	}
 	for _, op := range ops {
 		op(p)
 	}
 	return p
+}
+
+// Seed configures the seed for a pattern.
+type Seed struct {
+	Seed int64
+}
+
+func (s *Seed) SetSeed(v int64) {
+	s.Seed = v
+}
+
+type hasSeed interface {
+	SetSeed(int64)
+}
+
+// SetSeed creates an option to set the seed.
+func SetSeed(v int64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasSeed); ok {
+			h.SetSeed(v)
+		}
+	}
 }
