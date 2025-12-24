@@ -107,6 +107,47 @@ func registerCommands(fm dsl.FuncMap) {
 		return pattern.NewTransposed(input, x, y), nil
 	}
 
+	fm["mirror"] = func(args []string, input image.Image) (image.Image, error) {
+		if input == nil {
+			return nil, fmt.Errorf("mirror requires an input image")
+		}
+		horizontal := false
+		vertical := false
+		if len(args) > 0 {
+			switch args[0] {
+			case "h":
+				horizontal = true
+			case "v":
+				vertical = true
+			case "hv", "vh":
+				horizontal = true
+				vertical = true
+			default:
+				return nil, fmt.Errorf("mirror argument must be 'h', 'v', or 'hv'")
+			}
+		} else {
+			// Default to horizontal flip if no arg? Or both? Or error?
+			// Let's assume default is horizontal if not specified, or maybe error.
+			// Let's make it horizontal by default as it's the most common "mirror".
+			horizontal = true
+		}
+		return pattern.NewMirror(input, horizontal, vertical), nil
+	}
+
+	fm["rotate"] = func(args []string, input image.Image) (image.Image, error) {
+		if input == nil {
+			return nil, fmt.Errorf("rotate requires an input image")
+		}
+		if len(args) < 1 {
+			return nil, fmt.Errorf("rotate requires degrees (90, 180, 270)")
+		}
+		deg, err := strconv.Atoi(args[0])
+		if err != nil {
+			return nil, fmt.Errorf("invalid degrees: %v", err)
+		}
+		return pattern.NewRotate(input, deg), nil
+	}
+
 	fm["null"] = func(args []string, input image.Image) (image.Image, error) {
 		return pattern.NewNull(), nil
 	}
