@@ -56,7 +56,7 @@ func ExampleRect_bounded() {
 func GenerateRect(b image.Rectangle) image.Image {
 	v1 := NewDemoRect(SetBounds(b), SetFillColor(color.RGBA{255, 0, 0, 255}))
 
-	// Border Demo
+	// Border Demo (using Padding composition)
 	// Inner image: Horizontal Lines
 	// Background: Red Rect
 	// Padding makes the border
@@ -77,7 +77,51 @@ func GenerateRect(b image.Rectangle) image.Image {
 		PaddingBoundary(b),
 	)
 
-	return stitchImagesForDemo(v1, v2)
+	// Built-in Border Demo (New!)
+	// Rect with Fill=Blue, Line=Green(10px)
+	v3 := NewDemoRect(
+		SetBounds(b),
+		SetFillColor(color.RGBA{0, 0, 255, 255}),
+		SetLineColor(color.RGBA{0, 255, 0, 255}),
+		SetLineSize(10),
+	)
+
+	// Image Border Demo
+	// Rect with Fill=Yellow, Line=Gopher(15px)
+	gopher := NewGopher()
+	v4 := NewDemoRect(
+		SetBounds(b),
+		SetFillColor(color.RGBA{255, 255, 0, 255}),
+		SetLineImageSource(gopher),
+		SetLineSize(20),
+	)
+
+	return stitchImagesForDemo(v1, v2, v3, v4)
+}
+
+func ExampleRect_stroked() {
+	// A blue rectangle with a 10px green border
+	r := NewRect(
+		SetFillColor(color.RGBA{0, 0, 255, 255}),
+		SetLineColor(color.RGBA{0, 255, 0, 255}),
+		SetLineSize(10),
+		SetBounds(image.Rect(0, 0, 100, 100)),
+	)
+	fmt.Printf("%v", r.Bounds())
+	// Output: (0,0)-(100,100)
+}
+
+func ExampleRect_image_stroke() {
+	// A yellow rectangle with a 20px border made of the Gopher image
+	gopher := NewGopher()
+	r := NewRect(
+		SetFillColor(color.RGBA{255, 255, 0, 255}),
+		SetLineImageSource(gopher),
+		SetLineSize(20),
+		SetBounds(image.Rect(0, 0, 100, 100)),
+	)
+	fmt.Printf("%v", r.Bounds())
+	// Output: (0,0)-(100,100)
 }
 
 func ExampleRect_border_demo() {
