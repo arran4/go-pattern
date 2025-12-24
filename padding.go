@@ -228,29 +228,65 @@ func NewCenter(img image.Image, width, height int, bg image.Image) image.Image {
 // NewAligned returns an image padded to the specified width and height,
 // with the inner image aligned according to xAlign and yAlign (0.0 to 1.0).
 // 0.0 means Top/Left, 0.5 means Center, 1.0 means Bottom/Right.
-func NewAligned(img image.Image, width, height int, xAlign, yAlign float64, bg image.Image) image.Image {
+// Optional padding arguments can be provided (following CSS standards):
+// 1 arg: All sides
+// 2 args: Vertical, Horizontal
+// 4 args: Top, Right, Bottom, Left
+func NewAligned(img image.Image, width, height int, xAlign, yAlign float64, bg image.Image, padding ...int) image.Image {
 	b := img.Bounds()
 
+	padTop, padRight, padBottom, padLeft := 0, 0, 0, 0
+	if len(padding) > 0 {
+		padTop = padding[0]
+		padRight = padding[0]
+		padBottom = padding[0]
+		padLeft = padding[0]
+	}
+	if len(padding) >= 2 {
+		padTop = padding[0]
+		padBottom = padding[0]
+		padLeft = padding[1]
+		padRight = padding[1]
+	}
+	if len(padding) >= 4 {
+		padTop = padding[0]
+		padRight = padding[1]
+		padBottom = padding[2]
+		padLeft = padding[3]
+	}
+
 	// Calculate available space
-	availW := width - b.Dx()
-	availH := height - b.Dy()
+	availW := width - b.Dx() - padLeft - padRight
+	availH := height - b.Dy() - padTop - padBottom
 
 	// Calculate top/left margin based on alignment
 	mx := int(float64(availW) * xAlign)
 	my := int(float64(availH) * yAlign)
 
-	if mx < 0 { mx = 0 }
-	if my < 0 { my = 0 }
+	if mx < 0 {
+		mx = 0
+	}
+	if my < 0 {
+		my = 0
+	}
+
+	// Final margins
+	finalLeft := padLeft + mx
+	finalTop := padTop + my
 
 	// Calculate bottom/right margin to ensure exact width/height
-	mr := width - b.Dx() - mx
-	mb := height - b.Dy() - my
+	mr := width - b.Dx() - finalLeft
+	mb := height - b.Dy() - finalTop
 
-	if mr < 0 { mr = 0 }
-	if mb < 0 { mb = 0 }
+	if mr < 0 {
+		mr = 0
+	}
+	if mb < 0 {
+		mb = 0
+	}
 
 	return NewPadding(img,
-		PaddingTop(my), PaddingLeft(mx),
+		PaddingTop(finalTop), PaddingLeft(finalLeft),
 		PaddingBottom(mb), PaddingRight(mr),
 		PaddingBackground(bg),
 		PaddingBoundary(image.Rect(0, 0, width, height)),
