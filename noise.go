@@ -4,6 +4,9 @@ import (
 	"crypto/rand"
 	"image"
 	"image/color"
+	"math"
+	mrand "math/rand"
+	"sync"
 )
 
 // Ensure Noise implements the image.Image interface.
@@ -83,4 +86,129 @@ func (h *HashNoise) At(x, y int) color.Color {
 	z = (z ^ (z >> 27)) * 0x94d049bb133111eb
 	z = z ^ (z >> 31)
 	return color.Gray{Y: uint8(z)}
+}
+
+// PerlinNoise implements Improved Perlin Noise with Fractional Brownian Motion (fBm).
+type PerlinNoise struct {
+	Seed        int64
+	Octaves     int
+	Persistence float64 // Alpha
+	Lacunarity  float64 // Beta
+	Frequency   float64
+
+	p    [512]int
+	once sync.Once
+}
+
+func (n *PerlinNoise) init() {
+	n.once.Do(func() {
+		// Default parameters if zero
+		if n.Frequency == 0 {
+			n.Frequency = 0.02
+		}
+		if n.Octaves == 0 {
+			n.Octaves = 1
+		}
+		if n.Lacunarity == 0 {
+			n.Lacunarity = 2.0
+		}
+		if n.Persistence == 0 {
+			n.Persistence = 0.5
+		}
+
+		r := mrand.New(mrand.NewSource(n.Seed))
+		perm := make([]int, 256)
+		for i := range perm {
+			perm[i] = i
+		}
+		r.Shuffle(len(perm), func(i, j int) {
+			perm[i], perm[j] = perm[j], perm[i]
+		})
+
+		for i := 0; i < 256; i++ {
+			n.p[i] = perm[i]
+			n.p[i+256] = perm[i]
+		}
+	})
+}
+
+func (n *PerlinNoise) At(x, y int) color.Color {
+	n.init()
+
+	var total float64
+	var maxAmplitude float64
+	amplitude := 1.0
+	frequency := n.Frequency
+
+	for i := 0; i < n.Octaves; i++ {
+		total += n.noise(float64(x)*frequency, float64(y)*frequency) * amplitude
+		maxAmplitude += amplitude
+		amplitude *= n.Persistence
+		frequency *= n.Lacunarity
+	}
+
+	// Normalize result to [0, 1]
+	// Perlin noise returns values roughly in [-1, 1]
+	val := total / maxAmplitude
+
+	// Map [-1, 1] to [0, 1]
+	normalized := (val + 1.0) * 0.5
+	if normalized < 0 {
+		normalized = 0
+	}
+	if normalized > 1 {
+		normalized = 1
+	}
+
+	c := uint8(normalized * 255)
+	return color.Gray{Y: c}
+}
+
+func (n *PerlinNoise) noise(x, y float64) float64 {
+	X := int(math.Floor(x)) & 255
+	Y := int(math.Floor(y)) & 255
+
+	x -= math.Floor(x)
+	y -= math.Floor(y)
+
+	u := fade(x)
+	v := fade(y)
+
+	A := n.p[X] + Y
+	B := n.p[X+1] + Y
+
+	return lerp(v, lerp(u, grad(n.p[A], x, y), grad(n.p[B], x-1, y)),
+		lerp(u, grad(n.p[A+1], x, y-1), grad(n.p[B+1], x-1, y-1)))
+}
+
+func fade(t float64) float64 {
+	return t * t * t * (t*(t*6-15) + 10)
+}
+
+func lerp(t, a, b float64) float64 {
+	return a + t*(b-a)
+}
+
+func grad(hash int, x, y float64) float64 {
+	h := hash & 7
+	switch h {
+	case 0:
+		return x + y
+	case 1:
+		return -x + y
+	case 2:
+		return x - y
+	case 3:
+		return -x - y
+	case 4:
+		return x
+	case 5:
+		return -x
+	case 6:
+		return y
+	case 7:
+		return -y
+	default:
+		return 0
+	}
 }
