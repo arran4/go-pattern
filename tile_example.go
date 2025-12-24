@@ -8,7 +8,7 @@ var (
 	TileOutputFilename = "tile.png"
 	TileZoomLevels     = []int{}
 	TileOrder          = 6
-	TileBaseLabel      = "Tile"
+	TileBaseLabel      = "Tiled"
 )
 
 func init() {

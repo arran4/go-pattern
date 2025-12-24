@@ -145,12 +145,15 @@ func NewDemoGridAdvanced(ops ...func(any)) image.Image {
 	// White background for visibility
 	txt := NewText("Hello Grid", TextSize(24), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
 
+	// Center the text in a 150x50 box
+	centeredTxt := NewCenter(txt, 150, 50, image.NewUniform(color.White))
+
 	// 5. Padding with Checker background
 	checker := NewChecker(color.RGBA{200, 200, 200, 255}, color.White)
 	padded := NewPadding(smallGopher, PaddingMargin(20), PaddingBackground(checker))
 
 	args := []any{
-		Row(Cell(txt), Cell(padded)),
+		Row(Cell(centeredTxt), Cell(padded)),
 		Row(Cell(smallHead), Cell(tiled)),
 	}
 	for _, op := range ops {
