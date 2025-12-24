@@ -224,3 +224,35 @@ func NewCenter(img image.Image, width, height int, bg image.Image) image.Image {
 		PaddingBoundary(image.Rect(0, 0, width, height)),
 	)
 }
+
+// NewAligned returns an image padded to the specified width and height,
+// with the inner image aligned according to xAlign and yAlign (0.0 to 1.0).
+// 0.0 means Top/Left, 0.5 means Center, 1.0 means Bottom/Right.
+func NewAligned(img image.Image, width, height int, xAlign, yAlign float64, bg image.Image) image.Image {
+	b := img.Bounds()
+
+	// Calculate available space
+	availW := width - b.Dx()
+	availH := height - b.Dy()
+
+	// Calculate top/left margin based on alignment
+	mx := int(float64(availW) * xAlign)
+	my := int(float64(availH) * yAlign)
+
+	if mx < 0 { mx = 0 }
+	if my < 0 { my = 0 }
+
+	// Calculate bottom/right margin to ensure exact width/height
+	mr := width - b.Dx() - mx
+	mb := height - b.Dy() - my
+
+	if mr < 0 { mr = 0 }
+	if mb < 0 { mb = 0 }
+
+	return NewPadding(img,
+		PaddingTop(my), PaddingLeft(mx),
+		PaddingBottom(mb), PaddingRight(mr),
+		PaddingBackground(bg),
+		PaddingBoundary(image.Rect(0, 0, width, height)),
+	)
+}
