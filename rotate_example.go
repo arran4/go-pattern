@@ -11,6 +11,7 @@ var RotateOutputFilename = "rotate.png"
 var RotateZoomLevels = []int{}
 
 const RotateOrder = 33
+const RotateBaseLabel = "Grid"
 
 // Rotate Pattern
 // Rotates the input pattern by 90, 180, or 270 degrees.
@@ -33,7 +34,7 @@ func ExampleNewRotate() {
 func NewDemoRotateInput(b image.Rectangle) image.Image {
 	// Asymmetric input: Width != Height to see rotation effect on bounds.
 	// Use white background.
-	return NewText("Go", TextSize(80), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
+	return NewText("Go", TextSize(30), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
 }
 
 func GenerateRotate(b image.Rectangle) image.Image {

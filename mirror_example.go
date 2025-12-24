@@ -11,6 +11,7 @@ var MirrorOutputFilename = "mirror.png"
 var MirrorZoomLevels = []int{}
 
 const MirrorOrder = 32
+const MirrorBaseLabel = "Grid"
 
 // Mirror Pattern
 // Mirrors the input pattern horizontally or vertically.
@@ -33,7 +34,7 @@ func ExampleNewMirror() {
 func NewDemoMirrorInput(b image.Rectangle) image.Image {
 	// Create an asymmetric image to demonstrate mirroring.
 	// Use white background to ensure visibility.
-	return NewText("Go", TextSize(80), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
+	return NewText("Go", TextSize(30), TextColorColor(color.Black), TextBackgroundColorColor(color.White))
 }
 
 func GenerateMirror(b image.Rectangle) image.Image {
