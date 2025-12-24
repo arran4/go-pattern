@@ -11,6 +11,34 @@ These patterns are designed to be:
 ## Patterns
 
 
+### Polka Pattern
+
+
+
+![Polka Pattern](polka.png)
+
+```go
+	i := NewPolka(
+		SetRadius(10),
+		SetSpacing(40),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(PolkaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Null Pattern
 
 
@@ -79,15 +107,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-
-
-
-![Tile Pattern](tile.png)
-
-```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
 ```
 
 
@@ -256,20 +275,27 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
+### MathsMandelbrot Pattern
 
 
 
-![HorizontalLine Pattern](horizontal_line.png)
+![MathsMandelbrot Pattern](maths_mandelbrot.png)
 
 ```go
-	i := NewHorizontalLine(
-		SetLineSize(5),
-		SetSpaceSize(5),
-		SetLineColor(color.RGBA{255, 0, 0, 255}),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(HorizontalLineOutputFilename)
+	// See GenerateMathsMandelbrot for implementation details
+```
+
+
+### Noise Pattern
+
+
+
+![Noise Pattern](noise.png)
+
+```go
+	// Create a noise pattern with default (Crypto) algorithm
+	i := NewNoise()
+	f, err := os.Create(NoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -284,20 +310,15 @@ These patterns are designed to be:
 ```
 
 
-### VerticalLine Pattern
+### Gopher Pattern
 
 
 
-![VerticalLine Pattern](vertical_line.png)
+![Gopher Pattern](gopher.png)
 
 ```go
-	i := NewVerticalLine(
-		SetLineSize(5),
-		SetSpaceSize(5),
-		SetLineColor(color.RGBA{0, 0, 255, 255}),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(VerticalLineOutputFilename)
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -342,26 +363,14 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
+### MathsJulia Pattern
 
 
 
-![Gopher Pattern](gopher.png)
+![MathsJulia Pattern](maths_julia.png)
 
 ```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
+	// See GenerateMathsJulia for implementation details
 ```
 
 
@@ -421,6 +430,17 @@ These patterns are designed to be:
 ```
 
 
+### MathsSine Pattern
+
+
+
+![MathsSine Pattern](maths_sine.png)
+
+```go
+	// See GenerateMathsSine for implementation details
+```
+
+
 ### Not Pattern
 
 
@@ -449,6 +469,17 @@ These patterns are designed to be:
 ```
 
 
+### MathsWaves Pattern
+
+
+
+![MathsWaves Pattern](maths_waves.png)
+
+```go
+	// See GenerateMathsWaves for implementation details
+```
+
+
 ### Circle Pattern
 
 
@@ -472,6 +503,33 @@ These patterns are designed to be:
 		}
 	}()
 	if err = png.Encode(f, c); err != nil {
+		panic(err)
+	}
+```
+
+
+### SpeedLines Pattern
+
+
+
+![SpeedLines Pattern](speedlines.png)
+
+```go
+	i := NewSpeedLines(
+		SetDensity(150),
+		SetMinRadius(30),
+		SetMaxRadius(80),
+	)
+	f, err := os.Create(SpeedLinesOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
 ```
@@ -523,6 +581,36 @@ These patterns are designed to be:
 ```
 
 
+### LinearGradient Pattern
+
+
+
+![LinearGradient Pattern](linear_gradient.png)
+
+```go
+	// Linear Gradient (Horizontal)
+	NewLinearGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
+```
+
+
+### RadialGradient Pattern
+
+
+
+![RadialGradient Pattern](radial_gradient.png)
+
+```go
+	// Radial Gradient
+	NewRadialGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
+```
+
+
 ### Transposed Pattern
 
 
@@ -543,6 +631,21 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### ConicGradient Pattern
+
+
+
+![ConicGradient Pattern](conic_gradient.png)
+
+```go
+	// Conic Gradient
+	NewConicGradient(
+		SetStartColor(color.RGBA{255, 0, 255, 255}),
+		SetEndColor(color.RGBA{0, 255, 255, 255}),
+	)
 ```
 
 
