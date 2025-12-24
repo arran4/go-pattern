@@ -11,10 +11,7 @@ var _ image.Image = (*EdgeDetect)(nil)
 
 // EdgeDetect is a pattern that applies edge detection (Sobel operator) to an underlying image.
 type EdgeDetect struct {
-	img         image.Image
-	sensitivity float64 // Multiplier for magnitude. Default 1.0 (clamped).
-	// Or maybe normalization factor?
-	// Let's call it "Gain".
+	img image.Image
 }
 
 func (e *EdgeDetect) ColorModel() color.Model {
@@ -65,9 +62,7 @@ func (e *EdgeDetect) At(x, y int) color.Color {
 
 	// Normalization.
 	// Max magnitude is approx sqrt(32) ≈ 5.66.
-	// To make a full contrast edge (0 to 1) result in 1.0, we should divide by ~4 or ~5.66.
-	// If we leave it as is, it's very sensitive (mag 1.0 reached with small gradient).
-	// Let's normalize by 4.0 by default to give a reasonable "0-1" output for "0-1" input edges.
+	// We normalize by 4.0 by default to give a reasonable "0-1" output for "0-1" input edges.
 
 	val := mag / 4.0
 

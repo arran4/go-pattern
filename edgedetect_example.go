@@ -23,7 +23,17 @@ func GenerateEdgeDetectReferences() (map[string]func() image.Image, []string) {
 		return NewSimpleZoom(chk, 20)
 	}
 
+	gopherGen := func() image.Image {
+		return NewGopher()
+	}
+
+	gopherEdgesGen := func() image.Image {
+		return NewEdgeDetect(NewGopher())
+	}
+
 	return map[string]func() image.Image{
-		"Source": sourceGen,
-	}, []string{"Source"}
+		"Source":       sourceGen,
+		"Gopher":       gopherGen,
+		"Gopher Edges": gopherEdgesGen,
+	}, []string{"Source", "Gopher", "Gopher Edges"}
 }
