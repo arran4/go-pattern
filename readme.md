@@ -39,6 +39,41 @@ These patterns are designed to be:
 ```
 
 
+### Voronoi Pattern
+
+
+
+![Voronoi Pattern](voronoi.png)
+
+```go
+	// Define some points and colors
+	points := []image.Point{
+		{50, 50}, {200, 50}, {125, 125}, {50, 200}, {200, 200},
+	}
+	colors := []color.Color{
+		color.RGBA{255, 100, 100, 255},
+		color.RGBA{100, 255, 100, 255},
+		color.RGBA{100, 100, 255, 255},
+		color.RGBA{255, 255, 100, 255},
+		color.RGBA{100, 255, 255, 255},
+	}
+
+	i := NewVoronoi(points, colors)
+	f, err := os.Create(VoronoiOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Tile Pattern
 
 
@@ -61,41 +96,6 @@ These patterns are designed to be:
 ```go
 	i := NewNull()
 	f, err := os.Create(NullOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Voronoi Pattern
-
-
-
-![Voronoi Pattern](voronoi.png)
-
-```go
-	// Define some points and colors
-	points := []image.Point{
-		{50, 50}, {200, 50}, {125, 125}, {50, 200}, {200, 200},
-	}
-	colors := []color.Color{
-		color.RGBA{255, 100, 100, 255},
-		color.RGBA{100, 255, 100, 255},
-		color.RGBA{100, 100, 255, 255},
-		color.RGBA{255, 255, 100, 255},
-		color.RGBA{100, 255, 255, 255},
-	}
-
-	i := NewVoronoi(points, colors)
-	f, err := os.Create(VoronoiOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -275,16 +275,15 @@ These patterns are designed to be:
 ```
 
 
-### Noise Pattern
+### Gopher Pattern
 
 
 
-![Noise Pattern](noise.png)
+![Gopher Pattern](gopher.png)
 
 ```go
-	// Create a noise pattern with default (Crypto) algorithm
-	i := NewNoise()
-	f, err := os.Create(NoiseOutputFilename)
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -296,17 +295,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-```
-
-
-### MathsMandelbrot Pattern
-
-
-
-![MathsMandelbrot Pattern](maths_mandelbrot.png)
-
-```go
-	// See GenerateMathsMandelbrot for implementation details
 ```
 
 
@@ -340,15 +328,27 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
+### MathsMandelbrot Pattern
 
 
 
-![Gopher Pattern](gopher.png)
+![MathsMandelbrot Pattern](maths_mandelbrot.png)
 
 ```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
+	// See GenerateMathsMandelbrot for implementation details
+```
+
+
+### Noise Pattern
+
+
+
+![Noise Pattern](noise.png)
+
+```go
+	// Create a noise pattern with default (Crypto) algorithm
+	i := NewNoise()
+	f, err := os.Create(NoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -402,17 +402,6 @@ These patterns are designed to be:
 ```
 
 
-### MathsSine Pattern
-
-
-
-![MathsSine Pattern](maths_sine.png)
-
-```go
-	// See GenerateMathsSine for implementation details
-```
-
-
 ### Xor Pattern
 
 
@@ -441,14 +430,14 @@ These patterns are designed to be:
 ```
 
 
-### MathsWaves Pattern
+### MathsSine Pattern
 
 
 
-![MathsWaves Pattern](maths_waves.png)
+![MathsSine Pattern](maths_sine.png)
 
 ```go
-	// See GenerateMathsWaves for implementation details
+	// See GenerateMathsSine for implementation details
 ```
 
 
@@ -477,6 +466,17 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### MathsWaves Pattern
+
+
+
+![MathsWaves Pattern](maths_waves.png)
+
+```go
+	// See GenerateMathsWaves for implementation details
 ```
 
 
@@ -536,18 +536,26 @@ These patterns are designed to be:
 ```
 
 
-### LinearGradient Pattern
+### Quantize Pattern
 
 
 
-![LinearGradient Pattern](linear_gradient.png)
+![Quantize Pattern](quantize.png)
 
 ```go
-	// Linear Gradient (Horizontal)
-	NewLinearGradient(
-		SetStartColor(color.RGBA{255, 0, 0, 255}),
-		SetEndColor(color.RGBA{0, 0, 255, 255}),
-	)
+	i := NewQuantize(NewGopher(), 4)
+	f, err := os.Create(QuantizeOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
@@ -574,26 +582,18 @@ These patterns are designed to be:
 ```
 
 
-### Quantize Pattern
+### LinearGradient Pattern
 
 
 
-![Quantize Pattern](quantize.png)
+![LinearGradient Pattern](linear_gradient.png)
 
 ```go
-	i := NewQuantize(NewGopher(), 4)
-	f, err := os.Create(QuantizeOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
+	// Linear Gradient (Horizontal)
+	NewLinearGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
 ```
 
 
