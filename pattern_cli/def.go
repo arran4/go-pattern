@@ -107,6 +107,13 @@ func registerCommands(fm dsl.FuncMap) {
 		return pattern.NewTransposed(input, x, y), nil
 	}
 
+	fm["edgedetect"] = func(args []string, input image.Image) (image.Image, error) {
+		if input == nil {
+			return nil, fmt.Errorf("edgedetect requires an input image")
+		}
+		return pattern.NewEdgeDetect(input), nil
+	}
+
 	fm["null"] = func(args []string, input image.Image) (image.Image, error) {
 		return pattern.NewNull(), nil
 	}
