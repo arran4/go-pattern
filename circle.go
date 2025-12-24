@@ -9,11 +9,15 @@ import (
 var _ image.Image = (*Circle)(nil)
 
 // Circle is a pattern that draws a circle fitting within its bounds.
+// It supports a border (LineSize, LineColor, LineImageSource) and a fill (FillColor, FillImageSource).
 type Circle struct {
 	Null
+	LineSize
 	LineColor
-	SpaceColor
 	LineImageSource
+	FillColor
+	FillImageSource
+	SpaceColor
 }
 
 func (p *Circle) At(x, y int) color.Color {
@@ -21,43 +25,83 @@ func (p *Circle) At(x, y int) color.Color {
 	width := b.Dx()
 	height := b.Dy()
 
-	// Calculate diameter and radius (squared)
-	// We use 2*coordinate logic to avoid floating point math.
 	// Center coordinate in 2x space:
 	cx2 := b.Min.X + b.Max.X
 	cy2 := b.Min.Y + b.Max.Y
 
-	// Radius in 2x space would be diameter (since radius = diameter/2, 2*radius = diameter).
-	// We want to check distance from center.
 	// Point (x, y) center in 2x space is (2*x+1, 2*y+1).
-
 	dx2 := (2*x + 1) - cx2
 	dy2 := (2*y + 1) - cy2
 
-	// Max allowed distance (squared) in 2x space.
-	// The circle diameter corresponds to min(width, height).
-	// The radius in 1x space is min(width, height)/2.
-	// The radius in 2x space is min(width, height).
-	// So we compare dx2^2 + dy2^2 <= diameter^2.
+	// Distance squared in 2x space.
+	distSq := dx2*dx2 + dy2*dy2
 
 	diameter := width
 	if height < diameter {
 		diameter = height
 	}
 
-	radiusSq := diameter * diameter
+	// Outer radius squared in 2x space.
+	// radius = diameter/2.
+	// In 2x space, radius2x = diameter.
+	// radiusSq = diameter^2.
+	outerRadiusSq := diameter * diameter
 
-	if dx2*dx2 + dy2*dy2 <= radiusSq {
-		if p.LineImageSource.LineImageSource != nil {
-			return p.LineImageSource.LineImageSource.At(x, y)
+	if distSq > outerRadiusSq {
+		// Outside
+		if p.SpaceColor.SpaceColor != nil {
+			return p.SpaceColor.SpaceColor
 		}
-		return p.LineColor.LineColor
+		return color.RGBA{}
 	}
 
-	if p.SpaceColor.SpaceColor != nil {
-		return p.SpaceColor.SpaceColor
+	// Inside Outer Circle.
+
+	// Check for Border.
+	ls := p.LineSize.LineSize
+	if ls > 0 {
+		// Border Logic.
+		// Inner Radius = Radius - LineSize.
+		// In 2x space: innerRadius2x = diameter - 2*LineSize.
+		innerDiameter := diameter - 2*ls
+		if innerDiameter < 0 {
+			innerDiameter = 0
+		}
+		innerRadiusSq := innerDiameter * innerDiameter
+
+		if distSq > innerRadiusSq {
+			// In the Border.
+			if p.LineImageSource.LineImageSource != nil {
+				return p.LineImageSource.LineImageSource.At(x, y)
+			}
+			return p.LineColor.LineColor
+		}
+
+		// Inside Inner Circle (Fill).
+		if p.FillImageSource.FillImageSource != nil {
+			return p.FillImageSource.FillImageSource.At(x, y)
+		}
+		if p.FillColor.FillColor != nil {
+			return p.FillColor.FillColor
+		}
+		// If no fill specified, transparent?
+		return color.RGBA{}
 	}
-	return color.RGBA{}
+
+	// LineSize == 0. Legacy/Solid mode.
+	// The entire circle is filled.
+
+	// Prioritize: FillImage > FillColor > LineImage > LineColor
+	if p.FillImageSource.FillImageSource != nil {
+		return p.FillImageSource.FillImageSource.At(x, y)
+	}
+	if p.FillColor.FillColor != nil {
+		return p.FillColor.FillColor
+	}
+	if p.LineImageSource.LineImageSource != nil {
+		return p.LineImageSource.LineImageSource.At(x, y)
+	}
+	return p.LineColor.LineColor
 }
 
 // NewCircle creates a new Circle pattern.
@@ -69,7 +113,8 @@ func NewCircle(ops ...func(any)) image.Image {
 	}
 	// Defaults
 	p.LineColor.LineColor = color.Black
-	// SpaceColor defaults to nil (transparent)
+	p.LineSize.LineSize = 0
+	// FillColor, FillImage, LineImage, SpaceColor default to nil (transparent/zero)
 
 	for _, op := range ops {
 		op(p)
