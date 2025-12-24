@@ -11,26 +11,16 @@ These patterns are designed to be:
 ## Patterns
 
 
-### Null Pattern
+### Tile Pattern
 
 
 
-![Null Pattern](null.png)
+![Tile Pattern](tile.png)
 
 ```go
-	i := NewNull()
-	f, err := os.Create(NullOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
+	// Tile the gopher in a 200x200 area
+	return NewTile(gopher, image.Rect(0, 0, 200, 200))
 ```
 
 
@@ -69,16 +59,26 @@ These patterns are designed to be:
 ```
 
 
-### Tile Pattern
+### Null Pattern
 
 
 
-![Tile Pattern](tile.png)
+![Null Pattern](null.png)
 
 ```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
@@ -275,17 +275,15 @@ These patterns are designed to be:
 ```
 
 
-### And Pattern
-### Noise Pattern
+### Gopher Pattern
 
 
 
-![Noise Pattern](noise.png)
+![Gopher Pattern](gopher.png)
 
 ```go
-	// Create a noise pattern with default (Crypto) algorithm
-	i := NewNoise()
-	f, err := os.Create(NoiseOutputFilename)
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -311,7 +309,7 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
+### And Pattern
 
 
 
@@ -341,15 +339,16 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
+### Noise Pattern
 
 
 
-![Gopher Pattern](gopher.png)
+![Noise Pattern](noise.png)
 
 ```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
+	// Create a noise pattern with default (Crypto) algorithm
+	i := NewNoise()
+	f, err := os.Create(NoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -509,29 +508,6 @@ These patterns are designed to be:
 ```
 
 
-### Quantize Pattern
-
-
-
-![Quantize Pattern](quantize.png)
-
-```go
-	i := NewQuantize(NewGopher(), 4)
-	f, err := os.Create(QuantizeOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### SimpleZoom Pattern
 
 
@@ -570,6 +546,29 @@ These patterns are designed to be:
 ```
 
 
+### Quantize Pattern
+
+
+
+![Quantize Pattern](quantize.png)
+
+```go
+	i := NewQuantize(NewGopher(), 4)
+	f, err := os.Create(QuantizeOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Transposed Pattern
 
 
@@ -593,38 +592,6 @@ These patterns are designed to be:
 ```
 
 
-### Mirror Pattern
-
-
-
-![Mirror Pattern](mirror.png)
-
-```go
-	i := NewMirror(NewDemoMirrorInput(image.Rect(0, 0, 40, 40)), true, false)
-	f, err := os.Create(MirrorOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Rotate Pattern
-
-
-
-![Rotate Pattern](rotate.png)
-
-```go
-	i := NewRotate(NewDemoRotateInput(image.Rect(0, 0, 40, 60)), 90)
-	f, err := os.Create(RotateOutputFilename)
 ### RadialGradient Pattern
 
 
@@ -652,6 +619,28 @@ These patterns are designed to be:
 		SetStartColor(color.RGBA{255, 0, 255, 255}),
 		SetEndColor(color.RGBA{0, 255, 255, 255}),
 	)
+```
+
+
+### SierpinskiTriangle Pattern
+
+
+
+![SierpinskiTriangle Pattern](sierpinski_triangle.png)
+
+```go
+	// See GenerateSierpinskiTriangle for implementation details
+```
+
+
+### SierpinskiCarpet Pattern
+
+
+
+![SierpinskiCarpet Pattern](sierpinski_carpet.png)
+
+```go
+	// See GenerateSierpinskiCarpet for implementation details
 ```
 
 
