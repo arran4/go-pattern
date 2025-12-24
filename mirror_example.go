@@ -2,6 +2,7 @@ package pattern
 
 import (
 	"image"
+	"image/color"
 	"image/png"
 	"os"
 )
@@ -31,11 +32,27 @@ func ExampleNewMirror() {
 
 func NewDemoMirrorInput(b image.Rectangle) image.Image {
 	// Create an asymmetric image to demonstrate mirroring.
-	return NewSimpleZoom(NewGopher(), 2)
+	return NewText("Go", TextSize(40), TextColorColor(color.Black))
 }
 
 func GenerateMirror(b image.Rectangle) image.Image {
-	return NewMirror(NewDemoMirrorInput(b), true, false, SetBounds(b))
+	input := NewDemoMirrorInput(b)
+	// We want to show Original, Mirror H, Mirror V, Mirror HV
+	// Create a 2x2 grid.
+	// Since Grid expects components, we can build it.
+
+	// Helper to add bounds to an image if needed, though NewGrid handles layout.
+	// But Mirror needs to know the bounds of the input to mirror correctly?
+	// Mirror uses img.Bounds().
+	// Text image has fixed bounds (0,0, w, h).
+
+	return NewGrid(
+		2, 2,
+		NewDemoMirrorInput(b), // Original
+		NewMirror(input, true, false), // Mirror H
+		NewMirror(input, false, true), // Mirror V
+		NewMirror(input, true, true), // Mirror HV
+	)
 }
 
 func GenerateMirrorReferences() (map[string]func(image.Rectangle) image.Image, []string) {
