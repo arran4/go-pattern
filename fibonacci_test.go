@@ -48,8 +48,8 @@ func TestFibonacci_At(t *testing.T) {
 	// Let's verify with code logic manually or just trust the test runs.
 	// We'll just check it doesn't panic and returns valid colors.
 
-	if _, ok := c.(color.Color); !ok {
-		t.Error("At did not return a color")
+	if c == nil {
+		t.Error("At returned nil")
 	}
 }
 

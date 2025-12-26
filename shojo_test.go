@@ -14,9 +14,7 @@ func TestShojo(t *testing.T) {
 	)
 
 	// Check if it implements image.Image
-	if _, ok := p.(image.Image); !ok {
-		t.Fatal("Shojo does not implement image.Image")
-	}
+	var _ image.Image = p
 
 	// Sample a few pixels to ensure it doesn't crash and returns valid colors
 	// Center of a cell likely has a star if we are lucky, but we are testing for crashes/errors mainly.
@@ -28,8 +26,6 @@ func TestShojo(t *testing.T) {
 
 	_, _, _, a := c.RGBA()
 	if a == 0 {
-		// It might be transparent if SpaceColor is transparent, but we set it to Black (opaque).
-		// Wait, color.Black is opaque.
-		// So Alpha should be non-zero.
+		t.Error("Alpha should be non-zero for opaque background")
 	}
 }

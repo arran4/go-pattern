@@ -17,7 +17,9 @@ func ExampleNewBlueNoise() {
 		panic(err)
 	}
 	defer f.Close()
-	png.Encode(f, p)
+	if err := png.Encode(f, p); err != nil {
+		panic(err)
+	}
 }
 
 func GenerateBlueNoise(b image.Rectangle) image.Image {

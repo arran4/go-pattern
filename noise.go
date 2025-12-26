@@ -85,7 +85,9 @@ type CryptoNoise struct{}
 
 func (c *CryptoNoise) At(x, y int) color.Color {
 	b := make([]byte, 1)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		return color.Black
+	}
 	return color.Gray{Y: b[0]}
 }
 

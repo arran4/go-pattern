@@ -22,7 +22,9 @@ func ExampleNewConcentricRings() {
 		panic(err)
 	}
 	defer f.Close()
-	png.Encode(f, p)
+	if err := png.Encode(f, p); err != nil {
+		panic(err)
+	}
 }
 
 func GenerateConcentricRings(b image.Rectangle) image.Image {
