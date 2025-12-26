@@ -21,12 +21,12 @@ type BayerDither struct {
 
 // Standard Bayer Matrices
 var (
-	Bayer2x2 = []uint8{
+	bayer2x2 = []uint8{
 		0, 2,
 		3, 1,
 	}
 	// 4x4 derived from 2x2
-	Bayer4x4 = []uint8{
+	bayer4x4 = []uint8{
 		0, 8, 2, 10,
 		12, 4, 14, 6,
 		3, 11, 1, 9,
@@ -94,10 +94,10 @@ func (p *BayerDither) At(x, y int) color.Color {
 func NewBayerDither(input image.Image, size int, ops ...func(any)) image.Image {
 	var mat []uint8
 	if size == 4 {
-		mat = Bayer4x4
+		mat = bayer4x4
 	} else {
 		size = 2
-		mat = Bayer2x2
+		mat = bayer2x2
 	}
 
 	p := &BayerDither{

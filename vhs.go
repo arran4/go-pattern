@@ -194,17 +194,6 @@ func (p *VHS) SetNoiseIntensity(f float64) {
 	p.NoiseIntensity = f
 }
 
-type hasSeed interface {
-	SetSeed(int64)
-}
-
-func SetSeed(s int64) func(any) {
-	return func(i any) {
-		if v, ok := i.(hasSeed); ok {
-			v.SetSeed(s)
-		}
-	}
-}
 
 func (p *VHS) SetSeed(s int64) {
 	p.Seed = s
