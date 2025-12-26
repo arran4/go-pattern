@@ -113,23 +113,28 @@ func (p *Plasma) At(x, y int) color.Color {
 	gy := y % gh
 	if gy < 0 { gy += gh }
 
-	r := clamp(p.gridR[gx][gy])
+	r := clampFloat(p.gridR[gx][gy])
 
 	if p.Color {
-		g := clamp(p.gridG[gx][gy])
-		b := clamp(p.gridB[gx][gy])
-		return color.RGBA{uint8(r*255), uint8(g*255), uint8(b*255), 255}
+		g := clampFloat(p.gridG[gx][gy])
+		b := clampFloat(p.gridB[gx][gy])
+		return color.RGBA{uint8(r * 255), uint8(g * 255), uint8(b * 255), 255}
 	}
 
-	v := uint8(r*255)
+	v := uint8(r * 255)
 	return color.RGBA{v, v, v, 255}
 }
 
-func clampVal(v float64) float64 {
-	if v < 0 { return 0 }
-	if v > 1 { return 1 }
+func clampFloat(v float64) float64 {
+	if v < 0 {
+		return 0
+	}
+	if v > 1 {
+		return 1
+	}
 	return v
 }
+
 
 // NewPlasma creates a new Plasma pattern.
 func NewPlasma(ops ...func(any)) image.Image {

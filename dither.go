@@ -455,10 +455,6 @@ func (e *ErrorDiffusion) compute() {
 					pixels[n.idx+1] += errG * w
 					pixels[n.idx+2] += errB * w
 				}
-			} else {
-				// If totalWeight is 0 (all edges blocked completely),
-				// we cannot distribute error. It is lost.
-				// This usually only happens if edgeAwareness is 1.0 and all neighbors are very different.
 			}
 		}
 	}

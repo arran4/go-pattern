@@ -93,11 +93,11 @@ func TestQuantizeAlpha(t *testing.T) {
 	// Wait, converting NRGBA(255,0,0,128) to RGBA might be slightly lossy or exact depending on impl.
 	// 255 * 128 / 255 = 128.
 
-	if a != 0x8080 { // 128 * 257 = 32896
-		// It might be slightly off depending on Go's alpha blending.
-		// Go's RGBA usually does alpha-premultiplication.
-		// Let's trust it is around 50%.
-	}
+	// if a != 0x8080 { // 128 * 257 = 32896
+	// 	// It might be slightly off depending on Go's alpha blending.
+	// 	// Go's RGBA usually does alpha-premultiplication.
+	// 	// Let's trust it is around 50%.
+	// }
 
 	// Check that we got the "max" red for that alpha.
 	if r < a-200 { // Allow some tolerance
