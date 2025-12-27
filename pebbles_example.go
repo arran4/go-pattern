@@ -11,60 +11,54 @@ var PebblesOutputFilename = "pebbles.png"
 
 const PebblesBaseLabel = "Pebbles"
 
-// Pebbles Example (Chipped Stone)
-// Demonstrates using Worley Noise with Domain Warping (via Perlin Noise) to create chipped stones.
+// Pebbles Example (Chipped Stone / Gravel)
+// Demonstrates using Worley Noise combined with Perlin Noise (via Blend) to create irregular, chipped stones.
 func ExampleNewPebbles() {
 	// 1. Create the base Worley noise.
-	// We use F1 to get the distance from the center of the cell.
-	// Inverting this (or properly mapping it) gives us distinct stones.
+	// F2-F1 is often used for cells, but F1 gives us the "distance from center" which allows us to control the stone shape/size.
 	base := NewWorleyNoise(
-		SetFrequency(0.04),
+		SetFrequency(0.05),
 		SetSeed(200),
 		SetWorleyOutput(OutputF1),
 		SetWorleyMetric(MetricEuclidean),
+		SetWorleyJitter(1.0), // Full jitter for organic placement
 	)
 
-	// 2. Create Perlin noise for distortion (chipped edges).
-	// High frequency noise for fine details.
-	distortionX := NewNoise(
+	// 2. Create Perlin noise for "chips" and surface texture.
+	noise := NewNoise(
 		SetNoiseAlgorithm(&PerlinNoise{
 			Seed:        300,
-			Frequency:   0.1,
+			Frequency:   0.15, // Higher frequency for detail
 			Octaves:     3,
-			Persistence: 0.5,
-			Lacunarity:  2.0,
-		}),
-	)
-	distortionY := NewNoise(
-		SetNoiseAlgorithm(&PerlinNoise{
-			Seed:        400,
-			Frequency:   0.1,
-			Octaves:     3,
-			Persistence: 0.5,
+			Persistence: 0.6,
 			Lacunarity:  2.0,
 		}),
 	)
 
-	// 3. Warp the Worley noise using the Perlin noise.
-	// This makes the smooth cellular boundaries jagged.
-	warped := NewWarp(base,
-		WarpDistortionX(distortionX),
-		WarpDistortionY(distortionY),
-		WarpXScale(5.0), // Magnitude of distortion
-		WarpYScale(5.0),
-		WarpDistortionScale(1.0), // Scale of noise sampling
+	// 3. Scale down the noise intensity.
+	// We only want the noise to slightly perturb the Worley distance field.
+	// Mapping 0-255 to roughly 0-50 range.
+	scaledNoise := NewColorMap(noise,
+		ColorStop{Position: 0.0, Color: color.RGBA{0, 0, 0, 255}},
+		ColorStop{Position: 1.0, Color: color.RGBA{60, 60, 60, 255}},
 	)
 
-	// 4. Map to colors.
-	// Worley F1 is 0 at center, higher at edges.
-	// We map low values to stone color, high values to gap/mortar.
-	// Because of warping, the transition will be noisy.
-	pebbles := NewColorMap(warped,
-		ColorStop{Position: 0.0, Color: color.RGBA{180, 180, 190, 255}}, // Center Highlight
-		ColorStop{Position: 0.2, Color: color.RGBA{120, 120, 130, 255}}, // Stone Body
-		ColorStop{Position: 0.5, Color: color.RGBA{80, 80, 90, 255}},    // Stone Edge
-		ColorStop{Position: 0.6, Color: color.RGBA{40, 35, 30, 255}},    // Gap/Mortar start
-		ColorStop{Position: 1.0, Color: color.RGBA{20, 15, 10, 255}},    // Gap Center
+	// 4. Combine Worley Base + Scaled Noise.
+	// The noise adds to the distance, effectively bringing the "edge" threshold closer in random spots (chipping).
+	blended := NewBlend(base, scaledNoise, BlendAdd)
+
+	// 5. Map to Stone Colors.
+	// The blended value represents "Distance from center + Noise".
+	// Low values = Center of stone (High).
+	// Medium values = Edge of stone (Sloping down).
+	// High values = Gap/Mortar.
+	pebbles := NewColorMap(blended,
+		ColorStop{Position: 0.0, Color: color.RGBA{160, 160, 165, 255}}, // Highlight
+		ColorStop{Position: 0.2, Color: color.RGBA{120, 120, 125, 255}}, // Body
+		ColorStop{Position: 0.45, Color: color.RGBA{80, 80, 85, 255}},   // Darker Body
+		ColorStop{Position: 0.5, Color: color.RGBA{50, 50, 55, 255}},    // Edge/Rim (Sharp transition)
+		ColorStop{Position: 0.52, Color: color.RGBA{20, 15, 10, 255}},   // Gap Start
+		ColorStop{Position: 1.0, Color: color.RGBA{10, 5, 0, 255}},      // Gap Deep
 	)
 
 	f, err := os.Create(PebblesOutputFilename)
@@ -84,46 +78,38 @@ func ExampleNewPebbles() {
 func GeneratePebbles(b image.Rectangle) image.Image {
 	base := NewWorleyNoise(
 		SetBounds(b),
-		SetFrequency(0.04),
+		SetFrequency(0.05),
 		SetSeed(200),
 		SetWorleyOutput(OutputF1),
 		SetWorleyMetric(MetricEuclidean),
+		SetWorleyJitter(1.0),
 	)
 
-	distortionX := NewNoise(
+	noise := NewNoise(
 		SetBounds(b),
 		SetNoiseAlgorithm(&PerlinNoise{
 			Seed:        300,
-			Frequency:   0.1,
+			Frequency:   0.15,
 			Octaves:     3,
-			Persistence: 0.5,
-			Lacunarity:  2.0,
-		}),
-	)
-	distortionY := NewNoise(
-		SetBounds(b),
-		SetNoiseAlgorithm(&PerlinNoise{
-			Seed:        400,
-			Frequency:   0.1,
-			Octaves:     3,
-			Persistence: 0.5,
+			Persistence: 0.6,
 			Lacunarity:  2.0,
 		}),
 	)
 
-	warped := NewWarp(base,
-		WarpDistortionX(distortionX),
-		WarpDistortionY(distortionY),
-		WarpXScale(5.0),
-		WarpYScale(5.0),
+	scaledNoise := NewColorMap(noise,
+		ColorStop{Position: 0.0, Color: color.RGBA{0, 0, 0, 255}},
+		ColorStop{Position: 1.0, Color: color.RGBA{60, 60, 60, 255}},
 	)
 
-	return NewColorMap(warped,
-		ColorStop{Position: 0.0, Color: color.RGBA{180, 180, 190, 255}},
-		ColorStop{Position: 0.2, Color: color.RGBA{120, 120, 130, 255}},
-		ColorStop{Position: 0.5, Color: color.RGBA{80, 80, 90, 255}},
-		ColorStop{Position: 0.6, Color: color.RGBA{40, 35, 30, 255}},
-		ColorStop{Position: 1.0, Color: color.RGBA{20, 15, 10, 255}},
+	blended := NewBlend(base, scaledNoise, BlendAdd)
+
+	return NewColorMap(blended,
+		ColorStop{Position: 0.0, Color: color.RGBA{160, 160, 165, 255}},
+		ColorStop{Position: 0.2, Color: color.RGBA{120, 120, 125, 255}},
+		ColorStop{Position: 0.45, Color: color.RGBA{80, 80, 85, 255}},
+		ColorStop{Position: 0.5, Color: color.RGBA{50, 50, 55, 255}},
+		ColorStop{Position: 0.52, Color: color.RGBA{20, 15, 10, 255}},
+		ColorStop{Position: 1.0, Color: color.RGBA{10, 5, 0, 255}},
 	)
 }
 
