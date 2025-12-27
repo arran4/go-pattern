@@ -49,10 +49,17 @@ type PatternDemo struct {
 	Order      int
 }
 
+type PatternCtor struct {
+	Name string
+	Func *ast.FuncDecl
+}
+
 func main() {
 	flags := flag.NewFlagSet("bootstrap", flag.ExitOnError)
 	fn := "readme.md"
 	flags.StringVar(&fn, "filename", fn, "output filename")
+	cliOut := "pattern_cli/init_gen.go"
+	flags.StringVar(&cliOut, "cli-out", cliOut, "CLI output filename")
 	err := flags.Parse(os.Args)
 	if err != nil {
 		flags.Usage()
@@ -63,7 +70,7 @@ func main() {
 		return
 	}
 
-	patterns, err := discoverPatterns(".")
+	patterns, ctors, err := discoverPatterns(".")
 	if err != nil {
 		log.Fatalf("Failed to discover patterns: %v", err)
 	}
@@ -98,19 +105,38 @@ func main() {
 		log.Fatalf("Error executing template: %v", err)
 	}
 	log.Printf("Generated %s successfully\n", fn)
+
+	if err := generateCLI(cliOut, patterns, ctors); err != nil {
+		log.Fatalf("Error generating CLI: %v", err)
+	}
 }
 
-func discoverPatterns(root string) ([]PatternDemo, error) {
+func discoverPatterns(root string) ([]PatternDemo, map[string]*ast.FuncDecl, error) {
 	fset := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fset, root, nil, 0)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var patterns []PatternDemo
+	ctors := make(map[string]*ast.FuncDecl)
 
 	for _, pkg := range pkgs {
 		for filename, f := range pkg.Files {
+			// Find constructors in all files (excluding _test and _example)
+			if !strings.HasSuffix(filename, "_test.go") && !strings.HasSuffix(filename, "_example.go") {
+				ast.Inspect(f, func(n ast.Node) bool {
+					fn, ok := n.(*ast.FuncDecl)
+					if !ok {
+						return true
+					}
+					if strings.HasPrefix(fn.Name.Name, "New") {
+						ctors[fn.Name.Name] = fn
+					}
+					return true
+				})
+			}
+
 			// We only care about _example.go files for metadata
 			if !strings.HasSuffix(filename, "_example.go") {
 				continue
@@ -119,7 +145,7 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 			// To extract source code properly, we need to read the file content
 			fileContent, err := os.ReadFile(filename)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 
 			ast.Inspect(f, func(n ast.Node) bool {
@@ -137,57 +163,30 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 				start := fset.Position(fn.Body.Lbrace).Offset + 1
 				end := fset.Position(fn.Body.Rbrace).Offset
 				usage := string(fileContent[start:end])
-				// usage = strings.TrimSpace(usage) // Keep indentation or adjust?
-				// The original code had tabs. Let's try to dedent if needed,
-				// but simplistic extraction is likely fine if formatted.
-				// Actually, we should probably strip leading/trailing newlines.
 				usage = strings.Trim(usage, "\n")
 
 				pd := PatternDemo{
-					Name:          name + " Pattern", // Convention from hardcoded list
+					Name:          name + " Pattern",
 					GoUsageSample: usage,
-					// Description:   "", // Description was hardcoded. We might need to extract it from comments?
-					// For now, let's leave description empty or infer?
-					// The hardcoded list had descriptions. The prompt doesn't explicitly say where to get description.
-					// "Metadata is extracted... Usage... OutputFilename... ZoomLevels... Order... Custom Generator".
-					// It missed Description. I'll check if I can get it from doc comments.
 				}
 
 				if fn.Doc != nil {
 					pd.Description = strings.TrimSpace(fn.Doc.Text())
 				}
 
-				// Look up configuration in the AST of the same file
 				pd.OutputFilename = findStringVar(f, name+"OutputFilename")
 				pd.ZoomLevels = findIntSliceVar(f, fileContent, fset, name+"ZoomLevels")
 				pd.Order = findIntConst(f, name+"Order")
 				pd.BaseLabel = findStringConst(f, name+"BaseLabel")
 
-				// Look up Generator in Registry
 				if gen, ok := pattern.GlobalGenerators[name]; ok {
 					pd.Generator = gen
 				} else {
 					log.Printf("Warning: No generator found for %s", name)
 				}
 
-				// Look up References in Registry
 				if refsFunc, ok := pattern.GlobalReferences[name]; ok {
 					refMap, order := refsFunc()
-					// Map to Inputs/Transformers is tricky because the structure in main.go
-					// was specific to Transposed which used Inputs/Transformers.
-					// However, the `Generate` function in main.go handles `Inputs`, `References`, `Steps`.
-					// `Transposed` example in main.go used `Inputs` and `Transformers`.
-					// If `BootstrapTransposedReferences` returns a map, we can put them in `Inputs` or `References`.
-					// Let's use `References` for general map items?
-					// But `Transposed` logic in `Generate` (main.go) used `Inputs[0]` as base for Transformers.
-
-					// Let's try to adapt.
-					// If the pattern has references, we can populate `Inputs` or `References`.
-					// `Transposed` had `Original` (Input) and `Transposed` (Transformer output?).
-					// But here `refMap` gives us generators.
-					// If `BootstrapTransposedReferences` returns "Original" -> func and "Transposed" -> func.
-					// We can put them into `Inputs`?
-
 					for _, label := range order {
 						if g, ok := refMap[label]; ok {
 							pd.Inputs = append(pd.Inputs, LabelledGenerator{
@@ -196,14 +195,6 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 							})
 						}
 					}
-
-					// If "Transposed" logic specifically needs `Transformers`, we might need more metadata.
-					// But the requirement says: "References for patterns are provided by Bootstrap<Name>References functions which return a map of generators and a slice of labels for ordering."
-					// This matches `Inputs` or `References` in `PatternDemo` struct usage in `Generate` method:
-					// // 1. References
-					// for _, input := range p.Inputs { ... }
-					// for _, ref := range p.References { ... }
-					// So putting them in `Inputs` seems fine to display them.
 				}
 
 				patterns = append(patterns, pd)
@@ -217,7 +208,7 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 		return patterns[i].Order < patterns[j].Order
 	})
 
-	return patterns, nil
+	return patterns, ctors, nil
 }
 
 func findStringVar(f *ast.File, name string) string {
@@ -493,4 +484,169 @@ func (p *PatternDemo) Generate() image.Image {
 	}
 
 	return dst
+}
+
+func generateCLI(filename string, patterns []PatternDemo, ctors map[string]*ast.FuncDecl) error {
+	var sb strings.Builder
+	sb.WriteString("// Code generated by cmd/bootstrap; DO NOT EDIT.\n")
+	sb.WriteString("package pattern_cli\n\n")
+	sb.WriteString("import (\n")
+	sb.WriteString("\t\"fmt\"\n")
+	sb.WriteString("\t\"image\"\n")
+	sb.WriteString("\t\"strconv\"\n")
+	sb.WriteString("\t\"github.com/arran4/go-pattern\"\n")
+	sb.WriteString("\t\"github.com/arran4/go-pattern/dsl\"\n")
+	sb.WriteString(")\n\n")
+
+	sb.WriteString("func init() {\n")
+	sb.WriteString("\tRegisterGeneratedCommands = func(fm dsl.FuncMap) {\n")
+
+	for _, p := range patterns {
+		rawName := strings.TrimSuffix(p.Name, " Pattern")
+		cmdName := strings.ToLower(rawName)
+		ctorName := "New" + rawName
+
+		// Handle EdgeDetect -> NewEdgeDetect mismatch if needed (case sensitivity)
+		// Assuming pattern.Name is derived from "ExampleNew<Name>"
+
+		ctor, ok := ctors[ctorName]
+		if !ok {
+			// Try case insensitive match if direct match fails?
+			for n, c := range ctors {
+				if strings.EqualFold(n, ctorName) {
+					ctor = c
+					ok = true
+					break
+				}
+			}
+		}
+
+		if !ok {
+			sb.WriteString(fmt.Sprintf("\t\t// Warning: Constructor %s not found for %s\n", ctorName, cmdName))
+			continue
+		}
+
+		sb.WriteString(fmt.Sprintf("\t\tfm[\"%s\"] = func(args []string, input image.Image) (image.Image, error) {\n", cmdName))
+
+		// Build arguments
+		var callArgs []string
+		argIdx := 0
+		var paramCheck strings.Builder
+
+		// Filter relevant params (skip options for now, handle Image, Color, int/float)
+		if ctor.Type.Params != nil {
+			for _, field := range ctor.Type.Params.List {
+				typeStr := getType(field.Type)
+
+				// Handle multiple names for same type (e.g. x, y int)
+				names := field.Names
+				if len(names) == 0 {
+					// Anonymous param, treat as 1
+					names = []*ast.Ident{{Name: "_"}}
+				}
+
+				for range names {
+					if typeStr == "image.Image" {
+						// Usually input image.
+						// Heuristic: If it's the first param, it *might* be the input.
+						// Or if it's named 'input', 'img', 'src'.
+						// For now, let's assume if it takes an image, it's the pipeline input.
+						// But if we have multiple images? (e.g. blend?)
+						// CLI usually pipes one image.
+						// If constructor needs image, pass 'input'.
+						// If 'input' is nil, we should check.
+
+						paramCheck.WriteString("\t\t\tif input == nil {\n\t\t\t\treturn nil, fmt.Errorf(\"input image required\")\n\t\t\t}\n")
+						callArgs = append(callArgs, "input")
+
+					} else if typeStr == "color.Color" {
+						paramCheck.WriteString(fmt.Sprintf("\t\t\tif len(args) <= %d {\n\t\t\t\treturn nil, fmt.Errorf(\"argument %d (color) missing\")\n\t\t\t}\n", argIdx, argIdx+1))
+						paramCheck.WriteString(fmt.Sprintf("\t\t\tc%d, err := parseColor(args[%d])\n", argIdx, argIdx))
+						paramCheck.WriteString("\t\t\tif err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n")
+						callArgs = append(callArgs, fmt.Sprintf("c%d", argIdx))
+						argIdx++
+
+					} else if typeStr == "int" {
+						paramCheck.WriteString(fmt.Sprintf("\t\t\tif len(args) <= %d {\n\t\t\t\treturn nil, fmt.Errorf(\"argument %d (int) missing\")\n\t\t\t}\n", argIdx, argIdx+1))
+						paramCheck.WriteString(fmt.Sprintf("\t\t\ti%d, err := strconv.Atoi(args[%d])\n", argIdx, argIdx))
+						paramCheck.WriteString("\t\t\tif err != nil {\n\t\t\t\treturn nil, fmt.Errorf(\"invalid int argument: %%w\", err)\n\t\t\t}\n")
+						callArgs = append(callArgs, fmt.Sprintf("i%d", argIdx))
+						argIdx++
+
+					} else if typeStr == "float64" {
+						paramCheck.WriteString(fmt.Sprintf("\t\t\tif len(args) <= %d {\n\t\t\t\treturn nil, fmt.Errorf(\"argument %d (float) missing\")\n\t\t\t}\n", argIdx, argIdx+1))
+						paramCheck.WriteString(fmt.Sprintf("\t\t\tf%d, err := strconv.ParseFloat(args[%d], 64)\n", argIdx, argIdx))
+						paramCheck.WriteString("\t\t\tif err != nil {\n\t\t\t\treturn nil, fmt.Errorf(\"invalid float argument: %%w\", err)\n\t\t\t}\n")
+						callArgs = append(callArgs, fmt.Sprintf("f%d", argIdx))
+						argIdx++
+
+					} else if strings.HasPrefix(typeStr, "...") || strings.HasPrefix(typeStr, "[]") {
+						// Ignored variadic/slice for now
+						// callArgs = append(callArgs, "nil") // or empty slice?
+						// But if it's variadic options ...Option, we can just omit if it's the last arg.
+						// If it's []image.Point (Voronoi), we can't easily support it via simple CLI yet.
+						// Skip for now or print warning?
+
+						// If variadic '...', Go allows passing nothing.
+						if strings.HasPrefix(typeStr, "...") {
+							// do nothing
+						} else {
+							sb.WriteString(fmt.Sprintf("\t\t\t// Unsupported arg type: %s\n", typeStr))
+							sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"command %s has unsupported arguments\")\n", cmdName))
+							callArgs = nil // abort
+							break
+						}
+					} else {
+						// Unsupported type (e.g. structs, maps)
+						sb.WriteString(fmt.Sprintf("\t\t\t// Unsupported arg type: %s\n", typeStr))
+						sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"command %s has unsupported arguments\")\n", cmdName))
+						callArgs = nil // abort
+						break
+					}
+				}
+				if callArgs == nil { break }
+			}
+		}
+
+		if callArgs == nil && (ctor.Type.Params == nil || len(ctor.Type.Params.List) == 0) {
+			callArgs = []string{}
+		}
+
+		if callArgs != nil {
+			sb.WriteString(paramCheck.String())
+			// Must return (image.Image, error). Assuming pattern constructor returns image.Image or (image.Image, error)?
+			// Most pattern constructors return just image.Image (e.g. NewChecker).
+			// Let's check. pattern.NewChecker returns *Checker (which implements Image).
+			// So we need to wrap in `return ..., nil`.
+			sb.WriteString(fmt.Sprintf("\t\t\treturn pattern.%s(%s), nil\n", ctor.Name.Name, strings.Join(callArgs, ", ")))
+		} else {
+			// Stub to avoid missing return error
+			sb.WriteString("\t\t\treturn nil, fmt.Errorf(\"not implemented yet\")\n")
+		}
+
+		sb.WriteString("\t\t}\n")
+	}
+
+	sb.WriteString("\t}\n")
+	sb.WriteString("}\n\n")
+	sb.WriteString("var RegisterGeneratedCommands func(dsl.FuncMap)\n")
+
+	return os.WriteFile(filename, []byte(sb.String()), 0644)
+}
+
+func getType(expr ast.Expr) string {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		return t.Name
+	case *ast.SelectorExpr:
+		return getType(t.X) + "." + t.Sel.Name
+	case *ast.Ellipsis:
+		return "..." + getType(t.Elt)
+	case *ast.StarExpr:
+		return "*" + getType(t.X)
+	case *ast.ArrayType:
+		return "[]" + getType(t.Elt)
+	default:
+		return fmt.Sprintf("%T", t)
+	}
 }
