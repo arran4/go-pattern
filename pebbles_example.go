@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"math"
 	"os"
 )
 
@@ -12,53 +13,72 @@ var PebblesOutputFilename = "pebbles.png"
 const PebblesBaseLabel = "Pebbles"
 
 // Pebbles Example (Chipped Stone / Gravel)
-// Demonstrates using Worley Noise combined with Perlin Noise (via Blend) to create irregular, chipped stones.
+// Demonstrates using the Scatter pattern to create overlapping, irregular stones.
 func ExampleNewPebbles() {
-	// 1. Create the base Worley noise.
-	// F2-F1 is often used for cells, but F1 gives us the "distance from center" which allows us to control the stone shape/size.
-	base := NewWorleyNoise(
-		SetFrequency(0.05),
-		SetSeed(200),
-		SetWorleyOutput(OutputF1),
-		SetWorleyMetric(MetricEuclidean),
-		SetWorleyJitter(1.0), // Full jitter for organic placement
-	)
+	// Re-implement Pebbles using Scatter for true overlapping geometry.
+	pebbles := NewScatter(
+		SetScatterFrequency(0.04), // Size control
+		SetScatterDensity(1.0),    // Packed tight
+		SetScatterMaxOverlap(1),
+		SetScatterGenerator(func(u, v float64, hash uint64) (color.Color, float64) {
+			// Randomize size slightly
+			rSize := float64(hash&0xFF)/255.0
+			radius := 12.0 + rSize*6.0 // 12 to 18 pixels radius
 
-	// 2. Create Perlin noise for "chips" and surface texture.
-	noise := NewNoise(
-		SetNoiseAlgorithm(&PerlinNoise{
-			Seed:        300,
-			Frequency:   0.15, // Higher frequency for detail
-			Octaves:     3,
-			Persistence: 0.6,
-			Lacunarity:  2.0,
+			// Perturb the shape using simple noise (simulated by sin/cos of hash+angle)
+			// to make it "chipped" or irregular.
+			angle := math.Atan2(v, u)
+			dist := math.Sqrt(u*u + v*v)
+
+			// Simple radial noise
+			noise := math.Sin(angle*5 + float64(hash%10)) * 0.1
+			noise += math.Cos(angle*13 + float64(hash%7)) * 0.05
+
+			effectiveRadius := radius * (1.0 + noise)
+
+			if dist > effectiveRadius {
+				return color.Transparent, 0
+			}
+
+			// Stone Color: Grey/Brown variations
+			grey := 100 + int(hash%100)
+			col := color.RGBA{uint8(grey), uint8(grey - 5), uint8(grey - 10), 255}
+
+			// Shading (diffuse)
+			// Normal estimation for a flattened spheroid
+			nx := u / effectiveRadius
+			ny := v / effectiveRadius
+			nz := math.Sqrt(math.Max(0, 1.0 - nx*nx - ny*ny))
+
+			// Light dir
+			lx, ly, lz := -0.5, -0.5, 0.7
+			lLen := math.Sqrt(lx*lx + ly*ly + lz*lz)
+			lx, ly, lz = lx/lLen, ly/lLen, lz/lLen
+
+			diffuse := math.Max(0, nx*lx + ny*ly + nz*lz)
+
+			// Apply shading
+			r := float64(col.R) * (0.1 + 0.9*diffuse)
+			g := float64(col.G) * (0.1 + 0.9*diffuse)
+			b := float64(col.B) * (0.1 + 0.9*diffuse)
+
+			// Soft edge anti-aliasing
+			alpha := 1.0
+			edgeDist := effectiveRadius - dist
+			if edgeDist < 1.0 {
+				alpha = edgeDist
+			}
+
+			// Use hash for random Z-ordering
+			z := float64(hash) / 18446744073709551615.0
+
+			return color.RGBA{
+				R: uint8(math.Min(255, r)),
+				G: uint8(math.Min(255, g)),
+				B: uint8(math.Min(255, b)),
+				A: uint8(alpha * 255),
+			}, z
 		}),
-	)
-
-	// 3. Scale down the noise intensity.
-	// We only want the noise to slightly perturb the Worley distance field.
-	// Mapping 0-255 to roughly 0-50 range.
-	scaledNoise := NewColorMap(noise,
-		ColorStop{Position: 0.0, Color: color.RGBA{0, 0, 0, 255}},
-		ColorStop{Position: 1.0, Color: color.RGBA{60, 60, 60, 255}},
-	)
-
-	// 4. Combine Worley Base + Scaled Noise.
-	// The noise adds to the distance, effectively bringing the "edge" threshold closer in random spots (chipping).
-	blended := NewBlend(base, scaledNoise, BlendAdd)
-
-	// 5. Map to Stone Colors.
-	// The blended value represents "Distance from center + Noise".
-	// Low values = Center of stone (High).
-	// Medium values = Edge of stone (Sloping down).
-	// High values = Gap/Mortar.
-	pebbles := NewColorMap(blended,
-		ColorStop{Position: 0.0, Color: color.RGBA{160, 160, 165, 255}}, // Highlight
-		ColorStop{Position: 0.2, Color: color.RGBA{120, 120, 125, 255}}, // Body
-		ColorStop{Position: 0.45, Color: color.RGBA{80, 80, 85, 255}},   // Darker Body
-		ColorStop{Position: 0.5, Color: color.RGBA{50, 50, 55, 255}},    // Edge/Rim (Sharp transition)
-		ColorStop{Position: 0.52, Color: color.RGBA{20, 15, 10, 255}},   // Gap Start
-		ColorStop{Position: 1.0, Color: color.RGBA{10, 5, 0, 255}},      // Gap Deep
 	)
 
 	f, err := os.Create(PebblesOutputFilename)
@@ -76,40 +96,50 @@ func ExampleNewPebbles() {
 }
 
 func GeneratePebbles(b image.Rectangle) image.Image {
-	base := NewWorleyNoise(
+	return NewScatter(
 		SetBounds(b),
-		SetFrequency(0.05),
-		SetSeed(200),
-		SetWorleyOutput(OutputF1),
-		SetWorleyMetric(MetricEuclidean),
-		SetWorleyJitter(1.0),
-	)
+		SetScatterFrequency(0.04),
+		SetScatterDensity(1.0),
+		SetScatterMaxOverlap(1),
+		SetScatterGenerator(func(u, v float64, hash uint64) (color.Color, float64) {
+			rSize := float64(hash&0xFF)/255.0
+			radius := 12.0 + rSize*6.0
+			angle := math.Atan2(v, u)
+			dist := math.Sqrt(u*u + v*v)
+			noise := math.Sin(angle*5 + float64(hash%10)) * 0.1
+			noise += math.Cos(angle*13 + float64(hash%7)) * 0.05
+			effectiveRadius := radius * (1.0 + noise)
+			if dist > effectiveRadius {
+				return color.Transparent, 0
+			}
+			grey := 100 + int(hash%100)
+			col := color.RGBA{uint8(grey), uint8(grey - 5), uint8(grey - 10), 255}
+			nx := u / effectiveRadius
+			ny := v / effectiveRadius
+			nz := math.Sqrt(math.Max(0, 1.0 - nx*nx - ny*ny))
+			lx, ly, lz := -0.5, -0.5, 0.7
+			lLen := math.Sqrt(lx*lx + ly*ly + lz*lz)
+			lx, ly, lz = lx/lLen, ly/lLen, lz/lLen
+			diffuse := math.Max(0, nx*lx + ny*ly + nz*lz)
+			r := float64(col.R) * (0.1 + 0.9*diffuse)
+			g := float64(col.G) * (0.1 + 0.9*diffuse)
+			b := float64(col.B) * (0.1 + 0.9*diffuse)
+			alpha := 1.0
+			edgeDist := effectiveRadius - dist
+			if edgeDist < 1.0 {
+				alpha = edgeDist
+			}
 
-	noise := NewNoise(
-		SetBounds(b),
-		SetNoiseAlgorithm(&PerlinNoise{
-			Seed:        300,
-			Frequency:   0.15,
-			Octaves:     3,
-			Persistence: 0.6,
-			Lacunarity:  2.0,
+			// Use hash for random Z-ordering
+			z := float64(hash) / 18446744073709551615.0
+
+			return color.RGBA{
+				R: uint8(math.Min(255, r)),
+				G: uint8(math.Min(255, g)),
+				B: uint8(math.Min(255, b)),
+				A: uint8(alpha * 255),
+			}, z
 		}),
-	)
-
-	scaledNoise := NewColorMap(noise,
-		ColorStop{Position: 0.0, Color: color.RGBA{0, 0, 0, 255}},
-		ColorStop{Position: 1.0, Color: color.RGBA{60, 60, 60, 255}},
-	)
-
-	blended := NewBlend(base, scaledNoise, BlendAdd)
-
-	return NewColorMap(blended,
-		ColorStop{Position: 0.0, Color: color.RGBA{160, 160, 165, 255}},
-		ColorStop{Position: 0.2, Color: color.RGBA{120, 120, 125, 255}},
-		ColorStop{Position: 0.45, Color: color.RGBA{80, 80, 85, 255}},
-		ColorStop{Position: 0.5, Color: color.RGBA{50, 50, 55, 255}},
-		ColorStop{Position: 0.52, Color: color.RGBA{20, 15, 10, 255}},
-		ColorStop{Position: 1.0, Color: color.RGBA{10, 5, 0, 255}},
 	)
 }
 
