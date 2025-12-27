@@ -62,9 +62,11 @@ type Globe struct {
 	LineSize
 	SpaceColor
 	FillColor
+	FillImageSource
 	LatitudeLines
 	LongitudeLines
 	Angle // Rotation around Y axis in degrees
+	Tilt  // Rotation around X axis in degrees
 }
 
 func (p *Globe) At(x, y int) color.Color {
@@ -92,6 +94,8 @@ func (p *Globe) At(x, y int) color.Color {
 	dx := float64(x - cx)
 	dy := float64(y - cy)
 	distSq := dx*dx + dy*dy
+
+	// Outside the sphere
 	if distSq > r*r {
 		if p.SpaceColor.SpaceColor != nil {
 			return p.SpaceColor.SpaceColor
@@ -99,97 +103,145 @@ func (p *Globe) At(x, y int) color.Color {
 		return color.RGBA{} // Transparent
 	}
 
-	// Z coordinate on sphere
+	// Calculate front-facing point
 	z := math.Sqrt(r*r - distSq)
 
-	// Normal vector
-	nx := dx / r
-	ny := dy / r
-	nz := z / r
+	c, hitLine := p.sampleSpherePoint(dx, dy, z, r)
+	if hitLine {
+		return c
+	}
 
-	// Rotate around Y axis
-	rad := p.Angle.Angle * math.Pi / 180.0
-	cosA := math.Cos(rad)
-	sinA := math.Sin(rad)
+	// If we have a fill image, map it
+	if p.FillImageSource.FillImageSource != nil {
+		// Calculate lat/long for UV mapping
+		// We need consistent UVs regardless of rotation?
+		// Usually UVs are attached to the sphere surface.
+		// So we use the rotated coordinates? Yes.
 
-	// Rotated vector (nx', ny', nz')
-	// Rotation: x' = x cos - z sin, z' = x sin + z cos
-	rx := nx*cosA - nz*sinA
-	ry := ny
-	rz := nx*sinA + nz*cosA
+		// Re-calculate rotation to get surface coordinates
+		// (Same as in sampleSpherePoint but we need the coordinates)
+		_, _, _, phi, lambda := p.getSphereCoords(dx, dy, z, r)
 
-	// Convert to spherical coordinates
-	// Latitude phi: arcsin(y)
-	// Longitude lambda: atan2(z, x)
-	// Note: in math package, Asin returns [-pi/2, pi/2].
-	// Atan2 returns [-pi, pi].
+		// Map phi [-pi/2, pi/2] -> v [0, 1]
+		// Map lambda [-pi, pi] -> u [0, 1]
 
-	phi := math.Asin(ry)
-	lambda := math.Atan2(rz, rx)
+		u := (lambda + math.Pi) / (2 * math.Pi)
+		v := (phi + math.Pi/2) / math.Pi
 
-	lineSizeVal := float64(p.LineSize.LineSize)
-	drawLines := lineSizeVal > 0
+		// Sample image
+		src := p.FillImageSource.FillImageSource
+		sb := src.Bounds()
+		sx := int(float64(sb.Min.X) + u*float64(sb.Dx()))
+		sy := int(float64(sb.Min.Y) + (1.0-v)*float64(sb.Dy())) // Flip V? usually maps top-down
 
-	if drawLines {
-		halfLineWidthRad := (lineSizeVal / 2) / r
+		// Handle wrapping/clamping?
+		// float to int truncates.
+		if sx >= sb.Max.X { sx = sb.Max.X - 1 }
+		if sy >= sb.Max.Y { sy = sb.Max.Y - 1 }
 
-		// Check Latitude Lines
-		if p.LatitudeLines.LatitudeLines > 0 {
-			nLat := p.LatitudeLines.LatitudeLines
-			// Spacing. If nLat=1, draw at 0 (Equator).
-			// If nLat=2, draw at -pi/6, +pi/6? or -pi/4, +pi/4?
-			// Let's divide pi into nLat+1 segments.
-			dPhi := math.Pi / float64(nLat+1)
-
-			// We want to find closest k*dPhi to phi + pi/2
-			// phi ranges [-pi/2, pi/2].
-			// shifted: phi + pi/2 ranges [0, pi].
-
-			shiftedPhi := phi + math.Pi/2
-			k := math.Round(shiftedPhi / dPhi)
-
-			// If k=0 or k=nLat+1, these are poles. Usually don't draw point at pole as a line,
-			// but meridians meet there anyway.
-			if k > 0 && k < float64(nLat+1) {
-				targetPhi := -math.Pi/2 + k*dPhi
-				if math.Abs(phi - targetPhi) < halfLineWidthRad {
-					return p.LineColor.LineColor
-				}
-			}
-		}
-
-		// Check Longitude Lines
-		if p.LongitudeLines.LongitudeLines > 0 {
-			nLong := p.LongitudeLines.LongitudeLines
-			dLambda := 2 * math.Pi / float64(nLong)
-
-			// We want closest multiple of dLambda to lambda.
-			// lambda in [-pi, pi].
-
-			k := math.Round(lambda / dLambda)
-			targetLambda := k * dLambda
-
-			// Distance on sphere: |lambda - target| * cos(phi)
-			diff := math.Abs(lambda - targetLambda)
-			// Handle wrap around pi/-pi
-			if diff > math.Pi {
-				diff = 2*math.Pi - diff
-			}
-
-			if diff*math.Cos(phi) < halfLineWidthRad {
-				return p.LineColor.LineColor
-			}
-		}
+		return src.At(sx, sy)
 	}
 
 	if p.FillColor.FillColor != nil {
 		return p.FillColor.FillColor
 	}
 
-	// If no fill color and we didn't hit a line, return transparent?
-	// Or maybe the user expects a solid sphere if lines are not drawn or hit?
-	// Circle returns FillColor if set.
+	// Transparent sphere body (Wireframe mode).
+	// Check back face.
+	// Back face z is -z (relative to sphere center 0,0,0)
+	zBack := -z
+	cBack, hitLineBack := p.sampleSpherePoint(dx, dy, zBack, r)
+	if hitLineBack {
+		return cBack
+	}
+
+	// Transparent
 	return color.RGBA{}
+}
+
+// getSphereCoords rotates the point (dx,dy,dz) and returns rotated (rx, ry, rz) and spherical (phi, lambda).
+func (p *Globe) getSphereCoords(dx, dy, dz, r float64) (rx, ry, rz, phi, lambda float64) {
+	// Normal vector
+	nx := dx / r
+	ny := dy / r
+	nz := dz / r
+
+	// 1. Tilt (Rotation around X axis)
+	tiltRad := p.Tilt.Tilt * math.Pi / 180.0
+	cosT := math.Cos(tiltRad)
+	sinT := math.Sin(tiltRad)
+
+	// y' = y cos - z sin
+	// z' = y sin + z cos
+	ny2 := ny*cosT - nz*sinT
+	nz2 := ny*sinT + nz*cosT
+	nx2 := nx
+
+	// 2. Spin (Rotation around Y axis)
+	spinRad := p.Angle.Angle * math.Pi / 180.0
+	cosS := math.Cos(spinRad)
+	sinS := math.Sin(spinRad)
+
+	// x'' = x' cos - z' sin
+	// z'' = x' sin + z' cos
+	rx = nx2*cosS - nz2*sinS
+	rz = nx2*sinS + nz2*cosS
+	ry = ny2
+
+	// Spherical coordinates
+	// Latitude phi: arcsin(ry)
+	// Longitude lambda: atan2(rz, rx)
+	phi = math.Asin(ry)
+	lambda = math.Atan2(rz, rx)
+	return
+}
+
+// sampleSpherePoint checks if point (dx, dy, dz) on sphere surface hits a grid line.
+func (p *Globe) sampleSpherePoint(dx, dy, dz, r float64) (color.Color, bool) {
+	_, _, _, phi, lambda := p.getSphereCoords(dx, dy, dz, r)
+
+	lineSizeVal := float64(p.LineSize.LineSize)
+	if lineSizeVal <= 0 {
+		return nil, false
+	}
+
+	halfLineWidthRad := (lineSizeVal / 2) / r
+
+	// Check Latitude Lines
+	if p.LatitudeLines.LatitudeLines > 0 {
+		nLat := p.LatitudeLines.LatitudeLines
+		dPhi := math.Pi / float64(nLat+1)
+
+		shiftedPhi := phi + math.Pi/2
+		k := math.Round(shiftedPhi / dPhi)
+
+		if k > 0 && k < float64(nLat+1) {
+			targetPhi := -math.Pi/2 + k*dPhi
+			if math.Abs(phi - targetPhi) < halfLineWidthRad {
+				return p.LineColor.LineColor, true
+			}
+		}
+	}
+
+	// Check Longitude Lines
+	if p.LongitudeLines.LongitudeLines > 0 {
+		nLong := p.LongitudeLines.LongitudeLines
+		dLambda := 2 * math.Pi / float64(nLong)
+
+		k := math.Round(lambda / dLambda)
+		targetLambda := k * dLambda
+
+		diff := math.Abs(lambda - targetLambda)
+		if diff > math.Pi {
+			diff = 2*math.Pi - diff
+		}
+
+		if diff*math.Cos(phi) < halfLineWidthRad {
+			return p.LineColor.LineColor, true
+		}
+	}
+
+	return nil, false
 }
 
 // NewGlobe creates a new Globe pattern.

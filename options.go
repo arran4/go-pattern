@@ -469,6 +469,28 @@ func SetAngles(v ...float64) func(any) {
 	}
 }
 
+// Tilt configures a tilt angle option.
+type Tilt struct {
+	Tilt float64
+}
+
+func (s *Tilt) SetTilt(v float64) {
+	s.Tilt = v
+}
+
+type hasTilt interface {
+	SetTilt(float64)
+}
+
+// SetTilt creates an option to set the tilt.
+func SetTilt(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasTilt); ok {
+			h.SetTilt(v)
+		}
+	}
+}
+
 // Frequency configures the frequency of a pattern.
 type Frequency struct {
 	Frequency float64
