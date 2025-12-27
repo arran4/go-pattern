@@ -11,32 +11,28 @@ var StonesOutputFilename = "stones.png"
 
 const StonesBaseLabel = "Stones"
 
-// Stones Example
-// Demonstrates using Worley Noise to create a stone texture.
+// Stones Example (Riverbed / Cobblestones)
+// Demonstrates using Worley Noise (F2-F1) to create smooth stones with mortar.
 func ExampleNewStones() {
-	// Base Worley Noise (F1) provides the cellular structure (stones)
+	// F2-F1 gives distance to the border.
+	// Border is 0. Center is High.
 	noise := NewWorleyNoise(
 		SetFrequency(0.02),
-		SetSeed(42),
-		SetWorleyOutput(OutputF1),
+		SetSeed(100),
+		SetWorleyOutput(OutputF2MinusF1),
 		SetWorleyMetric(MetricEuclidean),
 	)
 
-	// Invert the noise to make stones white and edges dark (optional, depending on look)
-	// Or use ColorMap to map distance to stone colors.
-
-	// Let's create a ColorMap to define the stone look.
-	// Center of stone (distance 0) -> Light Grey
-	// Edge of stone (distance ~0.5) -> Dark Grey
-	// Gaps -> Black
+	// Map:
+	// 0.0 - 0.1: Mortar (Dark)
+	// 0.1 - 0.3: Edge of stone (Darker Grey)
+	// 0.3 - 1.0: Stone Body (Grey/Blueish with gradient)
 
 	stones := NewColorMap(noise,
-		// Color ramp
-		ColorStop{Position: 0.0, Color: color.RGBA{180, 180, 190, 255}}, // Center
-		ColorStop{Position: 0.4, Color: color.RGBA{100, 100, 110, 255}}, // Edge of stone
-		ColorStop{Position: 0.45, Color: color.RGBA{50, 50, 55, 255}},   // Darker edge
-		ColorStop{Position: 0.5, Color: color.RGBA{10, 10, 10, 255}},    // Gap
-		ColorStop{Position: 1.0, Color: color.RGBA{0, 0, 0, 255}},       // Deep gap
+		ColorStop{Position: 0.0, Color: color.RGBA{20, 15, 10, 255}},    // Mortar
+		ColorStop{Position: 0.15, Color: color.RGBA{40, 40, 45, 255}},   // Stone Edge
+		ColorStop{Position: 0.3, Color: color.RGBA{80, 80, 90, 255}},    // Stone Body
+		ColorStop{Position: 0.8, Color: color.RGBA{150, 150, 160, 255}}, // Highlight
 	)
 
 	f, err := os.Create(StonesOutputFilename)
@@ -56,17 +52,16 @@ func ExampleNewStones() {
 func GenerateStones(b image.Rectangle) image.Image {
 	noise := NewWorleyNoise(
 		SetBounds(b),
-		SetFrequency(0.04), // Higher freq for demo box
-		SetSeed(42),
-		SetWorleyOutput(OutputF1),
+		SetFrequency(0.04),
+		SetSeed(100),
+		SetWorleyOutput(OutputF2MinusF1),
 		SetWorleyMetric(MetricEuclidean),
 	)
 	return NewColorMap(noise,
-		ColorStop{Position: 0.0, Color: color.RGBA{180, 180, 190, 255}},
-		ColorStop{Position: 0.4, Color: color.RGBA{100, 100, 110, 255}},
-		ColorStop{Position: 0.45, Color: color.RGBA{50, 50, 55, 255}},
-		ColorStop{Position: 0.5, Color: color.RGBA{10, 10, 10, 255}},
-		ColorStop{Position: 1.0, Color: color.RGBA{0, 0, 0, 255}},
+		ColorStop{Position: 0.0, Color: color.RGBA{20, 15, 10, 255}},
+		ColorStop{Position: 0.15, Color: color.RGBA{40, 40, 45, 255}},
+		ColorStop{Position: 0.3, Color: color.RGBA{80, 80, 90, 255}},
+		ColorStop{Position: 0.8, Color: color.RGBA{150, 150, 160, 255}},
 	)
 }
 

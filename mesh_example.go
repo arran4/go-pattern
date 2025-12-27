@@ -7,13 +7,13 @@ import (
 	"os"
 )
 
-var CellsOutputFilename = "cells.png"
+var MeshOutputFilename = "mesh.png"
 
-const CellsBaseLabel = "Cells"
+const MeshBaseLabel = "Mesh"
 
-// Cells Example
-// Demonstrates using Worley Noise (CellID) to color cells randomly.
-func ExampleNewCells() {
+// Mesh Example (formerly Cells)
+// Demonstrates using Worley Noise (CellID) to create a 3D polygon mesh surface look.
+func ExampleNewMesh() {
 	// CellID output gives a random grayscale value per cell
 	noise := NewWorleyNoise(
 		SetFrequency(0.02),
@@ -21,8 +21,8 @@ func ExampleNewCells() {
 		SetWorleyOutput(OutputCellID),
 	)
 
-	// Use ColorMap to map random IDs to a palette (e.g., biological cells)
-	cells := NewColorMap(noise,
+	// Use ColorMap to map random IDs to a palette (e.g., biological cells or tech mesh)
+	mesh := NewColorMap(noise,
 		ColorStop{Position: 0.0, Color: color.RGBA{255, 100, 100, 255}}, // Red
 		ColorStop{Position: 0.2, Color: color.RGBA{255, 150, 150, 255}},
 		ColorStop{Position: 0.4, Color: color.RGBA{200, 50, 50, 255}},
@@ -31,10 +31,7 @@ func ExampleNewCells() {
 		ColorStop{Position: 1.0, Color: color.RGBA{255, 120, 120, 255}},
 	)
 
-	// Can combine with F1 to add borders or gradients inside cells?
-	// For now, just the solid colored cells.
-
-	f, err := os.Create(CellsOutputFilename)
+	f, err := os.Create(MeshOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -43,12 +40,12 @@ func ExampleNewCells() {
 			panic(e)
 		}
 	}()
-	if err = png.Encode(f, cells); err != nil {
+	if err = png.Encode(f, mesh); err != nil {
 		panic(err)
 	}
 }
 
-func GenerateCells(b image.Rectangle) image.Image {
+func GenerateMesh(b image.Rectangle) image.Image {
 	noise := NewWorleyNoise(
 		SetBounds(b),
 		SetFrequency(0.04),
@@ -66,5 +63,5 @@ func GenerateCells(b image.Rectangle) image.Image {
 }
 
 func init() {
-	RegisterGenerator(CellsBaseLabel, GenerateCells)
+	RegisterGenerator(MeshBaseLabel, GenerateMesh)
 }
