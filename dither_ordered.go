@@ -102,14 +102,14 @@ func generateBayer(n int) []float64 {
 		return []float64{0}
 	}
 
-	return normalizeMatrix(generateBayerInt(n))
+	return normalizeMatrix(GenerateBayerInt(n))
 }
 
-func generateBayerInt(n int) []int {
+func GenerateBayerInt(n int) []int {
 	if n == 1 {
 		return []int{0}
 	}
-	prev := generateBayerInt(n / 2)
+	prev := GenerateBayerInt(n / 2)
 	curr := make([]int, n*n)
 	half := n / 2
 
