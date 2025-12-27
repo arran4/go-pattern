@@ -6,11 +6,11 @@ import (
 	"math"
 )
 
-// Ensure Grass implements the image.Image interface.
-var _ image.Image = (*Grass)(nil)
+// Ensure GrassClose implements the image.Image interface.
+var _ image.Image = (*GrassClose)(nil)
 
-// Grass is a pattern that generates procedural grass blades.
-type Grass struct {
+// GrassClose is a pattern that generates procedural grass blades.
+type GrassClose struct {
 	Null
 	BladeWidth  float64
 	BladeHeight float64
@@ -24,7 +24,7 @@ type Grass struct {
 // SetBladeWidth sets the average width of a grass blade at the base.
 func SetBladeWidth(w float64) func(any) {
 	return func(p any) {
-		if g, ok := p.(*Grass); ok {
+		if g, ok := p.(*GrassClose); ok {
 			g.BladeWidth = w
 		}
 	}
@@ -33,7 +33,7 @@ func SetBladeWidth(w float64) func(any) {
 // SetBladeHeight sets the average height of a grass blade.
 func SetBladeHeight(h float64) func(any) {
 	return func(p any) {
-		if g, ok := p.(*Grass); ok {
+		if g, ok := p.(*GrassClose); ok {
 			g.BladeHeight = h
 		}
 	}
@@ -42,7 +42,7 @@ func SetBladeHeight(h float64) func(any) {
 // SetWindSource sets the pattern used for wind (bending).
 func SetWindSource(src image.Image) func(any) {
 	return func(p any) {
-		if g, ok := p.(*Grass); ok {
+		if g, ok := p.(*GrassClose); ok {
 			g.Wind = src
 		}
 	}
@@ -51,7 +51,7 @@ func SetWindSource(src image.Image) func(any) {
 // SetDensitySource sets the pattern used for density.
 func SetDensitySource(src image.Image) func(any) {
 	return func(p any) {
-		if g, ok := p.(*Grass); ok {
+		if g, ok := p.(*GrassClose); ok {
 			g.Density = src
 		}
 	}
@@ -66,14 +66,14 @@ func grassHash(x, y int, seed int64) float64 {
 	return float64(h&0xffffff) / 16777215.0
 }
 
-func (p *Grass) At(x, y int) color.Color {
+func (p *GrassClose) At(x, y int) color.Color {
 	// 1. Sample background
 	var r, g, b, a uint32
 	if p.Source != nil {
 		r, g, b, a = p.Source.At(x, y).RGBA()
 	}
 
-	// 2. Render Grass
+	// 2. Render GrassClose
 	// We use a grid system.
 	// Grid size must be large enough to contain a blade, or we need to search further.
 	// A blade of height H and max lean can cover some area.
@@ -87,22 +87,6 @@ func (p *Grass) At(x, y int) color.Color {
 	gy := int(math.Floor(float64(y) / float64(gridSize)))
 
 	// Blade rendering accumulators
-	// We need to handle occlusion/blending.
-	// Since we are 2D, we can just blend them on top.
-	// Ideally we draw back-to-front.
-	// Y-sorting: Blades with higher Y (lower on screen) are "closer" and should be drawn last.
-	// In our loop, we iterate neighbors. We should process them in Y order?
-	// The neighbor loop is small (3x3).
-	// We can collect valid blades and sort them?
-	// Or just iterate dy from -1 to 1? (Top to bottom neighbors -> Back to front?)
-	// Yes, dy=-1 is "above" (smaller y), dy=1 is "below" (larger y).
-	// But `At(x, y)` is a single pixel. We are checking which blades cover *this* pixel.
-	// The pixel has a fixed Z-order relative to the blades.
-	// Actually, for a single pixel, it will only hit one blade usually, or maybe overlap.
-	// If multiple blades overlap this pixel, the one "in front" wins.
-	// "In front" means the blade's root Y is largest.
-	// So we want the blade with the largest `rootY` that covers this pixel.
-
 	var bestBladeDist float64 = -1.0
 	var bestBladeColor color.Color
 	var hit bool
@@ -280,17 +264,17 @@ func blendColors(bg, fg color.Color) color.Color {
 	}
 }
 
-func (p *Grass) Bounds() image.Rectangle {
+func (p *GrassClose) Bounds() image.Rectangle {
 	return p.bounds
 }
 
-func (p *Grass) ColorModel() color.Model {
+func (p *GrassClose) ColorModel() color.Model {
 	return color.RGBA64Model
 }
 
-// NewGrass creates a new Grass pattern.
-func NewGrass(ops ...func(any)) image.Image {
-	p := &Grass{
+// NewGrassClose creates a new GrassClose pattern.
+func NewGrassClose(ops ...func(any)) image.Image {
+	p := &GrassClose{
 		Null: Null{
 			bounds: image.Rect(0, 0, 255, 255),
 		},

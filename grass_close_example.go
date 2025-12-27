@@ -7,14 +7,14 @@ import (
 	"os"
 )
 
-var GrassOutputFilename = "grass.png"
-var GrassZoomLevels = []int{}
+var GrassCloseOutputFilename = "grass_close.png"
+var GrassCloseZoomLevels = []int{}
 
-const GrassBaseLabel = "Grass"
+const GrassCloseBaseLabel = "Grass Close"
 
-// Grass Example
-// Demonstrates a procedural grass texture using the Grass pattern composed with Noise.
-func ExampleNewGrass() {
+// Grass Close Example
+// Demonstrates a procedural grass texture using the GrassClose pattern composed with Noise.
+func ExampleNewGrassClose() {
 	// 1. Background: Dirt
 	dirt := NewColorMap(
 		NewNoise(SetFrequency(0.05), NoiseSeed(1)),
@@ -36,7 +36,7 @@ func ExampleNewGrass() {
 	)
 
 	// 4. Grass Layer
-	grass := NewGrass(
+	grass := NewGrassClose(
 		SetBladeHeight(35),
 		SetBladeWidth(5),
 		SetFillColor(color.RGBA{20, 160, 30, 255}),
@@ -44,13 +44,13 @@ func ExampleNewGrass() {
 		SetDensitySource(density),
 		// Background source
 		func(p any) {
-			if g, ok := p.(*Grass); ok {
+			if g, ok := p.(*GrassClose); ok {
 				g.Source = dirt
 			}
 		},
 	)
 
-	f, err := os.Create(GrassOutputFilename)
+	f, err := os.Create(GrassCloseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -64,7 +64,7 @@ func ExampleNewGrass() {
 	}
 }
 
-func GenerateGrass(b image.Rectangle) image.Image {
+func GenerateGrassClose(b image.Rectangle) image.Image {
 	dirt := NewColorMap(
 		NewNoise(SetBounds(b), SetFrequency(0.05), NoiseSeed(1)),
 		ColorStop{0.0, color.RGBA{40, 30, 20, 255}},
@@ -84,13 +84,13 @@ func GenerateGrass(b image.Rectangle) image.Image {
 	// Helper to set source since it's not a standard option yet
 	setSource := func(src image.Image) func(any) {
 		return func(p any) {
-			if g, ok := p.(*Grass); ok {
+			if g, ok := p.(*GrassClose); ok {
 				g.Source = src
 			}
 		}
 	}
 
-	return NewGrass(
+	return NewGrassClose(
 		SetBounds(b),
 		SetBladeHeight(30),
 		SetBladeWidth(4),
@@ -101,7 +101,7 @@ func GenerateGrass(b image.Rectangle) image.Image {
 	)
 }
 
-func GenerateGrassReferences() (map[string]func(image.Rectangle) image.Image, []string) {
+func GenerateGrassCloseReferences() (map[string]func(image.Rectangle) image.Image, []string) {
 	return map[string]func(image.Rectangle) image.Image{
 		"Lush": func(b image.Rectangle) image.Image {
 			// Deep green background
@@ -111,22 +111,22 @@ func GenerateGrassReferences() (map[string]func(image.Rectangle) image.Image, []
 				ColorStop{1.0, color.RGBA{0, 80, 20, 255}},
 			)
 			// Layer 1: Dark, short undergrowth
-			layer1 := NewGrass(
+			layer1 := NewGrassClose(
 				SetBounds(b),
 				SetBladeHeight(15),
 				SetBladeWidth(3),
 				SetFillColor(color.RGBA{0, 100, 0, 255}),
-				func(p any) { p.(*Grass).Source = bg }, // Source
-				func(p any) { p.(*Grass).Seed = 11 },
+				func(p any) { p.(*GrassClose).Source = bg }, // Source
+				func(p any) { p.(*GrassClose).Seed = 11 },
 			)
 			// Layer 2: Longer, lighter grass
-			layer2 := NewGrass(
+			layer2 := NewGrassClose(
 				SetBounds(b),
 				SetBladeHeight(30),
 				SetBladeWidth(4),
 				SetFillColor(color.RGBA{50, 180, 40, 255}),
-				func(p any) { p.(*Grass).Source = layer1 },
-				func(p any) { p.(*Grass).Seed = 12 },
+				func(p any) { p.(*GrassClose).Source = layer1 },
+				func(p any) { p.(*GrassClose).Seed = 12 },
 				SetWindSource(NewNoise(SetBounds(b), SetFrequency(0.02), NoiseSeed(13))),
 			)
 			return layer2
@@ -137,12 +137,12 @@ func GenerateGrassReferences() (map[string]func(image.Rectangle) image.Image, []
 				ColorStop{0.0, color.RGBA{60, 50, 30, 255}},
 				ColorStop{1.0, color.RGBA{100, 90, 60, 255}},
 			)
-			return NewGrass(
+			return NewGrassClose(
 				SetBounds(b),
 				SetBladeHeight(25),
 				SetBladeWidth(3),
 				SetFillColor(color.RGBA{160, 140, 80, 255}), // Yellowish
-				func(p any) { p.(*Grass).Source = bg },
+				func(p any) { p.(*GrassClose).Source = bg },
 				SetWindSource(NewNoise(SetBounds(b), SetFrequency(0.02), NoiseSeed(21))),
 			)
 		},
@@ -162,21 +162,21 @@ func GenerateGrassReferences() (map[string]func(image.Rectangle) image.Image, []
 				ColorStop{0.4, color.Black},                   // Outside -> No grass
 			)
 
-			return NewGrass(
+			return NewGrassClose(
 				SetBounds(b),
 				SetBladeHeight(8), // Small blades
 				SetBladeWidth(2),
 				SetFillColor(color.RGBA{30, 100, 30, 255}),
-				func(p any) { p.(*Grass).Source = bg },
+				func(p any) { p.(*GrassClose).Source = bg },
 				SetDensitySource(density),
 				SetWindSource(NewNoise(SetBounds(b), SetFrequency(0.01), NoiseSeed(32))),
-				func(p any) { p.(*Grass).Seed = 33 },
+				func(p any) { p.(*GrassClose).Seed = 33 },
 			)
 		},
 	}, []string{"Lush", "Dry", "Distant Clumps"}
 }
 
 func init() {
-	RegisterGenerator(GrassBaseLabel, GenerateGrass)
-	RegisterReferences(GrassBaseLabel, GenerateGrassReferences)
+	RegisterGenerator("GrassClose", GenerateGrassClose)
+	RegisterReferences("GrassClose", GenerateGrassCloseReferences)
 }
