@@ -1,7 +1,11 @@
 module github.com/arran4/go-pattern
 
-go 1.24.0
+go 1.25.3
 
 require golang.org/x/image v0.34.0
 
-require golang.org/x/text v0.32.0 // indirect
+require (
+	github.com/arran4/go-subcommand v0.0.10 // indirect
+	golang.org/x/mod v0.31.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
+)
