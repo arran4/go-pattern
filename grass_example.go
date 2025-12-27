@@ -146,7 +146,34 @@ func GenerateGrassReferences() (map[string]func(image.Rectangle) image.Image, []
 				SetWindSource(NewNoise(SetBounds(b), SetFrequency(0.02), NoiseSeed(21))),
 			)
 		},
-	}, []string{"Lush", "Dry"}
+		"Distant Clumps": func(b image.Rectangle) image.Image {
+			// Ground
+			bg := NewColorMap(
+				NewNoise(SetBounds(b), SetFrequency(0.1), NoiseSeed(30)),
+				ColorStop{0.0, color.RGBA{50, 40, 30, 255}},
+				ColorStop{1.0, color.RGBA{70, 60, 50, 255}},
+			)
+			// Density map: Worley Noise clumps
+			// High contrast to make distinct patches
+			density := NewColorMap(
+				NewWorleyNoise(SetBounds(b), SetFrequency(0.05), SetSeed(31), SetWorleyOutput(OutputF1)),
+				ColorStop{0.0, color.White},                   // Center of cell -> Dense grass
+				ColorStop{0.3, color.RGBA{128, 128, 128, 255}}, // Edge of clump -> Sparse
+				ColorStop{0.4, color.Black},                   // Outside -> No grass
+			)
+
+			return NewGrass(
+				SetBounds(b),
+				SetBladeHeight(8), // Small blades
+				SetBladeWidth(2),
+				SetFillColor(color.RGBA{30, 100, 30, 255}),
+				func(p any) { p.(*Grass).Source = bg },
+				SetDensitySource(density),
+				SetWindSource(NewNoise(SetBounds(b), SetFrequency(0.01), NoiseSeed(32))),
+				func(p any) { p.(*Grass).Seed = 33 },
+			)
+		},
+	}, []string{"Lush", "Dry", "Distant Clumps"}
 }
 
 func init() {
