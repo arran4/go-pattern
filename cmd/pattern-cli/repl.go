@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/arran4/go-pattern/pattern_cli"
+	"github.com/arran4/go-pattern/pkg/pattern-cli"
 )
 
 var _ Cmd = (*replCmd)(nil)

@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"unicode"
 
 	pattern "github.com/arran4/go-pattern"
 	"golang.org/x/image/font"
@@ -98,6 +99,10 @@ func main() {
 		log.Fatalf("Error executing template: %v", err)
 	}
 	log.Printf("Generated %s successfully\n", fn)
+
+	if err := generateCLIInit(patterns, "pkg/pattern-cli/init_gen.go"); err != nil {
+		log.Fatalf("Error generating CLI init: %v", err)
+	}
 }
 
 func discoverPatterns(root string) ([]PatternDemo, error) {
@@ -137,20 +142,11 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 				start := fset.Position(fn.Body.Lbrace).Offset + 1
 				end := fset.Position(fn.Body.Rbrace).Offset
 				usage := string(fileContent[start:end])
-				// usage = strings.TrimSpace(usage) // Keep indentation or adjust?
-				// The original code had tabs. Let's try to dedent if needed,
-				// but simplistic extraction is likely fine if formatted.
-				// Actually, we should probably strip leading/trailing newlines.
 				usage = strings.Trim(usage, "\n")
 
 				pd := PatternDemo{
-					Name:          name + " Pattern", // Convention from hardcoded list
+					Name:          name + " Pattern",
 					GoUsageSample: usage,
-					// Description:   "", // Description was hardcoded. We might need to extract it from comments?
-					// For now, let's leave description empty or infer?
-					// The hardcoded list had descriptions. The prompt doesn't explicitly say where to get description.
-					// "Metadata is extracted... Usage... OutputFilename... ZoomLevels... Order... Custom Generator".
-					// It missed Description. I'll check if I can get it from doc comments.
 				}
 
 				if fn.Doc != nil {
@@ -173,37 +169,14 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 				// Look up References in Registry
 				if refsFunc, ok := pattern.GlobalReferences[name]; ok {
 					refMap, order := refsFunc()
-					// Map to Inputs/Transformers is tricky because the structure in main.go
-					// was specific to Transposed which used Inputs/Transformers.
-					// However, the `Generate` function in main.go handles `Inputs`, `References`, `Steps`.
-					// `Transposed` example in main.go used `Inputs` and `Transformers`.
-					// If `BootstrapTransposedReferences` returns a map, we can put them in `Inputs` or `References`.
-					// Let's use `References` for general map items?
-					// But `Transposed` logic in `Generate` (main.go) used `Inputs[0]` as base for Transformers.
-
-					// Let's try to adapt.
-					// If the pattern has references, we can populate `Inputs` or `References`.
-					// `Transposed` had `Original` (Input) and `Transposed` (Transformer output?).
-					// But here `refMap` gives us generators.
-					// If `BootstrapTransposedReferences` returns "Original" -> func and "Transposed" -> func.
-					// We can put them into `Inputs`?
-
 					for _, label := range order {
 						if g, ok := refMap[label]; ok {
 							pd.Inputs = append(pd.Inputs, LabelledGenerator{
-								Label: label,
+								Label:     label,
 								Generator: g,
 							})
 						}
 					}
-
-					// If "Transposed" logic specifically needs `Transformers`, we might need more metadata.
-					// But the requirement says: "References for patterns are provided by Bootstrap<Name>References functions which return a map of generators and a slice of labels for ordering."
-					// This matches `Inputs` or `References` in `PatternDemo` struct usage in `Generate` method:
-					// // 1. References
-					// for _, input := range p.Inputs { ... }
-					// for _, ref := range p.References { ... }
-					// So putting them in `Inputs` seems fine to display them.
 				}
 
 				patterns = append(patterns, pd)
@@ -293,7 +266,6 @@ func findStringConst(f *ast.File, name string) string {
 	return val
 }
 
-
 func findIntSliceVar(f *ast.File, content []byte, fset *token.FileSet, name string) []int {
 	var nums []int
 	ast.Inspect(f, func(n ast.Node) bool {
@@ -322,7 +294,6 @@ func findIntSliceVar(f *ast.File, content []byte, fset *token.FileSet, name stri
 	})
 	return nums
 }
-
 
 func DrawDemoPattern(pattern *PatternDemo, size image.Rectangle) {
 	i := addBorder(pattern.Generate())
@@ -354,7 +325,6 @@ func DrawDemoPattern(pattern *PatternDemo, size image.Rectangle) {
 
 func addBorder(img image.Image) image.Image {
 	if img == nil {
-		// Create a placeholder if image is nil (e.g. if generator returned nil)
 		img = image.NewRGBA(image.Rect(0, 0, 150, 150))
 	}
 	b := img.Bounds()
@@ -401,7 +371,6 @@ func (p *PatternDemo) Generate() image.Image {
 	}
 	var items []item
 
-	// 1. References / Inputs
 	for _, input := range p.Inputs {
 		items = append(items, item{input.Generator(b), input.Label})
 	}
@@ -409,12 +378,10 @@ func (p *PatternDemo) Generate() image.Image {
 		items = append(items, item{ref.Generator(b), ref.Label})
 	}
 
-	// 2. Steps
 	for _, step := range p.Steps {
 		items = append(items, item{step.Generator(b), step.Label})
 	}
 
-	// 3. Base 1x
 	baseLabel := p.BaseLabel
 	if baseLabel == "" {
 		baseLabel = "1x"
@@ -430,7 +397,6 @@ func (p *PatternDemo) Generate() image.Image {
 		}
 	}
 
-	// 4. Zooms
 	if baseImg != nil {
 		for _, z := range p.ZoomLevels {
 			img := pattern.NewSimpleZoom(baseImg, z, pattern.SetBounds(b))
@@ -438,7 +404,6 @@ func (p *PatternDemo) Generate() image.Image {
 		}
 	}
 
-	// Layout
 	n := len(items)
 	if n == 0 {
 		return image.NewRGBA(b)
@@ -449,16 +414,15 @@ func (p *PatternDemo) Generate() image.Image {
 		log.Fatalf("failed to load font: %v", err)
 	}
 
-	// Measure widths
 	var itemWidths []int
-	totalW := padding // Initial padding
+	totalW := padding
 	for _, it := range items {
 		d := &font.Drawer{Face: face}
 		w := d.MeasureString(it.label).Ceil()
 
 		iw := sz
 		if w > sz {
-			iw = w // expand cell if text is wider
+			iw = w
 		}
 		itemWidths = append(itemWidths, iw)
 		totalW += iw + padding
@@ -468,23 +432,21 @@ func (p *PatternDemo) Generate() image.Image {
 
 	dst := image.NewRGBA(image.Rect(0, 0, totalW, totalH))
 	white := image.NewUniform(color.White)
-	draw.Draw(dst, dst.Bounds(), white, image.Point{}, draw.Src) // background
+	draw.Draw(dst, dst.Bounds(), white, image.Point{}, draw.Src)
 
 	currentX := padding
 	for i, it := range items {
 		iw := itemWidths[i]
 
-		// Draw Label
 		d := &font.Drawer{
 			Dst:  dst,
 			Src:  image.NewUniform(color.Black),
 			Face: face,
 		}
 		labelW := d.MeasureString(it.label).Ceil()
-		d.Dot = fixed.P(currentX+(iw-labelW)/2, padding+20) // Center align
+		d.Dot = fixed.P(currentX+(iw-labelW)/2, padding+20)
 		d.DrawString(it.label)
 
-		// Draw Image (Centered in iw)
 		imgX := currentX + (iw - sz)/2
 		r := image.Rect(imgX, padding+labelHeight, imgX+sz, padding+labelHeight+sz)
 		draw.Draw(dst, r, it.img, b.Min, draw.Src)
@@ -493,4 +455,194 @@ func (p *PatternDemo) Generate() image.Image {
 	}
 
 	return dst
+}
+
+func generateCLIInit(demos []PatternDemo, outfile string) error {
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, ".", nil, 0)
+	if err != nil {
+		return err
+	}
+
+	type Command struct {
+		Name      string
+		FuncName  string
+		Args      []string
+		TakesInput bool
+	}
+	var commands []Command
+
+	for _, pkg := range pkgs {
+		for filename, f := range pkg.Files {
+			if strings.HasSuffix(filename, "_test.go") || strings.HasSuffix(filename, "_example.go") {
+				continue
+			}
+
+			ast.Inspect(f, func(n ast.Node) bool {
+				fn, ok := n.(*ast.FuncDecl)
+				if !ok {
+					return true
+				}
+				if !strings.HasPrefix(fn.Name.Name, "New") {
+					return true
+				}
+
+				cmdName := toSnakeCase(strings.TrimPrefix(fn.Name.Name, "New"))
+
+				var args []string
+				takesInput := false
+
+				if fn.Type.Params != nil {
+					for i, param := range fn.Type.Params.List {
+						// type string
+						typeName := ""
+						isVariadic := false
+
+						if ident, ok := param.Type.(*ast.Ident); ok {
+							typeName = ident.Name
+						} else if sel, ok := param.Type.(*ast.SelectorExpr); ok {
+							// e.g. color.Color
+							if x, ok := sel.X.(*ast.Ident); ok {
+								typeName = x.Name + "." + sel.Sel.Name
+							}
+						} else if ell, ok := param.Type.(*ast.Ellipsis); ok {
+							isVariadic = true
+							if ident, ok := ell.Elt.(*ast.Ident); ok {
+								typeName = "..." + ident.Name
+							} else if _, ok := ell.Elt.(*ast.FuncType); ok {
+								// ...func(any)
+								typeName = "...func(any)"
+							}
+						}
+
+						// Handle parameter names
+						for range param.Names {
+							if isVariadic {
+								if typeName == "...func(any)" {
+									// Skip this arg in CLI requirements
+									continue
+								}
+								// Treat other variadics as unsupported for now, or strings
+								args = append(args, typeName)
+							} else if i == 0 && typeName == "image.Image" {
+								takesInput = true
+							} else {
+								args = append(args, typeName)
+							}
+						}
+					}
+				}
+
+				commands = append(commands, Command{
+					Name:      cmdName,
+					FuncName:  fn.Name.Name,
+					Args:      args,
+					TakesInput: takesInput,
+				})
+				return true
+			})
+		}
+	}
+
+	// Generate file content
+	var sb strings.Builder
+	sb.WriteString("// Code generated by cmd/bootstrap/main.go; DO NOT EDIT.\n")
+	sb.WriteString("package pattern_cli\n\n")
+	sb.WriteString("import (\n")
+	sb.WriteString("\t\"fmt\"\n")
+	sb.WriteString("\t\"image\"\n")
+	sb.WriteString("\t\"strconv\"\n")
+	sb.WriteString("\t\"github.com/arran4/go-pattern/dsl\"\n")
+	sb.WriteString("\t\"github.com/arran4/go-pattern\"\n")
+	sb.WriteString(")\n\n")
+
+	sb.WriteString("func RegisterGeneratedCommands(fm dsl.FuncMap) {\n")
+
+	for _, cmd := range commands {
+		sb.WriteString(fmt.Sprintf("\tfm[\"%s\"] = func(args []string, input image.Image) (image.Image, error) {\n", cmd.Name))
+
+		// Check arg count
+		sb.WriteString(fmt.Sprintf("\t\tif len(args) < %d {\n", len(cmd.Args)))
+		sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"%s requires %d arguments\")\n", cmd.Name, len(cmd.Args)))
+		sb.WriteString("\t\t}\n")
+
+		// Check support first
+		supported := true
+		for _, argType := range cmd.Args {
+			switch argType {
+			case "int", "float64", "bool", "color.Color", "string":
+				// supported
+			default:
+				supported = false
+			}
+		}
+
+		if supported {
+			// Parse args
+			callArgs := []string{}
+			if cmd.TakesInput {
+				sb.WriteString("\t\tif input == nil {\n")
+				sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"%s requires an input image\")\n", cmd.Name))
+				sb.WriteString("\t\t}\n")
+				callArgs = append(callArgs, "input")
+			}
+
+			for i, argType := range cmd.Args {
+				varName := fmt.Sprintf("arg%d", i)
+				switch argType {
+				case "int":
+					sb.WriteString(fmt.Sprintf("\t\t%s, err := strconv.Atoi(args[%d])\n", varName, i))
+					sb.WriteString("\t\tif err != nil {\n")
+					sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"argument %d must be int: %%v\", err)\n", i))
+					sb.WriteString("\t\t}\n")
+					callArgs = append(callArgs, varName)
+				case "float64":
+					sb.WriteString(fmt.Sprintf("\t\t%s, err := strconv.ParseFloat(args[%d], 64)\n", varName, i))
+					sb.WriteString("\t\tif err != nil {\n")
+					sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"argument %d must be float: %%v\", err)\n", i))
+					sb.WriteString("\t\t}\n")
+					callArgs = append(callArgs, varName)
+				case "bool":
+					sb.WriteString(fmt.Sprintf("\t\t%s, err := strconv.ParseBool(args[%d])\n", varName, i))
+					sb.WriteString("\t\tif err != nil {\n")
+					sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"argument %d must be bool: %%v\", err)\n", i))
+					sb.WriteString("\t\t}\n")
+					callArgs = append(callArgs, varName)
+				case "color.Color":
+					sb.WriteString(fmt.Sprintf("\t\t%s, err := parseColor(args[%d])\n", varName, i))
+					sb.WriteString("\t\tif err != nil {\n")
+					sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"argument %d must be color: %%v\", err)\n", i))
+					sb.WriteString("\t\t}\n")
+					callArgs = append(callArgs, varName)
+				case "string":
+					callArgs = append(callArgs, fmt.Sprintf("args[%d]", i))
+				}
+			}
+
+			sb.WriteString(fmt.Sprintf("\t\treturn pattern.%s(%s), nil\n", cmd.FuncName, strings.Join(callArgs, ", ")))
+		} else {
+			sb.WriteString(fmt.Sprintf("\t\treturn nil, fmt.Errorf(\"command %s has unsupported argument types\")\n", cmd.Name))
+		}
+
+		sb.WriteString("\t}\n")
+	}
+
+	sb.WriteString("}\n")
+
+	return os.WriteFile(outfile, []byte(sb.String()), 0644)
+}
+
+func toSnakeCase(s string) string {
+	var sb strings.Builder
+	for i, r := range s {
+		if unicode.IsUpper(r) {
+			if i > 0 {
+				sb.WriteRune('_')
+			}
+			sb.WriteRune(unicode.ToLower(r))
+		} else {
+			sb.WriteRune(r)
+		}
+	}
+	return sb.String()
 }
