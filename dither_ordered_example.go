@@ -57,6 +57,9 @@ func GenerateOrderedDitherReferences() (map[string]func(image.Rectangle) image.I
 		"Halftone4x4": func(b image.Rectangle) image.Image {
 			return NewHalftoneDither(gopher, 4, bw)
 		},
+		"Halftone6x6": func(b image.Rectangle) image.Image {
+			return NewHalftoneDither(gopher, 6, bw)
+		},
 		"Halftone8x8": func(b image.Rectangle) image.Image {
 			return NewHalftoneDither(gopher, 8, bw)
 		},
@@ -64,7 +67,7 @@ func GenerateOrderedDitherReferences() (map[string]func(image.Rectangle) image.I
 			return NewRandomDither(gopher, bw, 12345)
 		},
 	}, []string{
-		"Bayer2x2", "Bayer4x4", "Bayer8x8", "Halftone4x4", "Halftone8x8", "Random",
+		"Bayer2x2", "Bayer4x4", "Bayer8x8", "Halftone4x4", "Halftone6x6", "Halftone8x8", "Random",
 	}
 }
 
