@@ -2,8 +2,8 @@ name: Update README
 
 on:
   push:
-    branches-ignore:
-      - '*-updated'
+    branches:
+      - main
     paths:
       - '**/*.go'
       - '**/*.gotmpl'
@@ -28,7 +28,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Update README and images
-          title: Update README and images
+          title: Update README and images for ${{ github.ref_name }}
           body: Auto-generated updates for README and images.
           branch: ${{ github.ref_name }}-updated
           base: ${{ github.ref_name }}
