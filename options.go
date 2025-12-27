@@ -468,3 +468,25 @@ func SetAngles(v ...float64) func(any) {
 		}
 	}
 }
+
+// Frequency configures the frequency of a pattern.
+type Frequency struct {
+	Frequency float64
+}
+
+func (s *Frequency) SetFrequency(v float64) {
+	s.Frequency = v
+}
+
+type hasFrequency interface {
+	SetFrequency(float64)
+}
+
+// SetFrequency creates an option to set the frequency.
+func SetFrequency(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasFrequency); ok {
+			h.SetFrequency(v)
+		}
+	}
+}
