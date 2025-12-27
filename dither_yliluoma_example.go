@@ -24,15 +24,24 @@ var Windows16 = color.Palette{
 	color.RGBA{0xff, 0xff, 0xff, 0xff}, // White
 }
 
+var Yliluoma1DitherOutputFilename = "dither_yliluoma1.png"
+var Yliluoma1DitherZoomLevels = []int{}
+
 func ExampleNewYliluoma1Dither() image.Image {
 	img := NewGopher()
 	return NewYliluoma1Dither(img, Windows16, 8)
 }
 
+var Yliluoma2DitherOutputFilename = "dither_yliluoma2.png"
+var Yliluoma2DitherZoomLevels = []int{}
+
 func ExampleNewYliluoma2Dither() image.Image {
 	img := NewGopher()
 	return NewYliluoma2Dither(img, Windows16, 8)
 }
+
+var KnollDitherOutputFilename = "dither_knoll.png"
+var KnollDitherZoomLevels = []int{}
 
 func ExampleNewKnollDither() image.Image {
 	img := NewGopher()

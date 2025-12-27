@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"math"
 	"sort"
+	"sync"
 )
 
 // Yliluoma1Dither implements Yliluoma's ordered dithering algorithm 1.
@@ -15,6 +16,8 @@ type Yliluoma1Dither struct {
 	Palette []color.Color
 	Matrix  []float64 // 0..1 values
 	Size    int       // e.g. 8 for 8x8
+	cache   map[int]mixingPlan
+	mu      sync.RWMutex
 }
 
 // NewYliluoma1Dither creates a new Yliluoma1Dither pattern.
@@ -48,6 +51,7 @@ func NewYliluoma1Dither(input image.Image, palette color.Palette, size int, ops 
 		Palette: palette,
 		Matrix:  mat,
 		Size:    size,
+		cache:   make(map[int]mixingPlan),
 	}
 	if input != nil {
 		p.bounds = input.Bounds()
@@ -80,7 +84,18 @@ func (p *Yliluoma1Dither) At(x, y int) color.Color {
 	mapValue := p.Matrix[my*p.Size+mx]
 
 	// Find best mixing plan
-	plan := p.deviseBestMixingPlan(ri, gi, bi)
+	key := (ri << 16) | (gi << 8) | bi
+
+	p.mu.RLock()
+	plan, ok := p.cache[key]
+	p.mu.RUnlock()
+
+	if !ok {
+		plan = p.deviseBestMixingPlan(ri, gi, bi)
+		p.mu.Lock()
+		p.cache[key] = plan
+		p.mu.Unlock()
+	}
 
 	if mapValue < plan.ratio {
 		return p.Palette[plan.index2]
@@ -191,6 +206,8 @@ type Yliluoma2Dither struct {
 	Palette []color.Color
 	Matrix  []float64
 	Size    int
+	cache   map[int][]int
+	mu      sync.RWMutex
 }
 
 // NewYliluoma2Dither creates a new Yliluoma2Dither pattern.
@@ -222,6 +239,7 @@ func NewYliluoma2Dither(input image.Image, palette color.Palette, size int, ops 
 		Palette: palette,
 		Matrix:  mat,
 		Size:    size,
+		cache:   make(map[int][]int),
 	}
 	if input != nil {
 		p.bounds = input.Bounds()
@@ -249,7 +267,18 @@ func (p *Yliluoma2Dither) At(x, y int) color.Color {
 	mapVal := p.Matrix[my*p.Size+mx]
 
 	// Build candidate list
-	candidates := p.deviseMixingPlan(ri, gi, bi)
+	key := (ri << 16) | (gi << 8) | bi
+
+	p.mu.RLock()
+	candidates, ok := p.cache[key]
+	p.mu.RUnlock()
+
+	if !ok {
+		candidates = p.deviseMixingPlan(ri, gi, bi)
+		p.mu.Lock()
+		p.cache[key] = candidates
+		p.mu.Unlock()
+	}
 
 	// candidates is sorted by luma
 	// index = mapVal * size
@@ -342,6 +371,8 @@ type KnollDither struct {
 	Palette []color.Color
 	Matrix  []int // Integer matrix 0..63 for 8x8
 	Size    int
+	cache   map[int][]int
+	mu      sync.RWMutex
 }
 
 // NewKnollDither creates a new KnollDither pattern.
@@ -364,6 +395,7 @@ func NewKnollDither(img image.Image, palette color.Palette, size int, ops ...fun
 		Palette: palette,
 		Matrix:  mat,
 		Size:    size,
+		cache:   make(map[int][]int),
 	}
 	if img != nil {
 		p.bounds = img.Bounds()
@@ -382,12 +414,23 @@ func (p *KnollDither) At(x, y int) color.Color {
 	r, g, b, _ := c.RGBA()
 	ri, gi, bi := int(r>>8), int(g>>8), int(b>>8)
 
-	candidates := p.devisePlan(ri, gi, bi)
-
 	mx := x % p.Size
 	if mx < 0 { mx += p.Size }
 	my := y % p.Size
 	if my < 0 { my += p.Size }
+
+	key := (ri << 16) | (gi << 8) | bi
+
+	p.mu.RLock()
+	candidates, ok := p.cache[key]
+	p.mu.RUnlock()
+
+	if !ok {
+		candidates = p.devisePlan(ri, gi, bi)
+		p.mu.Lock()
+		p.cache[key] = candidates
+		p.mu.Unlock()
+	}
 
 	idx := p.Matrix[my*p.Size + mx]
 
