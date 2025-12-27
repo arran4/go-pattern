@@ -11,4 +11,3 @@ These patterns are designed to be:
 - **Standard**: Fully compatible with any Go library that accepts `image.Image`.
 
 ## Patterns
-
