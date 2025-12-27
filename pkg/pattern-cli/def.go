@@ -57,6 +57,7 @@ func process(input string, fm dsl.FuncMap) error {
 }
 
 func registerCommands(fm dsl.FuncMap) {
+	RegisterGeneratedCommands(fm)
 	fm["checkers"] = func(args []string, input image.Image) (image.Image, error) {
 		if len(args) < 2 {
 			return nil, fmt.Errorf("checkers requires 2 color arguments")
