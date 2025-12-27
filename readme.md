@@ -13,58 +13,31 @@ These patterns are designed to be:
 ## Patterns
 
 
-### CrossHatch Pattern
+### Shojo_blue Pattern
 
 
 
-![CrossHatch Pattern](crosshatch.png)
+![Shojo_blue Pattern](shojo_blue.png)
 
 ```go
-	// This function body is empty because the bootstrap tool uses the function signature
-	// and the following variable to generate the documentation and image.
+	return NewShojo(
+		SetSpaceColor(color.RGBA{0, 0, 40, 255}), // Dark blue bg
+		SetFillColor(color.RGBA{200, 220, 255, 255}), // Blueish sparkles
+	)
 ```
 
 
-### Stones Pattern
+### Shojo_pink Pattern
 
 
 
-![Stones Pattern](stones.png)
+![Shojo_pink Pattern](shojo_pink.png)
 
 ```go
-	// F2-F1 gives distance to the border.
-	// Border is 0. Center is High.
-	noise := NewWorleyNoise(
-		SetFrequency(0.02),
-		SetSeed(100),
-		SetWorleyOutput(OutputF2MinusF1),
-		SetWorleyMetric(MetricEuclidean),
+	return NewShojo(
+		SetSpaceColor(color.RGBA{20, 0, 10, 255}), // Dark red/brown bg
+		SetFillColor(color.RGBA{255, 200, 220, 255}), // Pink sparkles
 	)
-
-	// Map:
-	// 0.0 - 0.1: Mortar (Dark)
-	// 0.1 - 0.3: Edge of stone (Darker Grey)
-	// 0.3 - 1.0: Stone Body (Grey/Blueish with gradient)
-
-	stones := NewColorMap(noise,
-		ColorStop{Position: 0.0, Color: color.RGBA{20, 15, 10, 255}},    // Mortar
-		ColorStop{Position: 0.15, Color: color.RGBA{40, 40, 45, 255}},   // Stone Edge
-		ColorStop{Position: 0.3, Color: color.RGBA{80, 80, 90, 255}},    // Stone Body
-		ColorStop{Position: 0.8, Color: color.RGBA{150, 150, 160, 255}}, // Highlight
-	)
-
-	f, err := os.Create(StonesOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, stones); err != nil {
-		panic(err)
-	}
 ```
 
 
@@ -161,27 +134,33 @@ These patterns are designed to be:
 ```
 
 
-### Voronoi Pattern
+### Tile Pattern
 
 
 
-![Voronoi Pattern](voronoi.png)
+![Tile Pattern](tile.png)
 
 ```go
-	// Define some points and colors
-	points := []image.Point{
-		{50, 50}, {200, 50}, {125, 125}, {50, 200}, {200, 200},
-	}
-	colors := []color.Color{
-		color.RGBA{255, 100, 100, 255},
-		color.RGBA{100, 255, 100, 255},
-		color.RGBA{100, 100, 255, 255},
-		color.RGBA{255, 255, 100, 255},
-		color.RGBA{100, 255, 255, 255},
-	}
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
+	// Tile the gopher in a 200x200 area
+	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+```
 
-	i := NewVoronoi(points, colors)
-	f, err := os.Create(VoronoiOutputFilename)
+
+### Polka Pattern
+
+
+
+![Polka Pattern](polka.png)
+
+```go
+	i := NewPolka(
+		SetRadius(10),
+		SetSpacing(40),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(PolkaOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -240,6 +219,52 @@ These patterns are designed to be:
 ```
 
 
+### Warp_clouds Pattern
+
+
+
+![Warp_clouds Pattern](warp_clouds.png)
+
+```go
+	baseNoise := NewNoise(NoiseSeed(777), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.02,
+		Octaves: 4,
+		Persistence: 0.5,
+	}))
+
+	warpNoise := NewNoise(NoiseSeed(888), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.02,
+		Octaves: 2,
+	}))
+
+	warped := NewWarp(baseNoise,
+		WarpDistortion(warpNoise),
+		WarpScale(50.0),
+	)
+
+	stops := []ColorStop{
+		{0.0, color.RGBA{0, 100, 200, 255}},
+		{0.4, color.RGBA{100, 150, 255, 255}},
+		{0.6, color.RGBA{255, 255, 255, 255}},
+		{1.0, color.RGBA{255, 255, 255, 255}},
+	}
+
+	return NewColorMap(warped, stops...)
+```
+
+
+### CrossHatch Pattern
+
+
+
+![CrossHatch Pattern](crosshatch.png)
+
+```go
+	// This function body is empty because the bootstrap tool uses the function signature
+	// and the following variable to generate the documentation and image.
+```
+
+
 ### Shojo Pattern
 
 
@@ -248,43 +273,6 @@ These patterns are designed to be:
 
 ```go
 	return NewShojo(ops...)
-```
-
-
-### Null Pattern
-
-
-
-![Null Pattern](null.png)
-
-```go
-	i := NewNull()
-	f, err := os.Create(NullOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Shojo_blue Pattern
-
-
-
-![Shojo_blue Pattern](shojo_blue.png)
-
-```go
-	return NewShojo(
-		SetSpaceColor(color.RGBA{0, 0, 40, 255}), // Dark blue bg
-		SetFillColor(color.RGBA{200, 220, 255, 255}), // Blueish sparkles
-	)
 ```
 
 
@@ -310,6 +298,127 @@ These patterns are designed to be:
 		}
 	}()
 	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Warp_terrain Pattern
+
+
+
+![Warp_terrain Pattern](warp_terrain.png)
+
+```go
+	fbm := func(seed int64) image.Image {
+		return NewNoise(NoiseSeed(seed), SetNoiseAlgorithm(&PerlinNoise{
+			Frequency: 0.015,
+			Octaves: 6,
+			Persistence: 0.5,
+			Lacunarity: 2.0,
+		}))
+	}
+
+	base := fbm(101)
+
+	warp := NewNoise(NoiseSeed(202), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.01,
+		Octaves: 2,
+	}))
+
+	warped := NewWarp(base,
+		WarpDistortion(warp),
+		WarpScale(80.0),
+	)
+
+	stops := []ColorStop{
+		{0.0, color.RGBA{0, 0, 150, 255}},
+		{0.2, color.RGBA{0, 50, 200, 255}},
+		{0.22, color.RGBA{240, 230, 140, 255}},
+		{0.3, color.RGBA{34, 139, 34, 255}},
+		{0.6, color.RGBA{107, 142, 35, 255}},
+		{0.8, color.RGBA{139, 69, 19, 255}},
+		{0.9, color.RGBA{100, 100, 100, 255}},
+		{0.98, color.RGBA{255, 250, 250, 255}},
+	}
+
+	return NewColorMap(warped, stops...)
+```
+
+
+### Voronoi Pattern
+
+
+
+![Voronoi Pattern](voronoi.png)
+
+```go
+	// Define some points and colors
+	points := []image.Point{
+		{50, 50}, {200, 50}, {125, 125}, {50, 200}, {200, 200},
+	}
+	colors := []color.Color{
+		color.RGBA{255, 100, 100, 255},
+		color.RGBA{100, 255, 100, 255},
+		color.RGBA{100, 100, 255, 255},
+		color.RGBA{255, 255, 100, 255},
+		color.RGBA{100, 255, 255, 255},
+	}
+
+	i := NewVoronoi(points, colors)
+	f, err := os.Create(VoronoiOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Stones Pattern
+
+
+
+![Stones Pattern](stones.png)
+
+```go
+	// F2-F1 gives distance to the border.
+	// Border is 0. Center is High.
+	noise := NewWorleyNoise(
+		SetFrequency(0.02),
+		SetSeed(100),
+		SetWorleyOutput(OutputF2MinusF1),
+		SetWorleyMetric(MetricEuclidean),
+	)
+
+	// Map:
+	// 0.0 - 0.1: Mortar (Dark)
+	// 0.1 - 0.3: Edge of stone (Darker Grey)
+	// 0.3 - 1.0: Stone Body (Grey/Blueish with gradient)
+
+	stones := NewColorMap(noise,
+		ColorStop{Position: 0.0, Color: color.RGBA{20, 15, 10, 255}},    // Mortar
+		ColorStop{Position: 0.15, Color: color.RGBA{40, 40, 45, 255}},   // Stone Edge
+		ColorStop{Position: 0.3, Color: color.RGBA{80, 80, 90, 255}},    // Stone Body
+		ColorStop{Position: 0.8, Color: color.RGBA{150, 150, 160, 255}}, // Highlight
+	)
+
+	f, err := os.Create(StonesOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, stones); err != nil {
 		panic(err)
 	}
 ```
@@ -384,48 +493,6 @@ These patterns are designed to be:
 ```
 
 
-### ScreenTone Pattern
-
-
-
-![ScreenTone Pattern](screentone.png)
-
-```go
-	i := NewScreenTone(
-		SetRadius(3),
-		SetSpacing(10),
-		SetAngle(45),
-		SetFillColor(color.Black),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(ScreenToneOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Tile Pattern
-
-
-
-![Tile Pattern](tile.png)
-
-```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
-```
-
-
 ### CrackedMud Pattern
 
 
@@ -467,20 +534,21 @@ These patterns are designed to be:
 ```
 
 
-### Polka Pattern
+### ScreenTone Pattern
 
 
 
-![Polka Pattern](polka.png)
+![ScreenTone Pattern](screentone.png)
 
 ```go
-	i := NewPolka(
-		SetRadius(10),
-		SetSpacing(40),
+	i := NewScreenTone(
+		SetRadius(3),
+		SetSpacing(10),
+		SetAngle(45),
 		SetFillColor(color.Black),
 		SetSpaceColor(color.White),
 	)
-	f, err := os.Create(PolkaOutputFilename)
+	f, err := os.Create(ScreenToneOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -495,110 +563,59 @@ These patterns are designed to be:
 ```
 
 
-### Warp_terrain Pattern
+### Null Pattern
 
 
 
-![Warp_terrain Pattern](warp_terrain.png)
+![Null Pattern](null.png)
 
 ```go
-	fbm := func(seed int64) image.Image {
-		return NewNoise(NoiseSeed(seed), SetNoiseAlgorithm(&PerlinNoise{
-			Frequency: 0.015,
-			Octaves: 6,
-			Persistence: 0.5,
-			Lacunarity: 2.0,
-		}))
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
+	if err != nil {
+		panic(err)
 	}
-
-	base := fbm(101)
-
-	warp := NewNoise(NoiseSeed(202), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.01,
-		Octaves: 2,
-	}))
-
-	warped := NewWarp(base,
-		WarpDistortion(warp),
-		WarpScale(80.0),
-	)
-
-	stops := []ColorStop{
-		{0.0, color.RGBA{0, 0, 150, 255}},
-		{0.2, color.RGBA{0, 50, 200, 255}},
-		{0.22, color.RGBA{240, 230, 140, 255}},
-		{0.3, color.RGBA{34, 139, 34, 255}},
-		{0.6, color.RGBA{107, 142, 35, 255}},
-		{0.8, color.RGBA{139, 69, 19, 255}},
-		{0.9, color.RGBA{100, 100, 100, 255}},
-		{0.98, color.RGBA{255, 250, 250, 255}},
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
 	}
-
-	return NewColorMap(warped, stops...)
 ```
 
 
-### Warp_clouds Pattern
+### Warp Pattern
 
 
 
-![Warp_clouds Pattern](warp_clouds.png)
+![Warp Pattern](warp.png)
 
 ```go
-	baseNoise := NewNoise(NoiseSeed(777), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.02,
-		Octaves: 4,
-		Persistence: 0.5,
-	}))
+	// Standard demo: Grid warped by noise
+	// We want a visual that clearly shows the warping effect.
+	// A checkerboard is good.
 
-	warpNoise := NewNoise(NoiseSeed(888), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.02,
+	checker := NewChecker(
+		color.RGBA{200, 200, 200, 255},
+		color.RGBA{50, 50, 50, 255},
+	)
+
+	// Distortion noise
+	noise := NewNoise(NoiseSeed(99), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.03,
 		Octaves: 2,
 	}))
 
-	warped := NewWarp(baseNoise,
-		WarpDistortion(warpNoise),
-		WarpScale(50.0),
-	)
-
-	stops := []ColorStop{
-		{0.0, color.RGBA{0, 100, 200, 255}},
-		{0.4, color.RGBA{100, 150, 255, 255}},
-		{0.6, color.RGBA{255, 255, 255, 255}},
-		{1.0, color.RGBA{255, 255, 255, 255}},
-	}
-
-	return NewColorMap(warped, stops...)
-```
-
-
-### Warp_marble Pattern
-
-
-
-![Warp_marble Pattern](warp_marble.png)
-
-```go
-	colors := []color.Color{
-		color.RGBA{240, 240, 245, 255},
-		color.RGBA{240, 240, 245, 255},
-		color.RGBA{240, 240, 245, 255},
-		color.RGBA{200, 200, 210, 255},
-		color.RGBA{100, 100, 110, 255},
-		color.RGBA{200, 200, 210, 255},
-	}
-	stripes := NewModuloStripe(colors)
-
-	noise := NewNoise(NoiseSeed(456), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.04,
-		Octaves: 4,
-		Persistence: 0.6,
-	}))
-
-	return NewWarp(stripes,
+	// Apply Warp
+	warped := NewWarp(checker,
 		WarpDistortion(noise),
-		WarpScale(30.0),
+		WarpScale(10.0),
 	)
+
+	fmt.Println(warped.At(10, 10))
+	// Output: {50 50 50 255}
 ```
 
 
@@ -640,50 +657,33 @@ These patterns are designed to be:
 ```
 
 
-### Shojo_pink Pattern
+### Warp_marble Pattern
 
 
 
-![Shojo_pink Pattern](shojo_pink.png)
-
-```go
-	return NewShojo(
-		SetSpaceColor(color.RGBA{20, 0, 10, 255}), // Dark red/brown bg
-		SetFillColor(color.RGBA{255, 200, 220, 255}), // Pink sparkles
-	)
-```
-
-
-### Warp Pattern
-
-
-
-![Warp Pattern](warp.png)
+![Warp_marble Pattern](warp_marble.png)
 
 ```go
-	// Standard demo: Grid warped by noise
-	// We want a visual that clearly shows the warping effect.
-	// A checkerboard is good.
+	colors := []color.Color{
+		color.RGBA{240, 240, 245, 255},
+		color.RGBA{240, 240, 245, 255},
+		color.RGBA{240, 240, 245, 255},
+		color.RGBA{200, 200, 210, 255},
+		color.RGBA{100, 100, 110, 255},
+		color.RGBA{200, 200, 210, 255},
+	}
+	stripes := NewModuloStripe(colors)
 
-	checker := NewChecker(
-		color.RGBA{200, 200, 200, 255},
-		color.RGBA{50, 50, 50, 255},
-	)
-
-	// Distortion noise
-	noise := NewNoise(NoiseSeed(99), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.03,
-		Octaves: 2,
+	noise := NewNoise(NoiseSeed(456), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.04,
+		Octaves: 4,
+		Persistence: 0.6,
 	}))
 
-	// Apply Warp
-	warped := NewWarp(checker,
+	return NewWarp(stripes,
 		WarpDistortion(noise),
-		WarpScale(10.0),
+		WarpScale(30.0),
 	)
-
-	fmt.Println(warped.At(10, 10))
-	// Output: {50 50 50 255}
 ```
 
 
@@ -852,6 +852,40 @@ These patterns are designed to be:
 ```
 
 
+### MathsMandelbrot Pattern
+
+
+
+![MathsMandelbrot Pattern](maths_mandelbrot.png)
+
+```go
+	// See GenerateMathsMandelbrot for implementation details
+```
+
+
+### Gopher Pattern
+
+
+
+![Gopher Pattern](gopher.png)
+
+```go
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Rect Pattern
 
 
@@ -879,17 +913,6 @@ These patterns are designed to be:
 ```
 
 
-### MathsMandelbrot Pattern
-
-
-
-![MathsMandelbrot Pattern](maths_mandelbrot.png)
-
-```go
-	// See GenerateMathsMandelbrot for implementation details
-```
-
-
 ### BooleanAnd Pattern
 
 
@@ -906,29 +929,6 @@ These patterns are designed to be:
 	i := NewAnd([]image.Image{g, h})
 
 	f, err := os.Create(BooleanAndOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Gopher Pattern
-
-
-
-![Gopher Pattern](gopher.png)
-
-```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -967,6 +967,17 @@ These patterns are designed to be:
 ```
 
 
+### MathsJulia Pattern
+
+
+
+![MathsJulia Pattern](maths_julia.png)
+
+```go
+	// See GenerateMathsJulia for implementation details
+```
+
+
 ### BooleanOr Pattern
 
 
@@ -992,17 +1003,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-```
-
-
-### MathsJulia Pattern
-
-
-
-![MathsJulia Pattern](maths_julia.png)
-
-```go
-	// See GenerateMathsJulia for implementation details
 ```
 
 
@@ -1220,25 +1220,6 @@ These patterns are designed to be:
 ```
 
 
-### XorGrid Pattern
-
-
-
-![XorGrid Pattern](xor_pattern.png)
-
-```go
-	p := NewXorPattern()
-	f, err := os.Create(XorGridOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	if err := png.Encode(f, p); err != nil {
-		panic(err)
-	}
-```
-
-
 ### SimpleZoom Pattern
 
 
@@ -1300,6 +1281,25 @@ These patterns are designed to be:
 ```
 
 
+### XorGrid Pattern
+
+
+
+![XorGrid Pattern](xor_pattern.png)
+
+```go
+	p := NewXorPattern()
+	f, err := os.Create(XorGridOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err := png.Encode(f, p); err != nil {
+		panic(err)
+	}
+```
+
+
 ### ModuloStripe Pattern
 
 
@@ -1349,6 +1349,21 @@ These patterns are designed to be:
 ```
 
 
+### RadialGradient Pattern
+
+
+
+![RadialGradient Pattern](radial_gradient.png)
+
+```go
+	// Radial Gradient
+	NewRadialGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
+```
+
+
 ### Transposed Pattern
 
 
@@ -1369,21 +1384,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-```
-
-
-### RadialGradient Pattern
-
-
-
-![RadialGradient Pattern](radial_gradient.png)
-
-```go
-	// Radial Gradient
-	NewRadialGradient(
-		SetStartColor(color.RGBA{255, 0, 0, 255}),
-		SetEndColor(color.RGBA{0, 0, 255, 255}),
-	)
 ```
 
 
@@ -1448,25 +1448,6 @@ These patterns are designed to be:
 ```
 
 
-### Plasma Pattern
-
-
-
-![Plasma Pattern](plasma.png)
-
-```go
-	p := NewPlasma()
-	f, err := os.Create(PlasmaOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	if err := png.Encode(f, p); err != nil {
-		panic(err)
-	}
-```
-
-
 ### Rotate Pattern
 
 
@@ -1485,6 +1466,25 @@ These patterns are designed to be:
 		}
 	}()
 	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Plasma Pattern
+
+
+
+![Plasma Pattern](plasma.png)
+
+```go
+	p := NewPlasma()
+	f, err := os.Create(PlasmaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
 ```
@@ -1576,17 +1576,6 @@ These patterns are designed to be:
 ```
 
 
-### VHS Pattern
-
-
-
-![VHS Pattern](vhs.png)
-
-```go
-	// See GenerateVHS for implementation details
-```
-
-
 ### SierpinskiTriangle Pattern
 
 
@@ -1595,6 +1584,17 @@ These patterns are designed to be:
 
 ```go
 	// See GenerateSierpinskiTriangle for implementation details
+```
+
+
+### VHS Pattern
+
+
+
+![VHS Pattern](vhs.png)
+
+```go
+	// See GenerateVHS for implementation details
 ```
 
 
