@@ -229,6 +229,78 @@ These patterns are designed to be:
 	)
 
 	f, err := os.Create(CellsOutputFilename)
+### CrossHatch Pattern
+
+
+
+![CrossHatch Pattern](crosshatch.png)
+
+```go
+	// This function body is empty because the bootstrap tool uses the function signature
+	// and the following variable to generate the documentation and image.
+```
+
+
+### Shojo_blue Pattern
+
+
+
+![Shojo_blue Pattern](shojo_blue.png)
+
+```go
+	return NewShojo(
+		SetSpaceColor(color.RGBA{0, 0, 40, 255}), // Dark blue bg
+		SetFillColor(color.RGBA{200, 220, 255, 255}), // Blueish sparkles
+	)
+```
+
+
+### Shojo_pink Pattern
+
+
+
+![Shojo_pink Pattern](shojo_pink.png)
+
+```go
+	return NewShojo(
+		SetSpaceColor(color.RGBA{20, 0, 10, 255}), // Dark red/brown bg
+		SetFillColor(color.RGBA{255, 200, 220, 255}), // Pink sparkles
+	)
+```
+
+
+### Shojo Pattern
+
+
+
+![Shojo Pattern](shojo.png)
+
+```go
+	return NewShojo(ops...)
+```
+
+
+### Voronoi Pattern
+
+
+
+![Voronoi Pattern](voronoi.png)
+
+```go
+	// Define some points and colors
+	points := []image.Point{
+		{50, 50}, {200, 50}, {125, 125}, {50, 200}, {200, 200},
+	}
+	colors := []color.Color{
+		color.RGBA{255, 100, 100, 255},
+		color.RGBA{100, 255, 100, 255},
+		color.RGBA{100, 100, 255, 255},
+		color.RGBA{255, 255, 100, 255},
+		color.RGBA{100, 255, 255, 255},
+	}
+
+	i := NewVoronoi(points, colors)
+	f, err := os.Create(VoronoiOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -238,6 +310,7 @@ These patterns are designed to be:
 		}
 	}()
 	if err = png.Encode(f, cells); err != nil {
+	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
 ```
@@ -257,6 +330,21 @@ These patterns are designed to be:
 		SetSpaceColor(color.White),
 	)
 	f, err := os.Create(PolkaOutputFilename)
+### ScreenTone Pattern
+
+
+
+![ScreenTone Pattern](screentone.png)
+
+```go
+	i := NewScreenTone(
+		SetRadius(3),
+		SetSpacing(10),
+		SetAngle(45),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(ScreenToneOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -411,6 +499,15 @@ These patterns are designed to be:
 		SetSpaceColor(color.White),
 	)
 	f, err := os.Create(ScreenToneOutputFilename)
+### Null Pattern
+
+
+
+![Null Pattern](null.png)
+
+```go
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -698,6 +795,46 @@ These patterns are designed to be:
 
 	// Create the file for the example
 	f, err := os.Create(RectOutputFilename)
+### BooleanAnd Pattern
+
+
+
+![BooleanAnd Pattern](boolean_and.png)
+
+```go
+	// Gopher AND Horizontal Stripes
+	g := NewGopher()
+	// Line: Black (Alpha 1). Space: White (Alpha 1).
+	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
+
+	// Default uses component-wise min if no TrueColor/FalseColor set.
+	i := NewAnd([]image.Image{g, h})
+
+	f, err := os.Create(BooleanAndOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Noise Pattern
+
+
+
+![Noise Pattern](noise.png)
+
+```go
+	// Create a noise pattern with a seeded algorithm (Hash) for stability
+	i := NewNoise(NoiseSeed(1))
+	f, err := os.Create(NoiseOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -759,22 +896,20 @@ These patterns are designed to be:
 ```
 
 
-### BooleanAnd Pattern
+### BooleanOr Pattern
 
 
 
-![BooleanAnd Pattern](boolean_and.png)
+![BooleanOr Pattern](boolean_or.png)
 
 ```go
-	// Gopher AND Horizontal Stripes
 	g := NewGopher()
-	// Line: Black (Alpha 1). Space: White (Alpha 1).
-	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
+	v := NewVerticalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
 
-	// Default uses component-wise min if no TrueColor/FalseColor set.
-	i := NewAnd([]image.Image{g, h})
+	// OR(Gopher, Stripes) -> Max(Gopher, Stripes)
+	i := NewOr([]image.Image{g, v})
 
-	f, err := os.Create(BooleanAndOutputFilename)
+	f, err := os.Create(BooleanOrOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -818,6 +953,18 @@ These patterns are designed to be:
 
 
 ### MathsJulia Pattern
+### MathsJulia Pattern
+
+
+
+![MathsJulia Pattern](maths_julia.png)
+
+```go
+	// See GenerateMathsJulia for implementation details
+```
+
+
+### MathsSine Pattern
 
 
 
@@ -903,6 +1050,17 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### Heatmap Pattern
+
+
+
+![Heatmap Pattern](heatmap.png)
+
+```go
+	// See GenerateHeatmap for implementation details
 ```
 
 
@@ -1042,15 +1200,19 @@ These patterns are designed to be:
 ```
 
 
-### SimpleZoom Pattern
+### SpeedLines Pattern
 
 
 
-![SimpleZoom Pattern](simplezoom.png)
+![SpeedLines Pattern](speedlines.png)
 
 ```go
-	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
-	f, err := os.Create(SimpleZoomOutputFilename)
+	i := NewSpeedLines(
+		SetDensity(150),
+		SetMinRadius(30),
+		SetMaxRadius(80),
+	)
+	f, err := os.Create(SpeedLinesOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -1062,6 +1224,44 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### Quantize Pattern
+
+
+
+![Quantize Pattern](quantize.png)
+
+```go
+	i := NewQuantize(NewGopher(), 4)
+	f, err := os.Create(QuantizeOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### LinearGradient Pattern
+
+
+
+![LinearGradient Pattern](linear_gradient.png)
+
+```go
+	// Linear Gradient (Horizontal)
+	NewLinearGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
 ```
 
 
@@ -1108,6 +1308,38 @@ These patterns are designed to be:
 ```go
 	i := NewQuantize(NewGopher(), 4)
 	f, err := os.Create(QuantizeOutputFilename)
+### SimpleZoom Pattern
+
+
+
+![SimpleZoom Pattern](simplezoom.png)
+
+```go
+	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
+	f, err := os.Create(SimpleZoomOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Transposed Pattern
+
+
+
+![Transposed Pattern](transposed.png)
+
+```go
+	i := NewTransposed(NewDemoNull(), 10, 10)
+	f, err := os.Create(TransposedOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -1260,16 +1492,6 @@ These patterns are designed to be:
 		color.RGBA{255, 0, 0, 255},
 	})
 	f, err := os.Create(ConcentricRingsOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	if err := png.Encode(f, p); err != nil {
-		panic(err)
-	}
-```
-
-
 ### Plasma Pattern
 
 
@@ -1284,6 +1506,29 @@ These patterns are designed to be:
 	}
 	defer f.Close()
 	if err := png.Encode(f, p); err != nil {
+		panic(err)
+	}
+```
+
+
+### Rotate Pattern
+
+
+
+![Rotate Pattern](rotate.png)
+
+```go
+	i := NewRotate(NewDemoRotateInput(image.Rect(0, 0, 40, 60)), 90)
+	f, err := os.Create(RotateOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
 ```
@@ -1398,17 +1643,6 @@ These patterns are designed to be:
 ```
 
 
-### SierpinskiTriangle Pattern
-
-
-
-![SierpinskiTriangle Pattern](sierpinski_triangle.png)
-
-```go
-	// See GenerateSierpinskiTriangle for implementation details
-```
-
-
 ### VHS Pattern
 
 
@@ -1417,6 +1651,17 @@ These patterns are designed to be:
 
 ```go
 	// See GenerateVHS for implementation details
+```
+
+
+### SierpinskiTriangle Pattern
+
+
+
+![SierpinskiTriangle Pattern](sierpinski_triangle.png)
+
+```go
+	// See GenerateSierpinskiTriangle for implementation details
 ```
 
 
