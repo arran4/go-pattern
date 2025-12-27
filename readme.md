@@ -13,6 +13,34 @@ These patterns are designed to be:
 ## Patterns
 
 
+### Polka Pattern
+
+
+
+![Polka Pattern](polka.png)
+
+```go
+	i := NewPolka(
+		SetRadius(10),
+		SetSpacing(40),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(PolkaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### ScreenTone Pattern
 
 
@@ -28,47 +56,6 @@ These patterns are designed to be:
 		SetSpaceColor(color.White),
 	)
 	f, err := os.Create(ScreenToneOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Tile Pattern
-
-
-
-![Tile Pattern](tile.png)
-
-```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
-```
-
-
-### Polka Pattern
-
-
-
-![Polka Pattern](polka.png)
-
-```go
-	i := NewPolka(
-		SetRadius(10),
-		SetSpacing(40),
-		SetFillColor(color.Black),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(PolkaOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -131,6 +118,45 @@ These patterns are designed to be:
 ```
 
 
+### Shojo_blue Pattern
+
+
+
+![Shojo_blue Pattern](shojo_blue.png)
+
+```go
+	return NewShojo(
+		SetSpaceColor(color.RGBA{0, 0, 40, 255}), // Dark blue bg
+		SetFillColor(color.RGBA{200, 220, 255, 255}), // Blueish sparkles
+	)
+```
+
+
+### CrossHatch Pattern
+
+
+
+![CrossHatch Pattern](crosshatch.png)
+
+```go
+	// This function body is empty because the bootstrap tool uses the function signature
+	// and the following variable to generate the documentation and image.
+```
+
+
+### Tile Pattern
+
+
+
+![Tile Pattern](tile.png)
+
+```go
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
+	// Tile the gopher in a 200x200 area
+	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+```
+
+
 ### Voronoi Pattern
 
 
@@ -163,32 +189,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-```
-
-
-### CrossHatch Pattern
-
-
-
-![CrossHatch Pattern](crosshatch.png)
-
-```go
-	// This function body is empty because the bootstrap tool uses the function signature
-	// and the following variable to generate the documentation and image.
-```
-
-
-### Shojo_blue Pattern
-
-
-
-![Shojo_blue Pattern](shojo_blue.png)
-
-```go
-	return NewShojo(
-		SetSpaceColor(color.RGBA{0, 0, 40, 255}), // Dark blue bg
-		SetFillColor(color.RGBA{200, 220, 255, 255}), // Blueish sparkles
-	)
 ```
 
 
@@ -357,36 +357,6 @@ These patterns are designed to be:
 ```
 
 
-### BooleanAnd Pattern
-
-
-
-![BooleanAnd Pattern](boolean_and.png)
-
-```go
-	// Gopher AND Horizontal Stripes
-	g := NewGopher()
-	// Line: Black (Alpha 1). Space: White (Alpha 1).
-	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
-
-	// Default uses component-wise min if no TrueColor/FalseColor set.
-	i := NewAnd([]image.Image{g, h})
-
-	f, err := os.Create(BooleanAndOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### Noise Pattern
 
 
@@ -422,6 +392,29 @@ These patterns are designed to be:
 ```
 
 
+### Gopher Pattern
+
+
+
+![Gopher Pattern](gopher.png)
+
+```go
+	i := NewGopher()
+	f, err := os.Create(GopherOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Rect Pattern
 
 
@@ -449,15 +442,22 @@ These patterns are designed to be:
 ```
 
 
-### Gopher Pattern
+### BooleanAnd Pattern
 
 
 
-![Gopher Pattern](gopher.png)
+![BooleanAnd Pattern](boolean_and.png)
 
 ```go
-	i := NewGopher()
-	f, err := os.Create(GopherOutputFilename)
+	// Gopher AND Horizontal Stripes
+	g := NewGopher()
+	// Line: Black (Alpha 1). Space: White (Alpha 1).
+	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
+
+	// Default uses component-wise min if no TrueColor/FalseColor set.
+	i := NewAnd([]image.Image{g, h})
+
+	f, err := os.Create(BooleanAndOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -511,6 +511,17 @@ These patterns are designed to be:
 ```
 
 
+### MathsSine Pattern
+
+
+
+![MathsSine Pattern](maths_sine.png)
+
+```go
+	// See GenerateMathsSine for implementation details
+```
+
+
 ### BooleanXor Pattern
 
 
@@ -536,17 +547,6 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
-```
-
-
-### MathsSine Pattern
-
-
-
-![MathsSine Pattern](maths_sine.png)
-
-```go
-	// See GenerateMathsSine for implementation details
 ```
 
 
@@ -589,6 +589,17 @@ These patterns are designed to be:
 ```
 
 
+### Heatmap Pattern
+
+
+
+![Heatmap Pattern](heatmap.png)
+
+```go
+	// See GenerateHeatmap for implementation details
+```
+
+
 ### Circle Pattern
 
 
@@ -617,14 +628,30 @@ These patterns are designed to be:
 ```
 
 
-### Heatmap Pattern
+### SpeedLines Pattern
 
 
 
-![Heatmap Pattern](heatmap.png)
+![SpeedLines Pattern](speedlines.png)
 
 ```go
-	// See GenerateHeatmap for implementation details
+	i := NewSpeedLines(
+		SetDensity(150),
+		SetMinRadius(30),
+		SetMaxRadius(80),
+	)
+	f, err := os.Create(SpeedLinesOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
@@ -670,33 +697,6 @@ These patterns are designed to be:
 ```
 
 
-### SpeedLines Pattern
-
-
-
-![SpeedLines Pattern](speedlines.png)
-
-```go
-	i := NewSpeedLines(
-		SetDensity(150),
-		SetMinRadius(30),
-		SetMaxRadius(80),
-	)
-	f, err := os.Create(SpeedLinesOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### Fibonacci Pattern
 
 
@@ -725,20 +725,24 @@ These patterns are designed to be:
 ```
 
 
-### XorGrid Pattern
+### SimpleZoom Pattern
 
 
 
-![XorGrid Pattern](xor_pattern.png)
+![SimpleZoom Pattern](simplezoom.png)
 
 ```go
-	p := NewXorPattern()
-	f, err := os.Create(XorGridOutputFilename)
+	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
+	f, err := os.Create(SimpleZoomOutputFilename)
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
-	if err := png.Encode(f, p); err != nil {
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
 ```
@@ -767,24 +771,20 @@ These patterns are designed to be:
 ```
 
 
-### SimpleZoom Pattern
+### XorGrid Pattern
 
 
 
-![SimpleZoom Pattern](simplezoom.png)
+![XorGrid Pattern](xor_pattern.png)
 
 ```go
-	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
-	f, err := os.Create(SimpleZoomOutputFilename)
+	p := NewXorPattern()
+	f, err := os.Create(XorGridOutputFilename)
 	if err != nil {
 		panic(err)
 	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
+	defer f.Close()
+	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
 ```
@@ -802,70 +802,6 @@ These patterns are designed to be:
 		SetStartColor(color.RGBA{255, 0, 0, 255}),
 		SetEndColor(color.RGBA{0, 0, 255, 255}),
 	)
-```
-
-
-### RadialGradient Pattern
-
-
-
-![RadialGradient Pattern](radial_gradient.png)
-
-```go
-	// Radial Gradient
-	NewRadialGradient(
-		SetStartColor(color.RGBA{255, 0, 0, 255}),
-		SetEndColor(color.RGBA{0, 0, 255, 255}),
-	)
-```
-
-
-### ModuloStripe Pattern
-
-
-
-![ModuloStripe Pattern](modulo_stripe.png)
-
-```go
-	p := NewModuloStripe([]color.Color{
-		color.RGBA{255, 0, 0, 255},
-		color.RGBA{0, 255, 0, 255},
-		color.RGBA{0, 0, 255, 255},
-	})
-	f, err := os.Create(ModuloStripeOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	if err := png.Encode(f, p); err != nil {
-		panic(err)
-	}
-```
-
-
-### Bayer2x2Dither Pattern
-
-
-
-![Bayer2x2Dither Pattern](bayer2x2.png)
-
-```go
-	// Black and White Palette
-	palette := []color.Color{color.Black, color.White}
-	i := NewBayer2x2Dither(NewGopher(), palette)
-
-	f, err := os.Create(Bayer2x2DitherOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
 ```
 
 
@@ -892,15 +828,56 @@ These patterns are designed to be:
 ```
 
 
-### Mirror Pattern
+### ModuloStripe Pattern
 
 
 
-![Mirror Pattern](mirror.png)
+![ModuloStripe Pattern](modulo_stripe.png)
 
 ```go
-	i := NewMirror(NewDemoMirrorInput(image.Rect(0, 0, 40, 40)), true, false)
-	f, err := os.Create(MirrorOutputFilename)
+	p := NewModuloStripe([]color.Color{
+		color.RGBA{255, 0, 0, 255},
+		color.RGBA{0, 255, 0, 255},
+		color.RGBA{0, 0, 255, 255},
+	})
+	f, err := os.Create(ModuloStripeOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err := png.Encode(f, p); err != nil {
+		panic(err)
+	}
+```
+
+
+### RadialGradient Pattern
+
+
+
+![RadialGradient Pattern](radial_gradient.png)
+
+```go
+	// Radial Gradient
+	NewRadialGradient(
+		SetStartColor(color.RGBA{255, 0, 0, 255}),
+		SetEndColor(color.RGBA{0, 0, 255, 255}),
+	)
+```
+
+
+### Bayer2x2Dither Pattern
+
+
+
+![Bayer2x2Dither Pattern](bayer2x2.png)
+
+```go
+	// Black and White Palette
+	palette := []color.Color{color.Black, color.White}
+	i := NewBayer2x2Dither(NewGopher(), palette)
+
+	f, err := os.Create(Bayer2x2DitherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -950,6 +927,29 @@ These patterns are designed to be:
 		SetStartColor(color.RGBA{255, 0, 255, 255}),
 		SetEndColor(color.RGBA{0, 255, 255, 255}),
 	)
+```
+
+
+### Mirror Pattern
+
+
+
+![Mirror Pattern](mirror.png)
+
+```go
+	i := NewMirror(NewDemoMirrorInput(image.Rect(0, 0, 40, 40)), true, false)
+	f, err := os.Create(MirrorOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
