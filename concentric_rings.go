@@ -12,6 +12,8 @@ var _ image.Image = (*ConcentricRings)(nil)
 // ConcentricRings generates concentric rings using sqrt(x^2 + y^2) % n.
 type ConcentricRings struct {
 	Null
+	Center
+	Frequency
 	Colors []color.Color
 }
 
@@ -19,22 +21,18 @@ func (p *ConcentricRings) At(x, y int) color.Color {
 	if len(p.Colors) == 0 {
 		return color.Black
 	}
-	// Calculate distance from origin (0,0).
-	// Users might want to center this.
-	// But the request says "(sqrt(x^2+y^2) % n)".
-	// If the user uses a transform/crop/translate, they can center it.
-	// Or we can add center coordinates. For now, strict adherence to formula.
 
-	dist := math.Sqrt(float64(x*x + y*y))
-	// n := float64(len(p.Colors))
+	dx := float64(x - p.CenterX)
+	dy := float64(y - p.CenterY)
+	dist := math.Sqrt(dx*dx + dy*dy)
 
-	// The request says "bands with palette mapping".
-	// Usually this means each band has width W, and we cycle through colors.
-	// Or if the request literally means "modulo n" where n is palette size?
-	// sqrt(x^2+y^2) is a float. Modulo n on a float?
-	// Likely means floor(dist) % n.
+	// Apply frequency scaling if set
+	if p.Frequency.Frequency != 0 {
+		dist *= p.Frequency.Frequency
+	}
 
 	idx := int(math.Floor(dist)) % len(p.Colors)
+	// Handle negative indices if any (unlikely with dist >= 0, but good practice)
 	if idx < 0 {
 		idx += len(p.Colors)
 	}
@@ -52,6 +50,7 @@ func NewConcentricRings(colors []color.Color, ops ...func(any)) image.Image {
 		},
 		Colors: colors,
 	}
+	p.Frequency.Frequency = 1.0 // Default to 1.0 (identity scaling)
 	for _, op := range ops {
 		op(p)
 	}
