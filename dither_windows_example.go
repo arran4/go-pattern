@@ -19,11 +19,21 @@ func ExampleNewWindowsDither() image.Image {
 	return NewBayer8x8Dither(img, Windows16)
 }
 
+func GenerateWindowsDither(b image.Rectangle) image.Image {
+	img := NewGopher()
+	return NewBayer8x8Dither(img, Windows16)
+}
+
 var WindowsDither4x4OutputFilename = "dither_windows_4x4.png"
 var WindowsDither4x4ZoomLevels = []int{}
 
 // ExampleNewWindowsDither4x4 demonstrates 4x4 variant.
 func ExampleNewWindowsDither4x4() image.Image {
+	img := NewGopher()
+	return NewBayer4x4Dither(img, Windows16)
+}
+
+func GenerateWindowsDither4x4(b image.Rectangle) image.Image {
 	img := NewGopher()
 	return NewBayer4x4Dither(img, Windows16)
 }
@@ -37,7 +47,14 @@ func ExampleNewWindowsDitherHalftone() image.Image {
 	return NewHalftoneDither(img, 8, Windows16)
 }
 
+func GenerateWindowsDitherHalftone(b image.Rectangle) image.Image {
+	img := NewGopher()
+	return NewHalftoneDither(img, 8, Windows16)
+}
+
 // Helper to use Windows16 palette
 func init() {
-	// Register Windows16 palette if we had a registry, but we don't need to for examples.
+	RegisterGenerator("WindowsDither", GenerateWindowsDither)
+	RegisterGenerator("WindowsDither4x4", GenerateWindowsDither4x4)
+	RegisterGenerator("WindowsDitherHalftone", GenerateWindowsDitherHalftone)
 }

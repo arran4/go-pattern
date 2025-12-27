@@ -32,10 +32,20 @@ func ExampleNewYliluoma1Dither() image.Image {
 	return NewYliluoma1Dither(img, Windows16, 8)
 }
 
+func GenerateYliluoma1Dither(b image.Rectangle) image.Image {
+	img := NewGopher()
+	return NewYliluoma1Dither(img, Windows16, 8)
+}
+
 var Yliluoma2DitherOutputFilename = "dither_yliluoma2.png"
 var Yliluoma2DitherZoomLevels = []int{}
 
 func ExampleNewYliluoma2Dither() image.Image {
+	img := NewGopher()
+	return NewYliluoma2Dither(img, Windows16, 8)
+}
+
+func GenerateYliluoma2Dither(b image.Rectangle) image.Image {
 	img := NewGopher()
 	return NewYliluoma2Dither(img, Windows16, 8)
 }
@@ -46,4 +56,15 @@ var KnollDitherZoomLevels = []int{}
 func ExampleNewKnollDither() image.Image {
 	img := NewGopher()
 	return NewKnollDither(img, Windows16, 8)
+}
+
+func GenerateKnollDither(b image.Rectangle) image.Image {
+	img := NewGopher()
+	return NewKnollDither(img, Windows16, 8)
+}
+
+func init() {
+	RegisterGenerator("Yliluoma1Dither", GenerateYliluoma1Dither)
+	RegisterGenerator("Yliluoma2Dither", GenerateYliluoma2Dither)
+	RegisterGenerator("KnollDither", GenerateKnollDither)
 }
