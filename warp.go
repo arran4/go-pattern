@@ -19,7 +19,7 @@ type Warp struct {
 	Scale           float64
 	XScale          float64
 	YScale          float64
-	DistortionScale float64
+	DistortionScale float64 // Scale factor for sampling the distortion image (zooming into noise)
 }
 
 // NewWarp creates a new Warp pattern.
@@ -54,25 +54,22 @@ func (p *Warp) At(x, y int) color.Color {
 
 	dx, dy := 0.0, 0.0
 
+	// Sample distortion at scaled coordinates
+	distX := int(float64(x) * p.DistortionScale)
+	distY := int(float64(y) * p.DistortionScale)
+
 	// If uniform Distortion map is provided
 	if p.Distortion != nil {
-		// Sample distortion map
-		// Usually we sample it at (x, y), maybe scaled.
-		// If DistortionScale is used, we might need floating point sampling?
-		// But existing patterns take Int.
-		// So we just sample At(x, y).
-
-		c := p.Distortion.At(x, y)
+		c := p.Distortion.At(distX, distY)
 		gray := color.GrayModel.Convert(c).(color.Gray)
-		// Map [0, 255] to [-1, 1] or [0, 1]?
-		// Typically [-0.5, 0.5] * Scale
+		// Map [0, 255] to [-1, 1] -> [-Scale, Scale]
 		val := (float64(gray.Y)/255.0 - 0.5) * 2.0
 		dx += val * p.Scale
 		dy += val * p.Scale
 	}
 
 	if p.DistortionX != nil {
-		c := p.DistortionX.At(x, y)
+		c := p.DistortionX.At(distX, distY)
 		gray := color.GrayModel.Convert(c).(color.Gray)
 		val := (float64(gray.Y)/255.0 - 0.5) * 2.0
 		scale := p.XScale
@@ -83,7 +80,7 @@ func (p *Warp) At(x, y int) color.Color {
 	}
 
 	if p.DistortionY != nil {
-		c := p.DistortionY.At(x, y)
+		c := p.DistortionY.At(distX, distY)
 		gray := color.GrayModel.Convert(c).(color.Gray)
 		val := (float64(gray.Y)/255.0 - 0.5) * 2.0
 		scale := p.YScale
@@ -123,6 +120,15 @@ func WarpYScale(scale float64) func(any) {
 	return func(i any) {
 		if p, ok := i.(*Warp); ok {
 			p.YScale = scale
+		}
+	}
+}
+
+// WarpDistortionScale sets the scale for sampling the distortion image (zooming into noise).
+func WarpDistortionScale(scale float64) func(any) {
+	return func(i any) {
+		if p, ok := i.(*Warp); ok {
+			p.DistortionScale = scale
 		}
 	}
 }
