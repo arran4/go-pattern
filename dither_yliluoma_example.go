@@ -1,0 +1,70 @@
+package pattern
+
+import (
+	"image"
+	"image/color"
+)
+
+var Windows16 = color.Palette{
+	color.RGBA{0x00, 0x00, 0x00, 0xff}, // Black
+	color.RGBA{0x80, 0x00, 0x00, 0xff}, // Maroon
+	color.RGBA{0x00, 0x80, 0x00, 0xff}, // Green
+	color.RGBA{0x80, 0x80, 0x00, 0xff}, // Olive
+	color.RGBA{0x00, 0x00, 0x80, 0xff}, // Navy
+	color.RGBA{0x80, 0x00, 0x80, 0xff}, // Purple
+	color.RGBA{0x00, 0x80, 0x80, 0xff}, // Teal
+	color.RGBA{0xc0, 0xc0, 0xc0, 0xff}, // Silver
+	color.RGBA{0x80, 0x80, 0x80, 0xff}, // Gray
+	color.RGBA{0xff, 0x00, 0x00, 0xff}, // Red
+	color.RGBA{0x00, 0xff, 0x00, 0xff}, // Lime
+	color.RGBA{0xff, 0xff, 0x00, 0xff}, // Yellow
+	color.RGBA{0x00, 0x00, 0xff, 0xff}, // Blue
+	color.RGBA{0xff, 0x00, 0xff, 0xff}, // Fuchsia
+	color.RGBA{0x00, 0xff, 0xff, 0xff}, // Aqua
+	color.RGBA{0xff, 0xff, 0xff, 0xff}, // White
+}
+
+var Yliluoma1DitherOutputFilename = "dither_yliluoma1.png"
+var Yliluoma1DitherZoomLevels = []int{}
+
+func ExampleNewYliluoma1Dither() image.Image {
+	img := NewGopher()
+	return NewYliluoma1Dither(img, Windows16, 8)
+}
+
+func GenerateYliluoma1Dither(b image.Rectangle) image.Image {
+	img := NewGopher()
+	return NewYliluoma1Dither(img, Windows16, 8)
+}
+
+var Yliluoma2DitherOutputFilename = "dither_yliluoma2.png"
+var Yliluoma2DitherZoomLevels = []int{}
+
+func ExampleNewYliluoma2Dither() image.Image {
+	img := NewGopher()
+	return NewYliluoma2Dither(img, Windows16, 8)
+}
+
+func GenerateYliluoma2Dither(b image.Rectangle) image.Image {
+	img := NewGopher()
+	return NewYliluoma2Dither(img, Windows16, 8)
+}
+
+var KnollDitherOutputFilename = "dither_knoll.png"
+var KnollDitherZoomLevels = []int{}
+
+func ExampleNewKnollDither() image.Image {
+	img := NewGopher()
+	return NewKnollDither(img, Windows16, 8)
+}
+
+func GenerateKnollDither(b image.Rectangle) image.Image {
+	img := NewGopher()
+	return NewKnollDither(img, Windows16, 8)
+}
+
+func init() {
+	RegisterGenerator("Yliluoma1Dither", GenerateYliluoma1Dither)
+	RegisterGenerator("Yliluoma2Dither", GenerateYliluoma2Dither)
+	RegisterGenerator("KnollDither", GenerateKnollDither)
+}
