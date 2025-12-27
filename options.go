@@ -490,3 +490,47 @@ func SetFrequency(v float64) func(any) {
 		}
 	}
 }
+
+// FrequencyX configures the X frequency of a pattern.
+type FrequencyX struct {
+	FrequencyX float64
+}
+
+func (s *FrequencyX) SetFrequencyX(v float64) {
+	s.FrequencyX = v
+}
+
+type hasFrequencyX interface {
+	SetFrequencyX(float64)
+}
+
+// SetFrequencyX creates an option to set the X frequency.
+func SetFrequencyX(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasFrequencyX); ok {
+			h.SetFrequencyX(v)
+		}
+	}
+}
+
+// FrequencyY configures the Y frequency of a pattern.
+type FrequencyY struct {
+	FrequencyY float64
+}
+
+func (s *FrequencyY) SetFrequencyY(v float64) {
+	s.FrequencyY = v
+}
+
+type hasFrequencyY interface {
+	SetFrequencyY(float64)
+}
+
+// SetFrequencyY creates an option to set the Y frequency.
+func SetFrequencyY(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasFrequencyY); ok {
+			h.SetFrequencyY(v)
+		}
+	}
+}
