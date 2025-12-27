@@ -13,75 +13,72 @@ var (
 	WoodBaseLabel      = "Wood"
 )
 
-// ExampleNewWood demonstrates a procedural wood texture using ConcentricRings, Warp, and Noise.
+// ExampleNewWood demonstrates a procedural wood texture using domain warping on a distance field.
 func ExampleNewWood() image.Image {
-	// 1. Create a wood color palette (gradient from light to dark brown)
-	woodLight := color.RGBA{210, 180, 140, 255} // Tan
-	woodDark := color.RGBA{139, 69, 19, 255}    // SaddleBrown
-
-	colors := []color.Color{}
-	steps := 12
-	// Gradient cycle
-	for i := 0; i < steps; i++ {
-		t := float64(i) / float64(steps-1)
-		colors = append(colors, lerpColor(woodLight, woodDark, t))
-	}
-	for i := steps - 1; i >= 0; i-- {
-		t := float64(i) / float64(steps-1)
-		colors = append(colors, lerpColor(woodLight, woodDark, t))
+	// 1. Wood Palette
+	// Dark brown (Late wood / Rings) -> Light Tan (Early wood) -> Dark
+	woodPalette := []ColorStop{
+		{0.0, color.RGBA{101, 67, 33, 255}},  // Dark Brown (Ring Edge)
+		{0.15, color.RGBA{160, 120, 80, 255}}, // Transition
+		{0.5, color.RGBA{222, 184, 135, 255}}, // Light Tan (Center - Burlywood)
+		{0.85, color.RGBA{160, 120, 80, 255}}, // Transition
+		{1.0, color.RGBA{101, 67, 33, 255}},  // Back to Edge
 	}
 
-	// 2. Base Rings: "Plank" style
-	// Center far to the left to create vertical arcs.
-	rings := NewConcentricRings(colors,
-		SetCenter(-300, 128),
-		SetFrequency(0.12),
+	// 2. Base "Heightmap" Generator
+	// We create a grayscale gradient for rings (0-255).
+	grayScale := make([]color.Color, 256)
+	for i := range grayScale {
+		grayScale[i] = color.Gray{Y: uint8(i)}
+	}
+
+	// Use ConcentricRings to generate the base distance field.
+	// We want ~10 rings across the 256px width.
+	// 256 colors in palette.
+	// To get 1 cycle every 25 pixels: Freq = 256/25 ≈ 10.
+	// To get elongated vertical rings, FreqY should be lower (slower change).
+	ringsBase := NewConcentricRings(grayScale,
+		SetCenter(128, -100), // Off-center top
+		SetFrequencyX(8.0),   // ~30px width per ring
+		SetFrequencyY(0.8),   // Stretched vertically (10x elongation)
 	)
 
-	// 3. Grain Distortion: Stretched noise for vertical grain.
-	// We generate a small height noise and scale it up vertically.
-	grainNoiseBase := NewNoise(NoiseSeed(42), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.1, // High frequency in the base (horizontal detail)
+	// 3. Main Distortion (Growth Wobble)
+	// Low frequency noise to warp the rings.
+	// Noise values are 0..1 (from NewNoise/Perlin).
+	// Warp maps intensity to offset.
+	wobbleNoise := NewNoise(NoiseSeed(101), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.015,
 		Octaves: 2,
 	}))
-	// Set bounds for the base noise to be wide but short (stretched vertically when upscaled)
-	if n, ok := grainNoiseBase.(interface{ SetBounds(image.Rectangle) }); ok {
-		n.SetBounds(image.Rect(0, 0, 256, 32))
-	}
 
-	// Stretch it vertically by scaling to 256x256
-	grainDistortion := NewScale(grainNoiseBase, ScaleToSize(256, 256))
-
-	warpedRings := NewWarp(rings,
-		WarpDistortion(grainDistortion),
-		WarpScale(12.0), // Distortion magnitude
+	// Apply warp.
+	// Scale 20.0 means max offset is +/- 20 pixels.
+	// Since rings are ~30px wide, this distorts them significantly but keeps structure.
+	warpedRings := NewWarp(ringsBase,
+		WarpDistortion(wobbleNoise),
+		WarpScale(20.0),
 	)
 
-	// 4. Pores: Small dark dashes.
-	// Use Worley Noise, generated at short height and scaled up to elongate dots into dashes.
-	poreBase := NewWorleyNoise(
-		SetFrequency(0.2), // Higher frequency
-		NoiseSeed(101),
-	)
-	if n, ok := poreBase.(interface{ SetBounds(image.Rectangle) }); ok {
-		n.SetBounds(image.Rect(0, 0, 256, 64)) // 4x stretch later
-	}
+	// 4. Fiber Grain (Fine Detail)
+	// Add "Turbulence" to the warp using higher frequency noise.
+	// This simulates the jagged edges of the grain.
+	fiberDistortion := NewNoise(NoiseSeed(303), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.1, // Higher freq
+		Octaves: 3,     // More detail
+	}))
 
-	poreStretched := NewScale(poreBase, ScaleToSize(256, 256))
-
-	// Worley returns distance (0 at center, 1 at edge).
-	// We want dark dashes at centers.
-	poreLayer := NewColorMap(poreStretched,
-		ColorStop{0.0, color.RGBA{60, 30, 0, 255}}, // Center: Dark pore
-		ColorStop{0.25, color.RGBA{60, 30, 0, 255}},
-		ColorStop{0.35, color.White},                 // Background: White (Transparent in Multiply)
-		ColorStop{1.0, color.White},
+	// Chain Warps: WarpedRings -> Warp again with fiber distortion
+	doubleWarped := NewWarp(warpedRings,
+		WarpDistortion(fiberDistortion),
+		WarpScale(2.0), // Small jaggedness (2 pixels)
 	)
 
-	// Blend pores onto wood using Multiply.
-	final := NewBlend(warpedRings, poreLayer, BlendMultiply)
+	// 5. Color Mapping
+	// Map the grayscale intensity (warped distance) to the wood palette.
+	finalWood := NewColorMap(doubleWarped, woodPalette...)
 
-	return final
+	return finalWood
 }
 
 func init() {

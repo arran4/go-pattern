@@ -14,6 +14,8 @@ type ConcentricRings struct {
 	Null
 	Center
 	Frequency
+	FrequencyX
+	FrequencyY
 	Colors []color.Color
 }
 
@@ -24,12 +26,20 @@ func (p *ConcentricRings) At(x, y int) color.Color {
 
 	dx := float64(x - p.CenterX)
 	dy := float64(y - p.CenterY)
-	dist := math.Sqrt(dx*dx + dy*dy)
 
-	// Apply frequency scaling if set
-	if p.Frequency.Frequency != 0 {
-		dist *= p.Frequency.Frequency
+	// Apply separate frequencies if set, otherwise use global Frequency
+	fx := p.Frequency.Frequency
+	if p.FrequencyX.FrequencyX != 0 {
+		fx = p.FrequencyX.FrequencyX
 	}
+	fy := p.Frequency.Frequency
+	if p.FrequencyY.FrequencyY != 0 {
+		fy = p.FrequencyY.FrequencyY
+	}
+
+	// Calculate distance with scaling
+	// sqrt((dx*fx)^2 + (dy*fy)^2)
+	dist := math.Sqrt((dx*fx)*(dx*fx) + (dy*fy)*(dy*fy))
 
 	idx := int(math.Floor(dist)) % len(p.Colors)
 	// Handle negative indices if any (unlikely with dist >= 0, but good practice)
