@@ -1,45 +1,17 @@
 package dsl
 
-import (
-	"strings"
-)
+// Legacy wrappers to maintain compatibility where possible,
+// though we changed the internal structure significantly.
 
-type Command struct {
-	Name string
-	Args []string
-}
+// Pipeline is now just an alias for Node to keep some type compatibility if needed,
+// but really we return Node now.
+// The old dsl.Pipeline was []Command. This breaks compatibility.
+// We should check who uses dsl.Pipeline.
+// pkg/pattern-cli/def.go uses it.
 
-type Pipeline []Command
-
-func Parse(input string) (Pipeline, error) {
-	var p Pipeline
-	parts := strings.Split(input, "|")
-	for _, part := range parts {
-		trimmed := strings.TrimSpace(part)
-		if trimmed == "" {
-			continue
-		}
-		fields := strings.Fields(trimmed)
-		if len(fields) == 0 {
-			continue
-		}
-		cmd := Command{
-			Name: fields[0],
-			Args: fields[1:],
-		}
-		p = append(p, cmd)
-	}
-	return p, nil
-}
-
-func (p Pipeline) String() string {
-	var parts []string
-	for _, cmd := range p {
-		s := cmd.Name
-		if len(cmd.Args) > 0 {
-			s += " " + strings.Join(cmd.Args, " ")
-		}
-		parts = append(parts, s)
-	}
-	return strings.Join(parts, " | ")
+// Parse parses the input string into a Node.
+func Parse(input string) (Node, error) {
+	l := NewLexer(input)
+	p := NewParser(l)
+	return p.ParsePipeline()
 }

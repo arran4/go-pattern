@@ -65,6 +65,8 @@ func NewRoot(name, version, commit, date string) (*RootCmd, error) {
 
 	c.Commands["run"] = c.NewrunCmd()
 
+	c.Commands["render"] = c.NewrenderCmd()
+
 	return c, nil
 }
 
