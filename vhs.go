@@ -194,7 +194,12 @@ func (p *VHS) SetNoiseIntensity(f float64) {
 	p.NoiseIntensity = f
 }
 
-
 func (p *VHS) SetSeed(s int64) {
 	p.Seed = s
+	p.noise = &HashNoise{Seed: p.Seed}
+}
+
+func (p *VHS) SetSeedUint64(s uint64) {
+	p.Seed = int64(s)
+	p.noise = &HashNoise{Seed: p.Seed}
 }

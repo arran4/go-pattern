@@ -30,6 +30,32 @@ func (n *Noise) At(x, y int) color.Color {
 	return color.RGBA{0, 0, 0, 255}
 }
 
+// SetSeedUint64 sets the seed for the noise algorithm.
+// It switches to HashNoise if the current algo is CryptoNoise.
+func (n *Noise) SetSeedUint64(v uint64) {
+	switch algo := n.algo.(type) {
+	case *CryptoNoise:
+		n.algo = &HashNoise{Seed: int64(v)}
+	case *HashNoise:
+		algo.Seed = int64(v)
+	case *PerlinNoise:
+		algo.Seed = int64(v)
+	}
+}
+
+// SetSeed sets the seed for the noise algorithm.
+// It switches to HashNoise if the current algo is CryptoNoise.
+func (n *Noise) SetSeed(v int64) {
+	switch algo := n.algo.(type) {
+	case *CryptoNoise:
+		n.algo = &HashNoise{Seed: v}
+	case *HashNoise:
+		algo.Seed = v
+	case *PerlinNoise:
+		algo.Seed = v
+	}
+}
+
 // NewNoise creates a new Noise pattern.
 func NewNoise(ops ...func(any)) image.Image {
 	p := &Noise{
@@ -63,17 +89,12 @@ func SetNoiseAlgorithm(algo NoiseAlgorithm) func(any) {
 
 // NoiseSeed sets the seed for the noise algorithm.
 // If the current algorithm is CryptoNoise, it switches to HashNoise.
+//
+// Deprecated: Use Seed() instead.
 func NoiseSeed(seed int64) func(any) {
 	return func(i any) {
 		if n, ok := i.(*Noise); ok {
-			switch algo := n.algo.(type) {
-			case *CryptoNoise:
-				n.algo = &HashNoise{Seed: seed}
-			case *HashNoise:
-				algo.Seed = seed
-			case *PerlinNoise:
-				algo.Seed = seed
-			}
+			n.SetSeed(seed)
 		}
 	}
 }
@@ -98,12 +119,8 @@ type HashNoise struct {
 }
 
 func (h *HashNoise) At(x, y int) color.Color {
-	// Mix x, y, and Seed using a robust hash function (SplitMix64-like steps)
-	// to ensure good visual randomness without repetition.
-	z := uint64(int64(x)*0x9e3779b9 + int64(y)*0x632be59b + h.Seed)
-	z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9
-	z = (z ^ (z >> 27)) * 0x94d049bb133111eb
-	z = z ^ (z >> 31)
+	// Mix x, y, and Seed using a robust hash function.
+	z := StableHash(x, y, uint64(h.Seed))
 	return color.Gray{Y: uint8(z)}
 }
 

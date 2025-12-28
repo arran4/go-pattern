@@ -35,6 +35,14 @@ type Scatter struct {
 	MaxOverlap int // Radius of neighbor cells to check (default 1 for 3x3)
 }
 
+func (s *Scatter) SetSeed(v int64) {
+	s.Seed = v
+}
+
+func (s *Scatter) SetSeedUint64(v uint64) {
+	s.Seed = int64(v)
+}
+
 func (s *Scatter) At(x, y int) color.Color {
 	freq := s.Frequency
 	if freq == 0 {
@@ -152,11 +160,7 @@ func (s *Scatter) At(x, y int) color.Color {
 
 // hash is a stateless hash function.
 func (s *Scatter) hash(x, y int) uint64 {
-	z := uint64(int64(x)*0x9e3779b9 + int64(y)*0x632be59b + s.Seed)
-	z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9
-	z = (z ^ (z >> 27)) * 0x94d049bb133111eb
-	z = z ^ (z >> 31)
-	return z
+	return StableHash(x, y, uint64(s.Seed))
 }
 
 // NewScatter creates a new Scatter pattern.
