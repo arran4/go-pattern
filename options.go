@@ -49,7 +49,7 @@ func SetFillImageSource(v image.Image) func(any) {
 	}
 }
 
-// Center configures the center point of a pattern.
+// Center configures the center point of a pattern (integer coordinates).
 type Center struct {
 	CenterX, CenterY int
 }
@@ -68,6 +68,29 @@ func SetCenter(x, y int) func(any) {
 	return func(i any) {
 		if h, ok := i.(hasCenter); ok {
 			h.SetCenter(x, y)
+		}
+	}
+}
+
+// FloatCenter configures the center point of a pattern (float coordinates).
+type FloatCenter struct {
+	CenterX, CenterY float64
+}
+
+func (c *FloatCenter) SetFloatCenter(x, y float64) {
+	c.CenterX = x
+	c.CenterY = y
+}
+
+type hasFloatCenter interface {
+	SetFloatCenter(float64, float64)
+}
+
+// SetFloatCenter creates an option to set the float center.
+func SetFloatCenter(x, y float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasFloatCenter); ok {
+			h.SetFloatCenter(x, y)
 		}
 	}
 }
@@ -271,7 +294,6 @@ func SetLineSize(v int) func(any) {
 }
 
 // LineColor configures the color of lines in a pattern.
-// Default should be black, but that's up to the consumer to initialize if not set.
 type LineColor struct {
 	LineColor color.Color
 }

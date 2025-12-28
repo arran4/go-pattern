@@ -75,7 +75,8 @@ type RadialGradient struct {
 	Null
 	StartColor
 	EndColor
-	// Center can be added if needed, defaulting to bounds center
+	FloatCenter
+	UseFloatCenter bool
 }
 
 // At returns the color at (x, y).
@@ -85,8 +86,14 @@ func (g *RadialGradient) At(x, y int) color.Color {
 		return color.RGBA{}
 	}
 
+	// Use specified center or default to bounds center
 	cx := float64(b.Min.X + b.Dx()/2)
 	cy := float64(b.Min.Y + b.Dy()/2)
+
+	if g.UseFloatCenter {
+		cx = float64(b.Min.X) + g.FloatCenter.CenterX*float64(b.Dx())
+		cy = float64(b.Min.Y) + g.FloatCenter.CenterY*float64(b.Dy())
+	}
 
 	dx := float64(x) - cx
 	dy := float64(y) - cy
@@ -95,9 +102,7 @@ func (g *RadialGradient) At(x, y int) color.Color {
 
 	// Max distance is from center to corner (or side?)
 	// Usually radial gradient goes to the furthest corner or closest side.
-	// CSS radial-gradient defaults to furthest-corner.
 	// Let's use half of the smallest dimension (circle fits in box) or distance to corner.
-	// Distance to corner:
 	maxDist := math.Sqrt(float64(b.Dx()*b.Dx() + b.Dy()*b.Dy())) / 2.0
 
 	t := dist / maxDist
@@ -116,10 +121,32 @@ func NewRadialGradient(ops ...func(any)) image.Image {
 	g.StartColor.StartColor = color.White
 	g.EndColor.EndColor = color.Black
 
+	// Default behavior matches CSS radial-gradient (center by default)
+	// We don't set UseFloatCenter to true by default because we want to fallback to calculated center.
+	// But if we want 0.5, 0.5 default, we can just set it.
+	// However, calculated center handles integer bounds precisely.
+	// Let's stick to default unset (false).
+
 	for _, op := range ops {
 		op(g)
 	}
 	return g
+}
+
+// GradientCenter sets the center of the gradient (normalized 0..1).
+func GradientCenter(x, y float64) func(any) {
+	return func(i any) {
+		if c, ok := i.(*RadialGradient); ok {
+			c.FloatCenter.CenterX = x
+			c.FloatCenter.CenterY = y
+			c.UseFloatCenter = true
+		}
+		if c, ok := i.(*ConicGradient); ok {
+			c.FloatCenter.CenterX = x
+			c.FloatCenter.CenterY = y
+			c.UseFloatCenter = true
+		}
+	}
 }
 
 // ConicGradient represents a conic (angular) color gradient.
@@ -127,6 +154,8 @@ type ConicGradient struct {
 	Null
 	StartColor
 	EndColor
+	FloatCenter
+	UseFloatCenter bool
 }
 
 // At returns the color at (x, y).
@@ -139,31 +168,18 @@ func (g *ConicGradient) At(x, y int) color.Color {
 	cx := float64(b.Min.X + b.Dx()/2)
 	cy := float64(b.Min.Y + b.Dy()/2)
 
+	if g.UseFloatCenter {
+		cx = float64(b.Min.X) + g.FloatCenter.CenterX*float64(b.Dx())
+		cy = float64(b.Min.Y) + g.FloatCenter.CenterY*float64(b.Dy())
+	}
+
 	dx := float64(x) - cx
 	dy := float64(y) - cy
 
 	// Atan2 returns -Pi to Pi
 	angle := math.Atan2(dy, dx)
 
-	// Normalize to 0..1
-	// Atan2: 0 is right (positive X), Pi/2 is down (positive Y), -Pi/2 is up.
-	// We want 0..1.
-	// Let's say we start at top (-Pi/2) or right (0).
-	// Standard usually starts at top (12 o'clock).
-	// atan2(y, x).
-	// If we want top to be 0:
-	// top: dy=-1, dx=0 -> atan2 = -Pi/2.
-	// right: dy=0, dx=1 -> atan2 = 0.
-	// bottom: dy=1, dx=0 -> atan2 = Pi/2.
-	// left: dy=0, dx=-1 -> atan2 = Pi.
-
 	// Map -Pi..Pi to 0..1
-	// t = (angle + Pi) / (2 * Pi) maps (-Pi -> 0, Pi -> 1).
-	// This makes -Pi (Left) start.
-
-	// If we want to rotate start, we can add offset.
-	// For now, simple mapping.
-
 	t := (angle + math.Pi) / (2 * math.Pi)
 
 	return lerpColor(g.StartColor.StartColor, g.EndColor.EndColor, t)
@@ -179,6 +195,7 @@ func NewConicGradient(ops ...func(any)) image.Image {
 	// Defaults
 	g.StartColor.StartColor = color.White
 	g.EndColor.EndColor = color.Black
+	// Default unset
 
 	for _, op := range ops {
 		op(g)

@@ -16,6 +16,7 @@ type HorizontalLine struct {
 	LineColor
 	SpaceColor
 	LineImageSource
+	Phase
 }
 
 func (p *HorizontalLine) At(x, y int) color.Color {
@@ -26,8 +27,11 @@ func (p *HorizontalLine) At(x, y int) color.Color {
 		return p.LineColor.LineColor
 	}
 
+	// Apply phase offset
+	offsetY := y - int(p.Phase.Phase)
+
 	// Handle negative coordinates correctly for modulo
-	mod := y % period
+	mod := offsetY % period
 	if mod < 0 {
 		mod += period
 	}
@@ -80,6 +84,7 @@ type VerticalLine struct {
 	LineColor
 	SpaceColor
 	LineImageSource
+	Phase
 }
 
 func (p *VerticalLine) At(x, y int) color.Color {
@@ -90,8 +95,11 @@ func (p *VerticalLine) At(x, y int) color.Color {
 		return p.LineColor.LineColor
 	}
 
+	// Apply phase offset
+	offsetX := x - int(p.Phase.Phase)
+
 	// Handle negative coordinates correctly for modulo
-	mod := x % period
+	mod := offsetX % period
 	if mod < 0 {
 		mod += period
 	}
