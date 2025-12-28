@@ -10,20 +10,34 @@ These patterns are designed to be:
 - **Composable**: Easily combined (e.g., zooming, transposing) to form complex visual structures.
 - **Standard**: Fully compatible with any Go library that accepts `image.Image`.
 
-## Patterns
+## Documentation
 
-{{range .Patterns}}
-### {{.Name}}
+- **[Gallery](GALLERY.md)**: A visual guide to all available base patterns with parameters and CLI usage.
+- **[Recipes](RECIPES.md)**: A cookbook of complex textures (grass, wood, stone, etc.) created by composing patterns.
 
-{{.Description}}
+## Quick Example
 
-![{{.Name}}]({{.OutputFilename}})
+![Grass](grass.png)
 
 ```go
-{{.GoUsageSample}}
-```
+func ExampleNewGrass() {
+	// 1. Create a base noise layer
+	baseNoise := NewNoise(SetNoiseAlgorithm(&PerlinNoise{Seed: 500, Frequency: 0.02, Octaves: 4}))
 
-{{end}}
+	// 2. Create a high-frequency noise layer
+	detailNoise := NewNoise(SetNoiseAlgorithm(&PerlinNoise{Seed: 600, Frequency: 0.2, Octaves: 2}))
+
+	// 3. Blend them
+	blended := NewBlend(baseNoise, detailNoise, BlendAverage)
+
+	// 4. Map to Grass Colors
+	grass := NewColorMap(blended,
+		ColorStop{0.0, color.RGBA{10, 40, 10, 255}},
+		ColorStop{1.0, color.RGBA{140, 220, 100, 255}},
+	)
+    // ...
+}
+```
 
 ## License
 
