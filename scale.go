@@ -15,7 +15,7 @@ type ScaledImage struct {
 type ScaleOption func(*scaleConfig)
 
 type scaleConfig struct {
-	width, height int
+	width, height  int
 	scaleX, scaleY float64
 	scaler         draw.Scaler
 }
@@ -51,6 +51,20 @@ func ScaleToMultiple(f int) ScaleOption {
 	}
 }
 
+// ScaleX sets independent X scaling factor
+func ScaleX(f float64) ScaleOption {
+	return func(c *scaleConfig) {
+		c.scaleX = f
+	}
+}
+
+// ScaleY sets independent Y scaling factor
+func ScaleY(f float64) ScaleOption {
+	return func(c *scaleConfig) {
+		c.scaleY = f
+	}
+}
+
 func ScaleUsing(s draw.Scaler) ScaleOption {
 	return func(c *scaleConfig) {
 		c.scaler = s
@@ -62,7 +76,6 @@ func ScaleFactor(f float64) ScaleOption { return ScaleToRatio(f) }
 
 // Deprecated: Use ScaleUsing
 func ScaleAlg(s draw.Scaler) ScaleOption { return ScaleUsing(s) }
-
 
 // NewScale creates a new scaled image.
 // Note: This eagerly computes the scaled image because advanced interpolation requires neighborhood access.
@@ -84,8 +97,12 @@ func NewScale(img image.Image, opts ...ScaleOption) image.Image {
 		dstH = int(float64(bounds.Dy()) * cfg.scaleY)
 	}
 
-	if dstW == 0 { dstW = 1 }
-	if dstH == 0 { dstH = 1 }
+	if dstW == 0 {
+		dstW = 1
+	}
+	if dstH == 0 {
+		dstH = 1
+	}
 
 	dstRect := image.Rect(0, 0, dstW, dstH)
 	dst := image.NewRGBA(dstRect)

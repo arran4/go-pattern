@@ -16,19 +16,20 @@ const (
 	BlendAverage
 	BlendScreen
 	BlendOverlay
+	BlendNormal // Standard Alpha Blending (Source Over Destination)
 )
 
 // Blend combines two images using a specified blend mode.
 type Blend struct {
 	Null
-	Image1 image.Image
-	Image2 image.Image
+	Image1 image.Image // Background
+	Image2 image.Image // Foreground
 	Mode   BlendMode
 }
 
 func (b *Blend) At(x, y int) color.Color {
-	c1 := b.Image1.At(x, y)
-	c2 := b.Image2.At(x, y)
+	c1 := b.Image1.At(x, y) // Dest
+	c2 := b.Image2.At(x, y) // Src
 
 	r1, g1, b1, a1 := c1.RGBA()
 	r2, g2, b2, a2 := c2.RGBA()
@@ -38,7 +39,9 @@ func (b *Blend) At(x, y int) color.Color {
 	fr2, fg2, fb2, fa2 := float64(r2)/65535, float64(g2)/65535, float64(b2)/65535, float64(a2)/65535
 
 	var or, og, ob, oa float64
-	oa = (fa1 + fa2) / 2 // Simple alpha blending for now, or max? Let's assume opaque for texture gen.
+
+	// Default alpha calculation for simple blends (not Over)
+	oa = (fa1 + fa2) / 2
 	if oa > 1 {
 		oa = 1
 	}
@@ -64,6 +67,20 @@ func (b *Blend) At(x, y int) color.Color {
 		or = overlay(fr1, fr2)
 		og = overlay(fg1, fg2)
 		ob = overlay(fb1, fb2)
+	case BlendNormal:
+		// Src Over Dest
+		// outA = srcA + dstA * (1 - srcA)
+		// outC = (srcC * srcA + dstC * dstA * (1 - srcA)) / outA
+		// Note: RGBA() returns premultiplied alpha colors.
+		// So srcC * srcA is already done in r2, g2, b2.
+		// Wait, if RGBA returns premultiplied, then r2 IS srcC * srcA? Yes.
+		// So formula simplifies:
+		// out = src + dst * (1 - srcA)
+
+		or = fr2 + fr1 * (1 - fa2)
+		og = fg2 + fg1 * (1 - fa2)
+		ob = fb2 + fb1 * (1 - fa2)
+		oa = fa2 + fa1 * (1 - fa2)
 	default:
 		or, og, ob = fr1, fg1, fb1
 	}
@@ -72,6 +89,7 @@ func (b *Blend) At(x, y int) color.Color {
 	if or > 1 { or = 1 }
 	if og > 1 { og = 1 }
 	if ob > 1 { ob = 1 }
+	if oa > 1 { oa = 1 }
 
 	return color.RGBA64{
 		R: uint16(or * 65535),
