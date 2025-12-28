@@ -22,6 +22,11 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.l.NextToken()
 }
 
+// ParsePipeline parses a full pipeline of commands.
+// It parses the first expression, and if there are remaining tokens,
+// it assumes they are part of the pipeline (if the parser stopped due to precedence).
+// Wait, `parseExpression(0)` parses everything until EOF unless precedence stops it.
+// If we introduce math operators, we need to ensure their precedence fits.
 func (p *Parser) ParsePipeline() (Node, error) {
 	left, err := p.parseExpression(0)
 	if err != nil {
@@ -32,13 +37,9 @@ func (p *Parser) ParsePipeline() (Node, error) {
 	if p.curToken.Type == EOF {
 		return left, nil
 	}
-    // If not EOF, check if we have unconsumed tokens that indicate error
-    // Removed empty branch to satisfy linter.
-    // If we have trailing tokens, we currently just ignore them or return what we parsed.
-    // For a strict parser, we should probably error here:
-    // return nil, fmt.Errorf("unexpected token at end of input: %s", p.curToken.Literal)
-
-    // However, existing behavior was to just return left.
+	// If not EOF, it might be an error or unexpected token
+	// return nil, fmt.Errorf("unexpected token: %s", p.curToken.Literal)
+	// For loose compatibility, we return what we have
 	return left, nil
 }
 
@@ -46,9 +47,25 @@ func (p *Parser) ParsePipeline() (Node, error) {
 const (
 	LOWEST      = iota
 	PIPELINE    // |
-	BINARY      // ^
-	CALL        // command arg
+	SUM         // + -
+	PRODUCT     // * / %
+	BINARY      // ^ (bitwise xor / boolean) - wait, ^ usually binds tighter than | but looser than *
+	CALL        // command arg, function call
 )
+
+// We need to define precedences carefully.
+// Standard math: * / > + -
+// Pipeline | should be very low precedence (separates stages).
+// ^ (XOR) in C/Go is lower than + but higher than |.
+// Let's adjust:
+// | : 1
+// ^ : 2
+// + - : 3
+// * / % : 4
+// Call : 5
+
+// However, `PIPELINE` constant was used for `|`.
+// `BINARY` was used for `^`.
 
 func (p *Parser) parseExpression(precedence int) (Node, error) {
 	prefix := p.prefixParseFn()
@@ -83,9 +100,15 @@ type infixParseFn func(Node) (Node, error)
 func (p *Parser) prefixParseFn() prefixParseFn {
 	switch p.curToken.Type {
 	case IDENT:
-		return p.parseCommand
+		// Could be command or variable or function call start
+		return p.parseIdentifierOrCommand
+	case NUMBER, STRING:
+		return p.parseLiteral
 	case LPAREN:
 		return p.parseGroupedExpression
+	case MINUS:
+		// Unary minus?
+		return nil // Not implemented yet
 	default:
 		return nil
 	}
@@ -97,6 +120,8 @@ func (p *Parser) infixParseFn(t TokenType) infixParseFn {
 		return p.parsePipelineOp
 	case CARET:
 		return p.parseBinaryOp
+	case PLUS, MINUS, ASTERISK, SLASH, PERCENT:
+		return p.parseMathOp
 	}
 	return nil
 }
@@ -107,12 +132,37 @@ func (p *Parser) peekPrecedence() int {
 		return PIPELINE
 	case CARET:
 		return BINARY
+	case PLUS, MINUS:
+		return SUM
+	case ASTERISK, SLASH, PERCENT:
+		return PRODUCT
+	case LPAREN:
+		// Function call? if peek is ( and cur is IDENT?
+		// Handled in prefix parse usually.
+		return LOWEST
 	}
 	return LOWEST
 }
 
-func (p *Parser) parseCommand() (Node, error) {
+func (p *Parser) parseIdentifierOrCommand() (Node, error) {
+	// If it's a command in a pipeline context, it consumes args.
+	// If it's a variable or function in a math context, it might be different.
+	// In the previous grammar, `cmd arg1 arg2`.
+	// In math grammar: `sin(x)`.
+	// Ambiguity: `sin (x)` vs `cmd (arg)`.
+	// We distinguish by checking if there's an opening paren immediately?
+	// Or we treat everything as command call?
+	// `sin` is a command taking 1 arg `(x)`.
+	// `x` is a command taking 0 args? Or a literal?
+	// Let's treat IDENT as CommandNode.
+
 	cmd := &CommandNode{Name: p.curToken.Literal}
+
+	// Arguments parsing.
+	// In pipeline mode: consume until | or EOF.
+	// In math mode: `a + b`. `a` has no args.
+	// Problem: `cmd arg | ...` vs `a + b`.
+	// If next token is an operator (+, -, *, /), we should stop parsing args.
 
 	for p.peekTokenIsArg() {
 		p.nextToken()
@@ -125,9 +175,18 @@ func (p *Parser) parseCommand() (Node, error) {
 	return cmd, nil
 }
 
+func (p *Parser) parseLiteral() (Node, error) {
+	return &LiteralNode{Value: p.curToken.Literal}, nil
+}
+
 func (p *Parser) peekTokenIsArg() bool {
 	t := p.peekToken.Type
-	return t == IDENT || t == NUMBER || t == STRING || t == LPAREN || t == EQUALS
+	// Operators stop argument parsing!
+	if t == PIPE || t == CARET || t == PLUS || t == MINUS || t == ASTERISK || t == SLASH || t == PERCENT || t == RPAREN || t == COMMA || t == EOF {
+		return false
+	}
+	return true
+	// Included: IDENT, NUMBER, STRING, LPAREN, EQUALS
 }
 
 func (p *Parser) parseArg() (ArgNode, error) {
@@ -160,13 +219,12 @@ func (p *Parser) parseArgValue() (ArgNode, error) {
 		return &SubExpressionNode{Node: exp}, nil
 	}
 
-	// Literal
+	// Literal or Identifier acting as arg
 	return &LiteralNode{Value: p.curToken.Literal}, nil
 }
 
 func (p *Parser) parsePipelineOp(left Node) (Node, error) {
-	// A | B | C
-    p.nextToken() // Advance past the pipe operator!
+    p.nextToken() // Advance past |
 	right, err := p.parseExpression(PIPELINE) // use PIPELINE precedence
 	if err != nil {
 		return nil, err
@@ -183,11 +241,24 @@ func (p *Parser) parsePipelineOp(left Node) (Node, error) {
 func (p *Parser) parseBinaryOp(left Node) (Node, error) {
 	op := p.curToken.Literal
 	precedence := p.curPrecedence()
-	p.nextToken() // Advance past operator
+	p.nextToken()
 	right, err := p.parseExpression(precedence)
 	if err != nil {
 		return nil, err
 	}
+	return &BinaryNode{Left: left, Operator: op, Right: right}, nil
+}
+
+func (p *Parser) parseMathOp(left Node) (Node, error) {
+	op := p.curToken.Literal
+	precedence := p.curPrecedence()
+	p.nextToken()
+	right, err := p.parseExpression(precedence)
+	if err != nil {
+		return nil, err
+	}
+	// Reuse BinaryNode? Or MathNode?
+	// BinaryNode handles operator string.
 	return &BinaryNode{Left: left, Operator: op, Right: right}, nil
 }
 
@@ -197,6 +268,10 @@ func (p *Parser) curPrecedence() int {
 		return PIPELINE
 	case CARET:
 		return BINARY
+	case PLUS, MINUS:
+		return SUM
+	case ASTERISK, SLASH, PERCENT:
+		return PRODUCT
 	}
 	return LOWEST
 }

@@ -3,6 +3,8 @@ package dsl
 import (
 	"fmt"
 	"image"
+	"image/color"
+	"math"
 	"strings"
 )
 
@@ -39,29 +41,26 @@ func (ctx *Context) GetImageFromHandle(handle string) (image.Image, bool) {
 
 // Execute executes the node with the given context and initial input.
 func (n *CommandNode) Execute(ctx *Context, input image.Image) (image.Image, error) {
-	fn, ok := ctx.FuncMap[n.Name]
-	if !ok {
-		return nil, fmt.Errorf("command not found: %s", n.Name)
-	}
-
-	var args []string
-	for _, arg := range n.Args {
-		if kv, ok := arg.(*KeyValueNode); ok {
-			valStr, err := resolveArg(kv.Value, ctx, input)
-			if err != nil {
-				return nil, err
+	if fn, ok := ctx.FuncMap[n.Name]; ok {
+		var args []string
+		for _, arg := range n.Args {
+			if kv, ok := arg.(*KeyValueNode); ok {
+				valStr, err := resolveArg(kv.Value, ctx, input)
+				if err != nil {
+					return nil, err
+				}
+				args = append(args, fmt.Sprintf("%s=%s", kv.Key, valStr))
+			} else {
+				valStr, err := resolveArg(arg, ctx, input)
+				if err != nil {
+					return nil, err
+				}
+				args = append(args, valStr)
 			}
-			args = append(args, fmt.Sprintf("%s=%s", kv.Key, valStr))
-		} else {
-			valStr, err := resolveArg(arg, ctx, input)
-			if err != nil {
-				return nil, err
-			}
-			args = append(args, valStr)
 		}
+		return fn(args, input)
 	}
-
-	return fn(args, input)
+	return nil, fmt.Errorf("command not found: %s", n.Name)
 }
 
 func resolveArg(arg ArgNode, ctx *Context, input image.Image) (string, error) {
@@ -109,6 +108,8 @@ func (n *BinaryNode) Execute(ctx *Context, input image.Image) (image.Image, erro
              return fn([]string{handle}, left)
 		}
 		return nil, fmt.Errorf("operator ^ (op_xor) not implemented")
+	case "+", "-", "*", "/", "%":
+		return ExecuteImageMath(left, right, n.Operator)
 	default:
 		return nil, fmt.Errorf("unknown operator %s", n.Operator)
 	}
@@ -128,10 +129,90 @@ func Execute(node Node, ctx *Context, input image.Image) (image.Image, error) {
 		return n.Execute(ctx, input)
 	case *GroupNode:
 		return n.Execute(ctx, input)
+	case *LiteralNode:
+		return CreateConstantImage(n.Value, input.Bounds()), nil
 	}
-	return nil, fmt.Errorf("unknown node type")
+	return nil, fmt.Errorf("unknown node type: %T", node)
 }
 
-// Helper wrapper for legacy calls (if any) or simplified usage
-// But dsl.Execute signature changed.
-// Need to update callers.
+// Helpers for Image Math
+
+func ExecuteImageMath(a, b image.Image, op string) (image.Image, error) {
+	bounds := a.Bounds()
+	out := image.NewRGBA64(bounds)
+
+	w, h := bounds.Dx(), bounds.Dy()
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			c1 := a.At(bounds.Min.X+x, bounds.Min.Y+y)
+			c2 := b.At(bounds.Min.X+x, bounds.Min.Y+y)
+			r1, g1, b1, a1 := colorToFloats(c1)
+			r2, g2, b2, a2 := colorToFloats(c2)
+
+			var r, g, bVal, aVal float64
+
+			switch op {
+			case "+":
+				r, g, bVal, aVal = r1+r2, g1+g2, b1+b2, a1+a2
+			case "-":
+				r, g, bVal, aVal = r1-r2, g1-g2, b1-b2, a1-a2
+			case "*":
+				r, g, bVal, aVal = r1*r2, g1*g2, b1*b2, a1*a2
+			case "/":
+				r = divSafe(r1, r2)
+				g = divSafe(g1, g2)
+				bVal = divSafe(b1, b2)
+				aVal = divSafe(a1, a2)
+			case "%":
+				r = modSafe(r1, r2)
+				g = modSafe(g1, g2)
+				bVal = modSafe(b1, b2)
+				aVal = modSafe(a1, a2)
+			}
+
+			out.Set(bounds.Min.X+x, bounds.Min.Y+y, floatsToColor(r, g, bVal, aVal))
+		}
+	}
+	return out, nil
+}
+
+func colorToFloats(c color.Color) (float64, float64, float64, float64) {
+	r, g, b, a := c.RGBA()
+	return float64(r)/65535.0, float64(g)/65535.0, float64(b)/65535.0, float64(a)/65535.0
+}
+
+func floatsToColor(r, g, b, a float64) color.Color {
+	clamp := func(v float64) uint16 {
+		if v < 0 { return 0 }
+		if v > 1 { return 65535 }
+		return uint16(v * 65535)
+	}
+	return color.RGBA64{clamp(r), clamp(g), clamp(b), clamp(a)}
+}
+
+func divSafe(a, b float64) float64 {
+	if b == 0 { return 0 }
+	return a / b
+}
+
+func modSafe(a, b float64) float64 {
+	if b == 0 { return 0 }
+	return math.Mod(a, b)
+}
+
+func CreateConstantImage(valStr string, bounds image.Rectangle) image.Image {
+	var v float64
+	if _, err := fmt.Sscanf(valStr, "%f", &v); err != nil {
+		// Log or fallback? Assuming 0 on failure or just try?
+		// Sscanf might fail for non-numbers (e.g. "red").
+		// But Parser identifies LiteralNode.
+		// If literal is "red", %f fails.
+		// We should probably check if it's a color?
+		// But here we are in Eval assuming it's a number for math context if used as operand.
+		// If it's used as arg to command, CommandNode handles it.
+		// This branch is only hit if LiteralNode appears at top level of expression (e.g. `0.5`).
+		v = 0
+	}
+	c := floatsToColor(v, v, v, 1.0)
+	return &image.Uniform{C: c}
+}

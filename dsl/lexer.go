@@ -16,6 +16,14 @@ const (
 	RPAREN // )
 	EQUALS // =
 	CARET  // ^
+
+	// Math operators
+	PLUS     // +
+	MINUS    // -
+	ASTERISK // *
+	SLASH    // /
+	PERCENT  // %
+	COMMA    // ,
 )
 
 type Token struct {
@@ -47,7 +55,12 @@ func (l *Lexer) readChar() {
 	l.readPos += 1
 }
 
-// peekChar removed as unused
+func (l *Lexer) peekChar() byte {
+	if l.readPos >= len(l.input) {
+		return 0
+	}
+	return l.input[l.readPos]
+}
 
 func (l *Lexer) NextToken() Token {
 	l.skipWhitespace()
@@ -65,6 +78,24 @@ func (l *Lexer) NextToken() Token {
 		tok = newToken(EQUALS, l.ch)
 	case '^':
 		tok = newToken(CARET, l.ch)
+	case '+':
+		tok = newToken(PLUS, l.ch)
+	case '-':
+		// Check if it's a negative number
+		if isDigit(l.peekChar()) {
+			tok.Literal = l.readNumberOrColor()
+			tok.Type = NUMBER
+			return tok
+		}
+		tok = newToken(MINUS, l.ch)
+	case '*':
+		tok = newToken(ASTERISK, l.ch)
+	case '/':
+		tok = newToken(SLASH, l.ch)
+	case '%':
+		tok = newToken(PERCENT, l.ch)
+	case ',':
+		tok = newToken(COMMA, l.ch)
 	case '"':
 		tok.Type = STRING
 		tok.Literal = l.readString()
@@ -76,10 +107,9 @@ func (l *Lexer) NextToken() Token {
 			tok.Literal = l.readIdentifier()
 			tok.Type = IDENT
 			return tok
-		} else if isDigit(l.ch) || l.ch == '-' || l.ch == '#' || l.ch == '.' {
-			// Numbers, Colors (#...), Decimals, Negatives
+		} else if isDigit(l.ch) || l.ch == '.' || l.ch == '#' {
 			tok.Literal = l.readNumberOrColor()
-			tok.Type = NUMBER // Treating loosely as a value
+			tok.Type = NUMBER
 			return tok
 		} else {
 			tok = newToken(EOF, l.ch) // Unknown
@@ -106,7 +136,12 @@ func (l *Lexer) readIdentifier() string {
 
 func (l *Lexer) readNumberOrColor() string {
 	position := l.pos
-	// Allow characters for numbers, hex colors, and simple strings that start with these
+	// Handled: first char (maybe -).
+	// Need to consume first char if called from switch case
+	// `readNumberOrColor` is called BEFORE consuming the first char if in switch default.
+	// But if called from '-', `l.ch` is '-'.
+
+	// Just consume until non-matching
 	for isDigit(l.ch) || isLetter(l.ch) || l.ch == '.' || l.ch == '-' || l.ch == '#' {
 		l.readChar()
 	}
