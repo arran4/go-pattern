@@ -47,12 +47,7 @@ func (l *Lexer) readChar() {
 	l.readPos += 1
 }
 
-func (l *Lexer) peekChar() byte {
-	if l.readPos >= len(l.input) {
-		return 0
-	}
-	return l.input[l.readPos]
-}
+// peekChar removed as unused
 
 func (l *Lexer) NextToken() Token {
 	l.skipWhitespace()

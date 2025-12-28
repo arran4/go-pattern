@@ -45,8 +45,12 @@ func (c *renderCmd) Execute(args []string) error {
 	if c.size != "" {
 		parts := strings.Split(c.size, "x")
 		if len(parts) == 2 {
-			fmt.Sscanf(parts[0], "%d", &width)
-			fmt.Sscanf(parts[1], "%d", &height)
+			if _, err := fmt.Sscanf(parts[0], "%d", &width); err != nil {
+				return fmt.Errorf("invalid width in size: %v", err)
+			}
+			if _, err := fmt.Sscanf(parts[1], "%d", &height); err != nil {
+				return fmt.Errorf("invalid height in size: %v", err)
+			}
 		}
 	}
 

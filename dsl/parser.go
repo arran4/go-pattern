@@ -8,7 +8,6 @@ type Parser struct {
 	l         *Lexer
 	curToken  Token
 	peekToken Token
-	errors    []string
 }
 
 func NewParser(l *Lexer) *Parser {
@@ -34,11 +33,12 @@ func (p *Parser) ParsePipeline() (Node, error) {
 		return left, nil
 	}
     // If not EOF, check if we have unconsumed tokens that indicate error
-    if p.curToken.Type != EOF {
-         // This can happen if precedence stopped parsing but we are not at EOF.
-         // E.g. "cmd arg )"
-    }
+    // Removed empty branch to satisfy linter.
+    // If we have trailing tokens, we currently just ignore them or return what we parsed.
+    // For a strict parser, we should probably error here:
+    // return nil, fmt.Errorf("unexpected token at end of input: %s", p.curToken.Literal)
 
+    // However, existing behavior was to just return left.
 	return left, nil
 }
 
@@ -154,8 +154,6 @@ func (p *Parser) parseArgValue() (ArgNode, error) {
 			return nil, err
 		}
 		if p.peekToken.Type != RPAREN {
-			// consume token to check if it matches RPAREN?
-            // current token is the last token of expression. peekToken should be RPAREN.
 			return nil, fmt.Errorf("expected ) but got %v", p.peekToken)
 		}
 		p.nextToken() // eat )
