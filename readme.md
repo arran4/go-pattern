@@ -13,15 +13,301 @@ These patterns are designed to be:
 ## Patterns
 
 
-### Starfield Pattern
+### Clouds_cumulus Pattern
 
 
 
-![Starfield Pattern](starfield.png)
+![Clouds_cumulus Pattern](clouds_cumulus.png)
 
 ```go
-	img := GenerateStarfield(image.Rect(0, 0, 150, 150))
-	f, err := os.Create(StarfieldOutputFilename)
+	// 1. Base shape: Low frequency noise to define the cloud blobs
+	noise := NewNoise(NoiseSeed(42), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency:   0.015,
+		Octaves:     4,
+		Persistence: 0.5,
+		Lacunarity:  2.0,
+	}))
+
+	// 2. Color Map: Sky Blue -> White
+	// We use a steep ramp around 0.5-0.6 to create distinct cloud shapes
+	// rather than a smooth fog.
+	return NewColorMap(noise,
+		ColorStop{0.0, color.RGBA{100, 180, 255, 255}}, // Blue Sky
+		ColorStop{0.4, color.RGBA{130, 200, 255, 255}}, // Light Sky
+		ColorStop{0.55, color.RGBA{245, 245, 255, 255}}, // Cloud Edge (White-ish)
+		ColorStop{0.7, color.RGBA{255, 255, 255, 255}}, // Cloud Body
+		ColorStop{1.0, color.RGBA{230, 230, 240, 255}}, // Cloud Shadow/Density
+	)
+```
+
+
+### Brick_textures Pattern
+
+
+
+![Brick_textures Pattern](brick_textures.png)
+
+```go
+	// Bricks with variations
+	// Create 3 variations of brick textures using Noise
+	var bricks []image.Image
+	for i := 0; i < 3; i++ {
+		// Noise with different seeds to ensure different texture per variant
+		noise := NewNoise(SetNoiseAlgorithm(&PerlinNoise{
+			Seed:      int64(i*100 + 1),
+			Frequency: 0.1,
+		}))
+
+		// Tint the noise red/brown
+		colored := NewColorMap(noise,
+			ColorStop{0.0, color.RGBA{100, 30, 30, 255}},
+			ColorStop{1.0, color.RGBA{180, 60, 50, 255}},
+		)
+		bricks = append(bricks, colored)
+	}
+
+	// Mortar texture: grey noise
+	mortar := NewColorMap(
+		NewNoise(SetNoiseAlgorithm(&PerlinNoise{
+			Seed:      999,
+			Frequency: 0.5,
+		})),
+		ColorStop{0.0, color.RGBA{180, 180, 180, 255}},
+		ColorStop{1.0, color.RGBA{220, 220, 220, 255}},
+	)
+
+	return NewBrick(
+		SetBrickSize(60, 25),
+		SetMortarSize(3),
+		SetBrickImages(bricks...),
+		SetMortarImage(mortar),
+	)
+```
+
+
+### WindowsDither Pattern
+
+
+
+![WindowsDither Pattern](dither_windows.png)
+
+```go
+	img := NewGopher()
+	// Spread 0 = auto calculate, or we can fine tune.
+	// Standard Windows dithering often just used the nearest color after thresholding.
+	// We use NewBayer8x8Dither for "Standard Ordered Dithering".
+	return NewBayer8x8Dither(img, Windows16)
+```
+
+
+### WindowsDither4x4 Pattern
+
+
+
+![WindowsDither4x4 Pattern](dither_windows_4x4.png)
+
+```go
+	img := NewGopher()
+	return NewBayer4x4Dither(img, Windows16)
+```
+
+
+### WindowsDitherHalftone Pattern
+
+
+
+![WindowsDitherHalftone Pattern](dither_windows_halftone.png)
+
+```go
+	img := NewGopher()
+	return NewHalftoneDither(img, 8, Windows16)
+```
+
+
+### Null Pattern
+
+
+
+![Null Pattern](null.png)
+
+```go
+	i := NewNull()
+	f, err := os.Create(NullOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Pebbles Pattern
+
+
+
+![Pebbles Pattern](pebbles.png)
+
+```go
+	// Re-implement Pebbles using Scatter for true overlapping geometry.
+	pebbles := NewScatter(
+		SetScatterFrequency(0.04), // Size control
+		SetScatterDensity(1.0),    // Packed tight
+		SetScatterMaxOverlap(1),
+		SetScatterGenerator(func(u, v float64, hash uint64) (color.Color, float64) {
+			// Randomize size slightly
+			rSize := float64(hash&0xFF)/255.0
+			radius := 12.0 + rSize*6.0 // 12 to 18 pixels radius
+
+			// Perturb the shape using simple noise (simulated by sin/cos of hash+angle)
+			// to make it "chipped" or irregular.
+			angle := math.Atan2(v, u)
+			dist := math.Sqrt(u*u + v*v)
+
+			// Simple radial noise
+			noise := math.Sin(angle*5 + float64(hash%10)) * 0.1
+			noise += math.Cos(angle*13 + float64(hash%7)) * 0.05
+
+			effectiveRadius := radius * (1.0 + noise)
+
+			if dist > effectiveRadius {
+				return color.Transparent, 0
+			}
+
+			// Stone Color: Grey/Brown variations
+			grey := 100 + int(hash%100)
+			col := color.RGBA{uint8(grey), uint8(grey - 5), uint8(grey - 10), 255}
+
+			// Shading (diffuse)
+			// Normal estimation for a flattened spheroid
+			nx := u / effectiveRadius
+			ny := v / effectiveRadius
+			nz := math.Sqrt(math.Max(0, 1.0 - nx*nx - ny*ny))
+
+			// Light dir
+			lx, ly, lz := -0.5, -0.5, 0.7
+			lLen := math.Sqrt(lx*lx + ly*ly + lz*lz)
+			lx, ly, lz = lx/lLen, ly/lLen, lz/lLen
+
+			diffuse := math.Max(0, nx*lx + ny*ly + nz*lz)
+
+			// Apply shading
+			r := float64(col.R) * (0.1 + 0.9*diffuse)
+			g := float64(col.G) * (0.1 + 0.9*diffuse)
+			b := float64(col.B) * (0.1 + 0.9*diffuse)
+
+			// Soft edge anti-aliasing
+			alpha := 1.0
+			edgeDist := effectiveRadius - dist
+			if edgeDist < 1.0 {
+				alpha = edgeDist
+			}
+
+			// Use hash for random Z-ordering
+			z := float64(hash) / 18446744073709551615.0
+
+			return color.RGBA{
+				R: uint8(math.Min(255, r)),
+				G: uint8(math.Min(255, g)),
+				B: uint8(math.Min(255, b)),
+				A: uint8(alpha * 255),
+			}, z
+		}),
+	)
+
+	f, err := os.Create(PebblesOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, pebbles); err != nil {
+		panic(err)
+	}
+```
+
+
+### ScreenTone Pattern
+
+
+
+![ScreenTone Pattern](screentone.png)
+
+```go
+	i := NewScreenTone(
+		SetRadius(3),
+		SetSpacing(10),
+		SetAngle(45),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(ScreenToneOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Voronoi Pattern
+
+
+
+![Voronoi Pattern](voronoi.png)
+
+```go
+	// Define some points and colors
+	points := []image.Point{
+		{50, 50}, {200, 50}, {125, 125}, {50, 200}, {200, 200},
+	}
+	colors := []color.Color{
+		color.RGBA{255, 100, 100, 255},
+		color.RGBA{100, 255, 100, 255},
+		color.RGBA{100, 100, 255, 255},
+		color.RGBA{255, 255, 100, 255},
+		color.RGBA{100, 255, 255, 255},
+	}
+
+	i := NewVoronoi(points, colors)
+	f, err := os.Create(VoronoiOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Camouflage Pattern
+
+
+
+![Camouflage Pattern](camouflage.png)
+
+```go
+	img := GenerateCamouflage(image.Rect(0, 0, 150, 150))
+	f, err := os.Create(CamouflageOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -32,92 +318,60 @@ These patterns are designed to be:
 ```
 
 
-### Wood Pattern
+### Globe_Projected Pattern
 
 
 
-![Wood Pattern](wood.png)
+![Globe_Projected Pattern](globe_projected.png)
 
 ```go
-	// 1. Wood Palette
-	// Dark brown (Late wood / Rings) -> Light Tan (Early wood) -> Dark
-	woodPalette := []ColorStop{
-		{0.0, color.RGBA{101, 67, 33, 255}},  // Dark Brown (Ring Edge)
-		{0.15, color.RGBA{160, 120, 80, 255}}, // Transition
-		{0.5, color.RGBA{222, 184, 135, 255}}, // Light Tan (Center - Burlywood)
-		{0.85, color.RGBA{160, 120, 80, 255}}, // Transition
-		{1.0, color.RGBA{101, 67, 33, 255}},  // Back to Edge
-	}
-
-	// 2. Base "Heightmap" Generator
-	// We create a grayscale gradient for rings (0-255).
-	grayScale := make([]color.Color, 256)
-	for i := range grayScale {
-		grayScale[i] = color.Gray{Y: uint8(i)}
-	}
-
-	// Use ConcentricRings to generate the base distance field.
-	// We want ~10 rings across the 256px width.
-	// 256 colors in palette.
-	// To get 1 cycle every 25 pixels: Freq = 256/25 ≈ 10.
-	// To get elongated vertical rings, FreqY should be lower (slower change).
-	ringsBase := NewConcentricRings(grayScale,
-		SetCenter(128, -100), // Off-center top
-		SetFrequencyX(8.0),   // ~30px width per ring
-		SetFrequencyY(0.8),   // Stretched vertically (10x elongation)
-	)
-
-	// 3. Main Distortion (Growth Wobble)
-	// Low frequency noise to warp the rings.
-	// Noise values are 0..1 (from NewNoise/Perlin).
-	// Warp maps intensity to offset.
-	wobbleNoise := NewNoise(NoiseSeed(101), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.015,
-		Octaves: 2,
-	}))
-
-	// Apply warp.
-	// Scale 20.0 means max offset is +/- 20 pixels.
-	// Since rings are ~30px wide, this distorts them significantly but keeps structure.
-	warpedRings := NewWarp(ringsBase,
-		WarpDistortion(wobbleNoise),
-		WarpScale(20.0),
-	)
-
-	// 4. Fiber Grain (Fine Detail)
-	// Add "Turbulence" to the warp using higher frequency noise.
-	// This simulates the jagged edges of the grain.
-	fiberDistortion := NewNoise(NoiseSeed(303), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.1, // Higher freq
-		Octaves: 3,     // More detail
-	}))
-
-	// Chain Warps: WarpedRings -> Warp again with fiber distortion
-	doubleWarped := NewWarp(warpedRings,
-		WarpDistortion(fiberDistortion),
-		WarpScale(2.0), // Small jaggedness (2 pixels)
-	)
-
-	// 5. Color Mapping
-	// Map the grayscale intensity (warped distance) to the wood palette.
-	finalWood := NewColorMap(doubleWarped, woodPalette...)
-
-	return finalWood
+	g := GenerateGlobe_Projected(image.Rect(0, 0, 300, 300))
+	saveImage(Globe_ProjectedOutputFilename, g)
 ```
 
 
-### Shojo_pink Pattern
+### Tile Pattern
 
 
 
-![Shojo_pink Pattern](shojo_pink.png)
+![Tile Pattern](tile.png)
 
 ```go
-	i := NewShojo(
-		SetSpaceColor(color.RGBA{20, 0, 10, 255}),    // Dark red/brown bg
-		SetFillColor(color.RGBA{255, 200, 220, 255}), // Pink sparkles
+	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
+	// Tile the gopher in a 200x200 area
+	return NewTile(gopher, image.Rect(0, 0, 200, 200))
+```
+
+
+### Stones Pattern
+
+
+
+![Stones Pattern](stones.png)
+
+```go
+	// F2-F1 gives distance to the border.
+	// Border is 0. Center is High.
+	noise := NewWorleyNoise(
+		SetFrequency(0.02),
+		SetSeed(100),
+		SetWorleyOutput(OutputF2MinusF1),
+		SetWorleyMetric(MetricEuclidean),
 	)
-	f, err := os.Create(Shojo_pinkOutputFilename)
+
+	// Map:
+	// 0.0 - 0.1: Mortar (Dark)
+	// 0.1 - 0.3: Edge of stone (Darker Grey)
+	// 0.3 - 1.0: Stone Body (Grey/Blueish with gradient)
+
+	stones := NewColorMap(noise,
+		ColorStop{Position: 0.0, Color: color.RGBA{20, 15, 10, 255}},    // Mortar
+		ColorStop{Position: 0.15, Color: color.RGBA{40, 40, 45, 255}},   // Stone Edge
+		ColorStop{Position: 0.3, Color: color.RGBA{80, 80, 90, 255}},    // Stone Body
+		ColorStop{Position: 0.8, Color: color.RGBA{150, 150, 160, 255}}, // Highlight
+	)
+
+	f, err := os.Create(StonesOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -126,24 +380,67 @@ These patterns are designed to be:
 			panic(e)
 		}
 	}()
-	if err = png.Encode(f, i); err != nil {
+	if err = png.Encode(f, stones); err != nil {
 		panic(err)
 	}
 ```
 
 
-### Shojo_blue Pattern
+### Islands Pattern
 
 
 
-![Shojo_blue Pattern](shojo_blue.png)
+![Islands Pattern](islands.png)
 
 ```go
-	i := NewShojo(
-		SetSpaceColor(color.RGBA{0, 0, 40, 255}),     // Dark blue bg
-		SetFillColor(color.RGBA{200, 220, 255, 255}), // Blueish sparkles
+	// Layer 1: Base Shape (Worley F1 Euclidean) - Large distinct landmasses
+	baseShape := NewWorleyNoise(
+		SetFrequency(0.01),
+		SetSeed(555),
+		SetWorleyOutput(OutputF1),
+		SetWorleyMetric(MetricEuclidean),
 	)
-	f, err := os.Create(Shojo_blueOutputFilename)
+
+	// Layer 2: Detail (Perlin Noise) - Adds coastline complexity and terrain roughness
+	detail := NewNoise(
+		SetNoiseAlgorithm(&PerlinNoise{
+			Seed:        123,
+			Frequency:   0.05,
+			Octaves:     4,
+			Persistence: 0.5,
+			Lacunarity:  2.0,
+		}),
+	)
+
+	// Blend: Subtract detail from base shape? Or Overlay?
+	// Worley F1 is 0 at center (Peak), 1 at edge (Deep Water).
+	// We want Peaks to be high (1.0). So let's Invert Worley first?
+	// Or just use ColorMap on the result.
+	// If we Add detail to Worley, the values increase.
+	// Let's use BlendOverlay to mix the gradients.
+
+	mixed := NewBlend(baseShape, detail, BlendOverlay)
+
+	// ColorMap:
+	// Worley: 0 (Peak) -> 1 (Edge)
+	// Overlay tends to push contrast.
+	// Let's define:
+	// 0.0 - 0.2: Snow (Peak)
+	// 0.2 - 0.4: Mountain/Rock
+	// 0.4 - 0.5: Forest
+	// 0.5 - 0.6: Sand
+	// 0.6 - 1.0: Water
+
+	islands := NewColorMap(mixed,
+		ColorStop{Position: 0.0, Color: color.RGBA{250, 250, 250, 255}}, // Snow
+		ColorStop{Position: 0.15, Color: color.RGBA{120, 120, 120, 255}}, // Rock
+		ColorStop{Position: 0.30, Color: color.RGBA{34, 139, 34, 255}},  // Forest
+		ColorStop{Position: 0.50, Color: color.RGBA{210, 180, 140, 255}}, // Sand
+		ColorStop{Position: 0.55, Color: color.RGBA{64, 164, 223, 255}}, // Water
+		ColorStop{Position: 1.0, Color: color.RGBA{0, 0, 128, 255}},     // Deep Water
+	)
+
+	f, err := os.Create(IslandsOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -152,7 +449,7 @@ These patterns are designed to be:
 			panic(e)
 		}
 	}()
-	if err = png.Encode(f, i); err != nil {
+	if err = png.Encode(f, islands); err != nil {
 		panic(err)
 	}
 ```
@@ -208,15 +505,212 @@ These patterns are designed to be:
 ```
 
 
-### Camouflage Pattern
+### CrackedMud Pattern
 
 
 
-![Camouflage Pattern](camouflage.png)
+![CrackedMud Pattern](cracked_mud.png)
 
 ```go
-	img := GenerateCamouflage(image.Rect(0, 0, 150, 150))
-	f, err := os.Create(CamouflageOutputFilename)
+	// F2-F1 gives thick lines at cell boundaries (where distance to 1st and 2nd closest points are similar)
+	noise := NewWorleyNoise(
+		SetFrequency(0.02),
+		SetSeed(123),
+		SetWorleyOutput(OutputF2MinusF1),
+		SetWorleyMetric(MetricEuclidean),
+	)
+
+	// Map distance to mud colors.
+	// Low value (close to 0) means F1 ~= F2, i.e., boundary/crack.
+	// High value means center of cell.
+
+	mud := NewColorMap(noise,
+		ColorStop{Position: 0.0, Color: color.RGBA{30, 20, 10, 255}},    // Crack (Dark brown/black)
+		ColorStop{Position: 0.1, Color: color.RGBA{60, 40, 20, 255}},    // Crack edge
+		ColorStop{Position: 0.2, Color: color.RGBA{130, 100, 70, 255}},  // Mud surface
+		ColorStop{Position: 1.0, Color: color.RGBA{160, 120, 80, 255}},  // Center of mud chunk
+	)
+
+	f, err := os.Create(CrackedMudOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, mud); err != nil {
+		panic(err)
+	}
+```
+
+
+### GrassClose Pattern
+
+
+
+![GrassClose Pattern](grass_close.png)
+
+```go
+	// 1. Background: Dirt
+	dirt := NewColorMap(
+		NewNoise(SetFrequency(0.05), NoiseSeed(1)),
+		ColorStop{0.0, color.RGBA{40, 30, 20, 255}},
+		ColorStop{1.0, color.RGBA{80, 60, 40, 255}},
+	)
+
+	// 2. Wind map (Perlin noise)
+	wind := NewNoise(
+		SetFrequency(0.01),
+		NoiseSeed(2),
+		SetNoiseAlgorithm(&PerlinNoise{Seed: 2, Octaves: 2, Persistence: 0.5}),
+	)
+
+	// 3. Density map (Worley noise for clumping)
+	density := NewWorleyNoise(
+		SetFrequency(0.02),
+		SetSeed(3),
+	)
+
+	// 4. Grass Layer
+	grass := NewGrassClose(
+		SetBladeHeight(35),
+		SetBladeWidth(5),
+		SetFillColor(color.RGBA{20, 160, 30, 255}),
+		SetWindSource(wind),
+		SetDensitySource(density),
+		// Background source
+		func(p any) {
+			if g, ok := p.(*GrassClose); ok {
+				g.Source = dirt
+			}
+		},
+	)
+
+	f, err := os.Create(GrassCloseOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, grass); err != nil {
+		panic(err)
+	}
+```
+
+
+### Globe_Grid Pattern
+
+
+
+![Globe_Grid Pattern](globe_grid.png)
+
+```go
+	g := GenerateGlobe_Grid(image.Rect(0, 0, 300, 300))
+	saveImage(Globe_GridOutputFilename, g)
+```
+
+
+### Globe Pattern
+
+
+
+![Globe Pattern](globe.png)
+
+```go
+	ExampleNewGlobe_Projected()
+```
+
+
+### Warp Pattern
+
+
+
+![Warp Pattern](warp.png)
+
+```go
+	// Standard demo: Grid warped by noise
+	// We want a visual that clearly shows the warping effect.
+	// A checkerboard is good.
+
+	checker := NewChecker(
+		color.RGBA{200, 200, 200, 255},
+		color.RGBA{50, 50, 50, 255},
+	)
+
+	// Distortion noise
+	noise := NewNoise(NoiseSeed(99), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.03,
+		Octaves: 2,
+	}))
+
+	// Apply Warp
+	warped := NewWarp(checker,
+		WarpDistortion(noise),
+		WarpScale(10.0),
+	)
+
+	fmt.Println(warped.At(10, 10))
+	// Output: {50 50 50 255}
+```
+
+
+### Warp_terrain Pattern
+
+
+
+![Warp_terrain Pattern](warp_terrain.png)
+
+```go
+	fbm := func(seed int64) image.Image {
+		return NewNoise(NoiseSeed(seed), SetNoiseAlgorithm(&PerlinNoise{
+			Frequency: 0.015,
+			Octaves: 6,
+			Persistence: 0.5,
+			Lacunarity: 2.0,
+		}))
+	}
+
+	base := fbm(101)
+
+	warp := NewNoise(NoiseSeed(202), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.01,
+		Octaves: 2,
+	}))
+
+	warped := NewWarp(base,
+		WarpDistortion(warp),
+		WarpScale(80.0),
+	)
+
+	stops := []ColorStop{
+		{0.0, color.RGBA{0, 0, 150, 255}},
+		{0.2, color.RGBA{0, 50, 200, 255}},
+		{0.22, color.RGBA{240, 230, 140, 255}},
+		{0.3, color.RGBA{34, 139, 34, 255}},
+		{0.6, color.RGBA{107, 142, 35, 255}},
+		{0.8, color.RGBA{139, 69, 19, 255}},
+		{0.9, color.RGBA{100, 100, 100, 255}},
+		{0.98, color.RGBA{255, 250, 250, 255}},
+	}
+
+	return NewColorMap(warped, stops...)
+```
+
+
+### Damascus Pattern
+
+
+
+![Damascus Pattern](damascus.png)
+
+```go
+	img := GenerateDamascus(image.Rect(0, 0, 150, 150))
+	f, err := os.Create(DamascusOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -224,6 +718,363 @@ These patterns are designed to be:
 	if err = png.Encode(f, img); err != nil {
 		panic(err)
 	}
+```
+
+
+### Shojo Pattern
+
+
+
+![Shojo Pattern](shojo.png)
+
+```go
+	i := NewShojo()
+	f, err := os.Create(ShojoOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Warp_clouds Pattern
+
+
+
+![Warp_clouds Pattern](warp_clouds.png)
+
+```go
+	baseNoise := NewNoise(NoiseSeed(777), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.02,
+		Octaves: 4,
+		Persistence: 0.5,
+	}))
+
+	warpNoise := NewNoise(NoiseSeed(888), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.02,
+		Octaves: 2,
+	}))
+
+	warped := NewWarp(baseNoise,
+		WarpDistortion(warpNoise),
+		WarpScale(50.0),
+	)
+
+	stops := []ColorStop{
+		{0.0, color.RGBA{0, 100, 200, 255}},
+		{0.4, color.RGBA{100, 150, 255, 255}},
+		{0.6, color.RGBA{255, 255, 255, 255}},
+		{1.0, color.RGBA{255, 255, 255, 255}},
+	}
+
+	return NewColorMap(warped, stops...)
+```
+
+
+### Starfield Pattern
+
+
+
+![Starfield Pattern](starfield.png)
+
+```go
+	img := GenerateStarfield(image.Rect(0, 0, 150, 150))
+	f, err := os.Create(StarfieldOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err = png.Encode(f, img); err != nil {
+		panic(err)
+	}
+```
+
+
+### Grass Pattern
+
+
+
+![Grass Pattern](grass.png)
+
+```go
+	// 1. Create a base noise layer for general color variation.
+	baseNoise := NewNoise(
+		SetNoiseAlgorithm(&PerlinNoise{
+			Seed:        500,
+			Frequency:   0.02,
+			Octaves:     4,
+			Persistence: 0.5,
+			Lacunarity:  2.0,
+		}),
+	)
+
+	// 2. Create a high-frequency noise layer for "blades" or detail.
+	detailNoise := NewNoise(
+		SetNoiseAlgorithm(&PerlinNoise{
+			Seed:        600,
+			Frequency:   0.2, // High frequency for grass blades
+			Octaves:     2,
+			Persistence: 0.5,
+			Lacunarity:  2.0,
+		}),
+	)
+
+	// 3. Blend them. We want the detail to be prominent but influenced by the base.
+	// Multiply might darken too much, let's use Overlay or just simple addition/average.
+	// Actually, let's just use the detail noise warped by base noise for a wind-blown look?
+	// Or simply blend them.
+
+	// Let's try blending: Base * 0.5 + Detail * 0.5
+	// Using BlendAverage is simple.
+	blended := NewBlend(baseNoise, detailNoise, BlendAverage)
+
+	// 4. Map to Grass Colors.
+	grass := NewColorMap(blended,
+		ColorStop{Position: 0.0, Color: color.RGBA{10, 40, 10, 255}},    // Deep shadow/dirt
+		ColorStop{Position: 0.3, Color: color.RGBA{30, 80, 30, 255}},    // Dark Grass
+		ColorStop{Position: 0.6, Color: color.RGBA{60, 140, 40, 255}},   // Mid Grass
+		ColorStop{Position: 0.8, Color: color.RGBA{100, 180, 60, 255}},  // Light Grass
+		ColorStop{Position: 1.0, Color: color.RGBA{140, 220, 100, 255}}, // Tips/Highlights
+	)
+
+	f, err := os.Create(GrassOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, grass); err != nil {
+		panic(err)
+	}
+```
+
+
+### Warp_marble Pattern
+
+
+
+![Warp_marble Pattern](warp_marble.png)
+
+```go
+	colors := []color.Color{
+		color.RGBA{240, 240, 245, 255},
+		color.RGBA{240, 240, 245, 255},
+		color.RGBA{240, 240, 245, 255},
+		color.RGBA{200, 200, 210, 255},
+		color.RGBA{100, 100, 110, 255},
+		color.RGBA{200, 200, 210, 255},
+	}
+	stripes := NewModuloStripe(colors)
+
+	noise := NewNoise(NoiseSeed(456), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.04,
+		Octaves: 4,
+		Persistence: 0.6,
+	}))
+
+	return NewWarp(stripes,
+		WarpDistortion(noise),
+		WarpScale(30.0),
+	)
+```
+
+
+### Clouds Pattern
+
+
+
+![Clouds Pattern](clouds.png)
+
+```go
+	return ExampleNewClouds_cumulus()
+```
+
+
+### Polka Pattern
+
+
+
+![Polka Pattern](polka.png)
+
+```go
+	i := NewPolka(
+		SetRadius(10),
+		SetSpacing(40),
+		SetFillColor(color.Black),
+		SetSpaceColor(color.White),
+	)
+	f, err := os.Create(PolkaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Globe_Simple Pattern
+
+
+
+![Globe_Simple Pattern](globe_simple.png)
+
+```go
+	g := GenerateGlobe_Simple(image.Rect(0, 0, 300, 300))
+	saveImage(Globe_SimpleOutputFilename, g)
+```
+
+
+### Lava Pattern
+
+
+
+![Lava Pattern](lava.png)
+
+```go
+	// This function is for the testable example and documentation.
+	// It creates the file directly.
+	img := GenerateLava(image.Rect(0, 0, 150, 150))
+	f, err := os.Create(LavaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err = png.Encode(f, img); err != nil {
+		panic(err)
+	}
+```
+
+
+### Clouds_sunset Pattern
+
+
+
+![Clouds_sunset Pattern](clouds_sunset.png)
+
+```go
+	// 1. Sky Gradient (Orange to Purple)
+	sky := NewLinearGradient(
+		SetStartColor(color.RGBA{255, 100, 50, 255}),  // Orange/Red Horizon
+		SetEndColor(color.RGBA{50, 20, 100, 255}),     // Purple/Blue Zenith
+		GradientVertical(),
+	)
+
+	// 2. Cloud Shapes
+	clouds := NewNoise(NoiseSeed(888), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency:   0.012,
+		Octaves:     4,
+	}))
+
+	// Map cloud noise to alpha/color
+	// We want the clouds to be dark at the bottom (shadow) and pink/gold at the edges
+	cloudColor := NewColorMap(clouds,
+		ColorStop{0.0, color.Black},                        // No clouds
+		ColorStop{0.4, color.Black},                        // No clouds
+		ColorStop{0.5, color.RGBA{80, 40, 60, 255}},        // Dark cloud base
+		ColorStop{0.7, color.RGBA{200, 100, 80, 255}},      // Orange/Pink mid
+		ColorStop{1.0, color.RGBA{255, 200, 100, 255}},     // Gold highlights
+	)
+
+	// 3. Composite Clouds over Sky using Screen blend mode for a glowing effect
+	return NewBlend(sky, cloudColor, BlendScreen)
+```
+
+
+### WorleyNoise Pattern
+
+
+
+![WorleyNoise Pattern](worley.png)
+
+```go
+	// Standard F1 Euclidean Worley Noise
+	i := NewWorleyNoise(
+		SetFrequency(0.05),
+		SetSeed(1),
+	)
+	f, err := os.Create(WorleyNoiseOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Molecules Pattern
+
+
+
+![Molecules Pattern](molecules.png)
+
+```go
+	// Base Worley Noise (F1) provides the cellular structure
+	noise := NewWorleyNoise(
+		SetFrequency(0.02),
+		SetSeed(42),
+		SetWorleyOutput(OutputF1),
+		SetWorleyMetric(MetricEuclidean),
+	)
+
+	// ColorMap:
+	// Center (distance 0) -> Light
+	// Edge (distance ~0.5) -> Dark
+	// Gaps -> Black
+
+	molecules := NewColorMap(noise,
+		ColorStop{Position: 0.0, Color: color.RGBA{180, 180, 190, 255}}, // Center
+		ColorStop{Position: 0.4, Color: color.RGBA{100, 100, 110, 255}}, // Edge
+		ColorStop{Position: 0.45, Color: color.RGBA{50, 50, 55, 255}},   // Darker edge
+		ColorStop{Position: 0.5, Color: color.RGBA{10, 10, 10, 255}},    // Gap
+		ColorStop{Position: 1.0, Color: color.RGBA{0, 0, 0, 255}},       // Deep gap
+	)
+
+	f, err := os.Create(MoleculesOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, molecules); err != nil {
+		panic(err)
+	}
+```
+
+
+### KnollDither Pattern
+
+
+
+![KnollDither Pattern](dither_knoll.png)
+
+```go
+	img := NewGopher()
+	return NewKnollDither(img, Windows16, 8)
 ```
 
 
@@ -334,219 +1185,174 @@ These patterns are designed to be:
 ```
 
 
-### Warp_marble Pattern
+### CrossHatch Pattern
 
 
 
-![Warp_marble Pattern](warp_marble.png)
+![CrossHatch Pattern](crosshatch.png)
 
 ```go
-	colors := []color.Color{
-		color.RGBA{240, 240, 245, 255},
-		color.RGBA{240, 240, 245, 255},
-		color.RGBA{240, 240, 245, 255},
-		color.RGBA{200, 200, 210, 255},
-		color.RGBA{100, 100, 110, 255},
-		color.RGBA{200, 200, 210, 255},
-	}
-	stripes := NewModuloStripe(colors)
+	// This function body is empty because the bootstrap tool uses the function signature
+	// and the following variable to generate the documentation and image.
+```
 
-	noise := NewNoise(NoiseSeed(456), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.04,
-		Octaves: 4,
-		Persistence: 0.6,
+
+### Yliluoma2Dither Pattern
+
+
+
+![Yliluoma2Dither Pattern](dither_yliluoma2.png)
+
+```go
+	img := NewGopher()
+	return NewYliluoma2Dither(img, Windows16, 8)
+```
+
+
+### Wood Pattern
+
+
+
+![Wood Pattern](wood.png)
+
+```go
+	// 1. Wood Palette
+	// Dark brown (Late wood / Rings) -> Light Tan (Early wood) -> Dark
+	woodPalette := []ColorStop{
+		{0.0, color.RGBA{101, 67, 33, 255}},  // Dark Brown (Ring Edge)
+		{0.15, color.RGBA{160, 120, 80, 255}}, // Transition
+		{0.5, color.RGBA{222, 184, 135, 255}}, // Light Tan (Center - Burlywood)
+		{0.85, color.RGBA{160, 120, 80, 255}}, // Transition
+		{1.0, color.RGBA{101, 67, 33, 255}},  // Back to Edge
+	}
+
+	// 2. Base "Heightmap" Generator
+	// We create a grayscale gradient for rings (0-255).
+	grayScale := make([]color.Color, 256)
+	for i := range grayScale {
+		grayScale[i] = color.Gray{Y: uint8(i)}
+	}
+
+	// Use ConcentricRings to generate the base distance field.
+	// We want ~10 rings across the 256px width.
+	// 256 colors in palette.
+	// To get 1 cycle every 25 pixels: Freq = 256/25 ≈ 10.
+	// To get elongated vertical rings, FreqY should be lower (slower change).
+	ringsBase := NewConcentricRings(grayScale,
+		SetCenter(128, -100), // Off-center top
+		SetFrequencyX(8.0),   // ~30px width per ring
+		SetFrequencyY(0.8),   // Stretched vertically (10x elongation)
+	)
+
+	// 3. Main Distortion (Growth Wobble)
+	// Low frequency noise to warp the rings.
+	// Noise values are 0..1 (from NewNoise/Perlin).
+	// Warp maps intensity to offset.
+	wobbleNoise := NewNoise(NoiseSeed(101), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.015,
+		Octaves: 2,
 	}))
 
-	return NewWarp(stripes,
-		WarpDistortion(noise),
-		WarpScale(30.0),
+	// Apply warp.
+	// Scale 20.0 means max offset is +/- 20 pixels.
+	// Since rings are ~30px wide, this distorts them significantly but keeps structure.
+	warpedRings := NewWarp(ringsBase,
+		WarpDistortion(wobbleNoise),
+		WarpScale(20.0),
+	)
+
+	// 4. Fiber Grain (Fine Detail)
+	// Add "Turbulence" to the warp using higher frequency noise.
+	// This simulates the jagged edges of the grain.
+	fiberDistortion := NewNoise(NoiseSeed(303), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency: 0.1, // Higher freq
+		Octaves: 3,     // More detail
+	}))
+
+	// Chain Warps: WarpedRings -> Warp again with fiber distortion
+	doubleWarped := NewWarp(warpedRings,
+		WarpDistortion(fiberDistortion),
+		WarpScale(2.0), // Small jaggedness (2 pixels)
+	)
+
+	// 5. Color Mapping
+	// Map the grayscale intensity (warped distance) to the wood palette.
+	finalWood := NewColorMap(doubleWarped, woodPalette...)
+
+	return finalWood
+```
+
+
+### Brick Pattern
+
+
+
+![Brick Pattern](brick.png)
+
+```go
+	return NewBrick(
+		SetBrickSize(50, 20),
+		SetMortarSize(4),
 	)
 ```
 
 
-### Pebbles Pattern
+### Clouds_cirrus Pattern
 
 
 
-![Pebbles Pattern](pebbles.png)
+![Clouds_cirrus Pattern](clouds_cirrus.png)
 
 ```go
-	// Re-implement Pebbles using Scatter for true overlapping geometry.
-	pebbles := NewScatter(
-		SetScatterFrequency(0.04), // Size control
-		SetScatterDensity(1.0),    // Packed tight
-		SetScatterMaxOverlap(1),
-		SetScatterGenerator(func(u, v float64, hash uint64) (color.Color, float64) {
-			// Randomize size slightly
-			rSize := float64(hash&0xFF)/255.0
-			radius := 12.0 + rSize*6.0 // 12 to 18 pixels radius
+	// High frequency noise with high persistence to simulate wisps
+	wispyNoise := NewNoise(NoiseSeed(103), SetNoiseAlgorithm(&PerlinNoise{
+		Frequency:   0.05,
+		Octaves:     6,
+		Persistence: 0.7,
+	}))
 
-			// Perturb the shape using simple noise (simulated by sin/cos of hash+angle)
-			// to make it "chipped" or irregular.
-			angle := math.Atan2(v, u)
-			dist := math.Sqrt(u*u + v*v)
-
-			// Simple radial noise
-			noise := math.Sin(angle*5 + float64(hash%10)) * 0.1
-			noise += math.Cos(angle*13 + float64(hash%7)) * 0.05
-
-			effectiveRadius := radius * (1.0 + noise)
-
-			if dist > effectiveRadius {
-				return color.Transparent, 0
-			}
-
-			// Stone Color: Grey/Brown variations
-			grey := 100 + int(hash%100)
-			col := color.RGBA{uint8(grey), uint8(grey - 5), uint8(grey - 10), 255}
-
-			// Shading (diffuse)
-			// Normal estimation for a flattened spheroid
-			nx := u / effectiveRadius
-			ny := v / effectiveRadius
-			nz := math.Sqrt(math.Max(0, 1.0 - nx*nx - ny*ny))
-
-			// Light dir
-			lx, ly, lz := -0.5, -0.5, 0.7
-			lLen := math.Sqrt(lx*lx + ly*ly + lz*lz)
-			lx, ly, lz = lx/lLen, ly/lLen, lz/lLen
-
-			diffuse := math.Max(0, nx*lx + ny*ly + nz*lz)
-
-			// Apply shading
-			r := float64(col.R) * (0.1 + 0.9*diffuse)
-			g := float64(col.G) * (0.1 + 0.9*diffuse)
-			b := float64(col.B) * (0.1 + 0.9*diffuse)
-
-			// Soft edge anti-aliasing
-			alpha := 1.0
-			edgeDist := effectiveRadius - dist
-			if edgeDist < 1.0 {
-				alpha = edgeDist
-			}
-
-			// Use hash for random Z-ordering
-			z := float64(hash) / 18446744073709551615.0
-
-			return color.RGBA{
-				R: uint8(math.Min(255, r)),
-				G: uint8(math.Min(255, g)),
-				B: uint8(math.Min(255, b)),
-				A: uint8(alpha * 255),
-			}, z
-		}),
+	return NewColorMap(wispyNoise,
+		ColorStop{0.0, color.RGBA{20, 50, 150, 255}},   // Dark Blue Sky
+		ColorStop{0.6, color.RGBA{50, 100, 200, 255}},  // Blue
+		ColorStop{0.7, color.RGBA{150, 200, 255, 100}}, // Faint wisp
+		ColorStop{1.0, color.RGBA{255, 255, 255, 200}}, // Bright wisp
 	)
-
-	f, err := os.Create(PebblesOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, pebbles); err != nil {
-		panic(err)
-	}
 ```
 
 
-### GrassClose Pattern
+### Brick_stone Pattern
 
 
 
-![GrassClose Pattern](grass_close.png)
-
-```go
-	// 1. Background: Dirt
-	dirt := NewColorMap(
-		NewNoise(SetFrequency(0.05), NoiseSeed(1)),
-		ColorStop{0.0, color.RGBA{40, 30, 20, 255}},
-		ColorStop{1.0, color.RGBA{80, 60, 40, 255}},
-	)
-
-	// 2. Wind map (Perlin noise)
-	wind := NewNoise(
-		SetFrequency(0.01),
-		NoiseSeed(2),
-		SetNoiseAlgorithm(&PerlinNoise{Seed: 2, Octaves: 2, Persistence: 0.5}),
-	)
-
-	// 3. Density map (Worley noise for clumping)
-	density := NewWorleyNoise(
-		SetFrequency(0.02),
-		SetSeed(3),
-	)
-
-	// 4. Grass Layer
-	grass := NewGrassClose(
-		SetBladeHeight(35),
-		SetBladeWidth(5),
-		SetFillColor(color.RGBA{20, 160, 30, 255}),
-		SetWindSource(wind),
-		SetDensitySource(density),
-		// Background source
-		func(p any) {
-			if g, ok := p.(*GrassClose); ok {
-				g.Source = dirt
-			}
-		},
-	)
-
-	f, err := os.Create(GrassCloseOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, grass); err != nil {
-		panic(err)
-	}
-```
-
-
-### CrackedMud Pattern
-
-
-
-![CrackedMud Pattern](cracked_mud.png)
+![Brick_stone Pattern](brick_stone.png)
 
 ```go
-	// F2-F1 gives thick lines at cell boundaries (where distance to 1st and 2nd closest points are similar)
-	noise := NewWorleyNoise(
-		SetFrequency(0.02),
-		SetSeed(123),
-		SetWorleyOutput(OutputF2MinusF1),
-		SetWorleyMetric(MetricEuclidean),
-	)
-
-	// Map distance to mud colors.
-	// Low value (close to 0) means F1 ~= F2, i.e., boundary/crack.
-	// High value means center of cell.
-
-	mud := NewColorMap(noise,
-		ColorStop{Position: 0.0, Color: color.RGBA{30, 20, 10, 255}},    // Crack (Dark brown/black)
-		ColorStop{Position: 0.1, Color: color.RGBA{60, 40, 20, 255}},    // Crack edge
-		ColorStop{Position: 0.2, Color: color.RGBA{130, 100, 70, 255}},  // Mud surface
-		ColorStop{Position: 1.0, Color: color.RGBA{160, 120, 80, 255}},  // Center of mud chunk
-	)
-
-	f, err := os.Create(CrackedMudOutputFilename)
-	if err != nil {
-		panic(err)
+	// Create "Stone" textures
+	var stones []image.Image
+	for i := 0; i < 4; i++ {
+		noise := NewNoise(SetNoiseAlgorithm(&PerlinNoise{
+			Seed:      int64(i*50 + 123),
+			Frequency: 0.2,
+		}))
+		// Grey/Blueish stone colors
+		colored := NewColorMap(noise,
+			ColorStop{0.0, color.RGBA{80, 80, 90, 255}},
+			ColorStop{0.6, color.RGBA{120, 120, 130, 255}},
+			ColorStop{1.0, color.RGBA{160, 160, 170, 255}},
+		)
+		stones = append(stones, colored)
 	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, mud); err != nil {
-		panic(err)
-	}
+
+	mortar := NewUniform(color.RGBA{50, 50, 50, 255})
+
+	// Larger bricks/stones
+	return NewBrick(
+		SetBrickSize(40, 30),
+		SetMortarSize(6),
+		SetBrickImages(stones...),
+		SetMortarImage(mortar),
+		SetBrickOffset(0.3), // Non-standard offset
+	)
 ```
 
 
@@ -588,250 +1394,6 @@ These patterns are designed to be:
 ```
 
 
-### Islands Pattern
-
-
-
-![Islands Pattern](islands.png)
-
-```go
-	// Layer 1: Base Shape (Worley F1 Euclidean) - Large distinct landmasses
-	baseShape := NewWorleyNoise(
-		SetFrequency(0.01),
-		SetSeed(555),
-		SetWorleyOutput(OutputF1),
-		SetWorleyMetric(MetricEuclidean),
-	)
-
-	// Layer 2: Detail (Perlin Noise) - Adds coastline complexity and terrain roughness
-	detail := NewNoise(
-		SetNoiseAlgorithm(&PerlinNoise{
-			Seed:        123,
-			Frequency:   0.05,
-			Octaves:     4,
-			Persistence: 0.5,
-			Lacunarity:  2.0,
-		}),
-	)
-
-	// Blend: Subtract detail from base shape? Or Overlay?
-	// Worley F1 is 0 at center (Peak), 1 at edge (Deep Water).
-	// We want Peaks to be high (1.0). So let's Invert Worley first?
-	// Or just use ColorMap on the result.
-	// If we Add detail to Worley, the values increase.
-	// Let's use BlendOverlay to mix the gradients.
-
-	mixed := NewBlend(baseShape, detail, BlendOverlay)
-
-	// ColorMap:
-	// Worley: 0 (Peak) -> 1 (Edge)
-	// Overlay tends to push contrast.
-	// Let's define:
-	// 0.0 - 0.2: Snow (Peak)
-	// 0.2 - 0.4: Mountain/Rock
-	// 0.4 - 0.5: Forest
-	// 0.5 - 0.6: Sand
-	// 0.6 - 1.0: Water
-
-	islands := NewColorMap(mixed,
-		ColorStop{Position: 0.0, Color: color.RGBA{250, 250, 250, 255}}, // Snow
-		ColorStop{Position: 0.15, Color: color.RGBA{120, 120, 120, 255}}, // Rock
-		ColorStop{Position: 0.30, Color: color.RGBA{34, 139, 34, 255}},  // Forest
-		ColorStop{Position: 0.50, Color: color.RGBA{210, 180, 140, 255}}, // Sand
-		ColorStop{Position: 0.55, Color: color.RGBA{64, 164, 223, 255}}, // Water
-		ColorStop{Position: 1.0, Color: color.RGBA{0, 0, 128, 255}},     // Deep Water
-	)
-
-	f, err := os.Create(IslandsOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, islands); err != nil {
-		panic(err)
-	}
-```
-
-
-### Grass Pattern
-
-
-
-![Grass Pattern](grass.png)
-
-```go
-	// 1. Create a base noise layer for general color variation.
-	baseNoise := NewNoise(
-		SetNoiseAlgorithm(&PerlinNoise{
-			Seed:        500,
-			Frequency:   0.02,
-			Octaves:     4,
-			Persistence: 0.5,
-			Lacunarity:  2.0,
-		}),
-	)
-
-	// 2. Create a high-frequency noise layer for "blades" or detail.
-	detailNoise := NewNoise(
-		SetNoiseAlgorithm(&PerlinNoise{
-			Seed:        600,
-			Frequency:   0.2, // High frequency for grass blades
-			Octaves:     2,
-			Persistence: 0.5,
-			Lacunarity:  2.0,
-		}),
-	)
-
-	// 3. Blend them. We want the detail to be prominent but influenced by the base.
-	// Multiply might darken too much, let's use Overlay or just simple addition/average.
-	// Actually, let's just use the detail noise warped by base noise for a wind-blown look?
-	// Or simply blend them.
-
-	// Let's try blending: Base * 0.5 + Detail * 0.5
-	// Using BlendAverage is simple.
-	blended := NewBlend(baseNoise, detailNoise, BlendAverage)
-
-	// 4. Map to Grass Colors.
-	grass := NewColorMap(blended,
-		ColorStop{Position: 0.0, Color: color.RGBA{10, 40, 10, 255}},    // Deep shadow/dirt
-		ColorStop{Position: 0.3, Color: color.RGBA{30, 80, 30, 255}},    // Dark Grass
-		ColorStop{Position: 0.6, Color: color.RGBA{60, 140, 40, 255}},   // Mid Grass
-		ColorStop{Position: 0.8, Color: color.RGBA{100, 180, 60, 255}},  // Light Grass
-		ColorStop{Position: 1.0, Color: color.RGBA{140, 220, 100, 255}}, // Tips/Highlights
-	)
-
-	f, err := os.Create(GrassOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, grass); err != nil {
-		panic(err)
-	}
-```
-
-
-### WindowsDither Pattern
-
-
-
-![WindowsDither Pattern](dither_windows.png)
-
-```go
-	img := NewGopher()
-	// Spread 0 = auto calculate, or we can fine tune.
-	// Standard Windows dithering often just used the nearest color after thresholding.
-	// We use NewBayer8x8Dither for "Standard Ordered Dithering".
-	return NewBayer8x8Dither(img, Windows16)
-```
-
-
-### WindowsDither4x4 Pattern
-
-
-
-![WindowsDither4x4 Pattern](dither_windows_4x4.png)
-
-```go
-	img := NewGopher()
-	return NewBayer4x4Dither(img, Windows16)
-```
-
-
-### WindowsDitherHalftone Pattern
-
-
-
-![WindowsDitherHalftone Pattern](dither_windows_halftone.png)
-
-```go
-	img := NewGopher()
-	return NewHalftoneDither(img, 8, Windows16)
-```
-
-
-### CrossHatch Pattern
-
-
-
-![CrossHatch Pattern](crosshatch.png)
-
-```go
-	// This function body is empty because the bootstrap tool uses the function signature
-	// and the following variable to generate the documentation and image.
-```
-
-
-### Clouds Pattern
-
-
-
-![Clouds Pattern](clouds.png)
-
-```go
-	return ExampleNewClouds_cumulus()
-```
-
-
-### Clouds_cumulus Pattern
-
-
-
-![Clouds_cumulus Pattern](clouds_cumulus.png)
-
-```go
-	// 1. Base shape: Low frequency noise to define the cloud blobs
-	noise := NewNoise(NoiseSeed(42), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency:   0.015,
-		Octaves:     4,
-		Persistence: 0.5,
-		Lacunarity:  2.0,
-	}))
-
-	// 2. Color Map: Sky Blue -> White
-	// We use a steep ramp around 0.5-0.6 to create distinct cloud shapes
-	// rather than a smooth fog.
-	return NewColorMap(noise,
-		ColorStop{0.0, color.RGBA{100, 180, 255, 255}}, // Blue Sky
-		ColorStop{0.4, color.RGBA{130, 200, 255, 255}}, // Light Sky
-		ColorStop{0.55, color.RGBA{245, 245, 255, 255}}, // Cloud Edge (White-ish)
-		ColorStop{0.7, color.RGBA{255, 255, 255, 255}}, // Cloud Body
-		ColorStop{1.0, color.RGBA{230, 230, 240, 255}}, // Cloud Shadow/Density
-	)
-```
-
-
-### Clouds_cirrus Pattern
-
-
-
-![Clouds_cirrus Pattern](clouds_cirrus.png)
-
-```go
-	// High frequency noise with high persistence to simulate wisps
-	wispyNoise := NewNoise(NoiseSeed(103), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency:   0.05,
-		Octaves:     6,
-		Persistence: 0.7,
-	}))
-
-	return NewColorMap(wispyNoise,
-		ColorStop{0.0, color.RGBA{20, 50, 150, 255}},   // Dark Blue Sky
-		ColorStop{0.6, color.RGBA{50, 100, 200, 255}},  // Blue
-		ColorStop{0.7, color.RGBA{150, 200, 255, 100}}, // Faint wisp
-		ColorStop{1.0, color.RGBA{255, 255, 255, 200}}, // Bright wisp
-	)
-```
-
-
 ### Clouds_storm Pattern
 
 
@@ -863,570 +1425,6 @@ These patterns are designed to be:
 		ColorStop{0.8, color.RGBA{120, 120, 130, 255}}, // Light Grey highlights
 		ColorStop{1.0, color.RGBA{160, 160, 170, 255}}, // Brightest peaks
 	)
-```
-
-
-### Clouds_sunset Pattern
-
-
-
-![Clouds_sunset Pattern](clouds_sunset.png)
-
-```go
-	// 1. Sky Gradient (Orange to Purple)
-	sky := NewLinearGradient(
-		SetStartColor(color.RGBA{255, 100, 50, 255}),  // Orange/Red Horizon
-		SetEndColor(color.RGBA{50, 20, 100, 255}),     // Purple/Blue Zenith
-		GradientVertical(),
-	)
-
-	// 2. Cloud Shapes
-	clouds := NewNoise(NoiseSeed(888), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency:   0.012,
-		Octaves:     4,
-	}))
-
-	// Map cloud noise to alpha/color
-	// We want the clouds to be dark at the bottom (shadow) and pink/gold at the edges
-	cloudColor := NewColorMap(clouds,
-		ColorStop{0.0, color.Black},                        // No clouds
-		ColorStop{0.4, color.Black},                        // No clouds
-		ColorStop{0.5, color.RGBA{80, 40, 60, 255}},        // Dark cloud base
-		ColorStop{0.7, color.RGBA{200, 100, 80, 255}},      // Orange/Pink mid
-		ColorStop{1.0, color.RGBA{255, 200, 100, 255}},     // Gold highlights
-	)
-
-	// 3. Composite Clouds over Sky using Screen blend mode for a glowing effect
-	return NewBlend(sky, cloudColor, BlendScreen)
-```
-
-
-### ScreenTone Pattern
-
-
-
-![ScreenTone Pattern](screentone.png)
-
-```go
-	i := NewScreenTone(
-		SetRadius(3),
-		SetSpacing(10),
-		SetAngle(45),
-		SetFillColor(color.Black),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(ScreenToneOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Shojo Pattern
-
-
-
-![Shojo Pattern](shojo.png)
-
-```go
-	i := NewShojo()
-	f, err := os.Create(ShojoOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Warp_clouds Pattern
-
-
-
-![Warp_clouds Pattern](warp_clouds.png)
-
-```go
-	baseNoise := NewNoise(NoiseSeed(777), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.02,
-		Octaves: 4,
-		Persistence: 0.5,
-	}))
-
-	warpNoise := NewNoise(NoiseSeed(888), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.02,
-		Octaves: 2,
-	}))
-
-	warped := NewWarp(baseNoise,
-		WarpDistortion(warpNoise),
-		WarpScale(50.0),
-	)
-
-	stops := []ColorStop{
-		{0.0, color.RGBA{0, 100, 200, 255}},
-		{0.4, color.RGBA{100, 150, 255, 255}},
-		{0.6, color.RGBA{255, 255, 255, 255}},
-		{1.0, color.RGBA{255, 255, 255, 255}},
-	}
-
-	return NewColorMap(warped, stops...)
-```
-
-
-### Brick_textures Pattern
-
-
-
-![Brick_textures Pattern](brick_textures.png)
-
-```go
-	// Bricks with variations
-	// Create 3 variations of brick textures using Noise
-	var bricks []image.Image
-	for i := 0; i < 3; i++ {
-		// Noise with different seeds to ensure different texture per variant
-		noise := NewNoise(SetNoiseAlgorithm(&PerlinNoise{
-			Seed:      int64(i*100 + 1),
-			Frequency: 0.1,
-		}))
-
-		// Tint the noise red/brown
-		colored := NewColorMap(noise,
-			ColorStop{0.0, color.RGBA{100, 30, 30, 255}},
-			ColorStop{1.0, color.RGBA{180, 60, 50, 255}},
-		)
-		bricks = append(bricks, colored)
-	}
-
-	// Mortar texture: grey noise
-	mortar := NewColorMap(
-		NewNoise(SetNoiseAlgorithm(&PerlinNoise{
-			Seed:      999,
-			Frequency: 0.5,
-		})),
-		ColorStop{0.0, color.RGBA{180, 180, 180, 255}},
-		ColorStop{1.0, color.RGBA{220, 220, 220, 255}},
-	)
-
-	return NewBrick(
-		SetBrickSize(60, 25),
-		SetMortarSize(3),
-		SetBrickImages(bricks...),
-		SetMortarImage(mortar),
-	)
-```
-
-
-### Tile Pattern
-
-
-
-![Tile Pattern](tile.png)
-
-```go
-	gopher := NewScale(NewGopher(), ScaleToRatio(0.25))
-	// Tile the gopher in a 200x200 area
-	return NewTile(gopher, image.Rect(0, 0, 200, 200))
-```
-
-
-### Polka Pattern
-
-
-
-![Polka Pattern](polka.png)
-
-```go
-	i := NewPolka(
-		SetRadius(10),
-		SetSpacing(40),
-		SetFillColor(color.Black),
-		SetSpaceColor(color.White),
-	)
-	f, err := os.Create(PolkaOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Globe Pattern
-
-
-
-![Globe Pattern](globe.png)
-
-```go
-	ExampleNewGlobe_Projected()
-```
-
-
-### Globe_Grid Pattern
-
-
-
-![Globe_Grid Pattern](globe_grid.png)
-
-```go
-	g := GenerateGlobe_Grid(image.Rect(0, 0, 300, 300))
-	saveImage(Globe_GridOutputFilename, g)
-```
-
-
-### Globe_Projected Pattern
-
-
-
-![Globe_Projected Pattern](globe_projected.png)
-
-```go
-	g := GenerateGlobe_Projected(image.Rect(0, 0, 300, 300))
-	saveImage(Globe_ProjectedOutputFilename, g)
-```
-
-
-### Globe_Simple Pattern
-
-
-
-![Globe_Simple Pattern](globe_simple.png)
-
-```go
-	g := GenerateGlobe_Simple(image.Rect(0, 0, 300, 300))
-	saveImage(Globe_SimpleOutputFilename, g)
-```
-
-
-### Voronoi Pattern
-
-
-
-![Voronoi Pattern](voronoi.png)
-
-```go
-	// Define some points and colors
-	points := []image.Point{
-		{50, 50}, {200, 50}, {125, 125}, {50, 200}, {200, 200},
-	}
-	colors := []color.Color{
-		color.RGBA{255, 100, 100, 255},
-		color.RGBA{100, 255, 100, 255},
-		color.RGBA{100, 100, 255, 255},
-		color.RGBA{255, 255, 100, 255},
-		color.RGBA{100, 255, 255, 255},
-	}
-
-	i := NewVoronoi(points, colors)
-	f, err := os.Create(VoronoiOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Brick Pattern
-
-
-
-![Brick Pattern](brick.png)
-
-```go
-	return NewBrick(
-		SetBrickSize(50, 20),
-		SetMortarSize(4),
-	)
-```
-
-
-### Molecules Pattern
-
-
-
-![Molecules Pattern](molecules.png)
-
-```go
-	// Base Worley Noise (F1) provides the cellular structure
-	noise := NewWorleyNoise(
-		SetFrequency(0.02),
-		SetSeed(42),
-		SetWorleyOutput(OutputF1),
-		SetWorleyMetric(MetricEuclidean),
-	)
-
-	// ColorMap:
-	// Center (distance 0) -> Light
-	// Edge (distance ~0.5) -> Dark
-	// Gaps -> Black
-
-	molecules := NewColorMap(noise,
-		ColorStop{Position: 0.0, Color: color.RGBA{180, 180, 190, 255}}, // Center
-		ColorStop{Position: 0.4, Color: color.RGBA{100, 100, 110, 255}}, // Edge
-		ColorStop{Position: 0.45, Color: color.RGBA{50, 50, 55, 255}},   // Darker edge
-		ColorStop{Position: 0.5, Color: color.RGBA{10, 10, 10, 255}},    // Gap
-		ColorStop{Position: 1.0, Color: color.RGBA{0, 0, 0, 255}},       // Deep gap
-	)
-
-	f, err := os.Create(MoleculesOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, molecules); err != nil {
-		panic(err)
-	}
-```
-
-
-### Brick_stone Pattern
-
-
-
-![Brick_stone Pattern](brick_stone.png)
-
-```go
-	// Create "Stone" textures
-	var stones []image.Image
-	for i := 0; i < 4; i++ {
-		noise := NewNoise(SetNoiseAlgorithm(&PerlinNoise{
-			Seed:      int64(i*50 + 123),
-			Frequency: 0.2,
-		}))
-		// Grey/Blueish stone colors
-		colored := NewColorMap(noise,
-			ColorStop{0.0, color.RGBA{80, 80, 90, 255}},
-			ColorStop{0.6, color.RGBA{120, 120, 130, 255}},
-			ColorStop{1.0, color.RGBA{160, 160, 170, 255}},
-		)
-		stones = append(stones, colored)
-	}
-
-	mortar := NewUniform(color.RGBA{50, 50, 50, 255})
-
-	// Larger bricks/stones
-	return NewBrick(
-		SetBrickSize(40, 30),
-		SetMortarSize(6),
-		SetBrickImages(stones...),
-		SetMortarImage(mortar),
-		SetBrickOffset(0.3), // Non-standard offset
-	)
-```
-
-
-### Yliluoma1Dither Pattern
-
-
-
-![Yliluoma1Dither Pattern](dither_yliluoma1.png)
-
-```go
-	img := NewGopher()
-	return NewYliluoma1Dither(img, Windows16, 8)
-```
-
-
-### Yliluoma2Dither Pattern
-
-
-
-![Yliluoma2Dither Pattern](dither_yliluoma2.png)
-
-```go
-	img := NewGopher()
-	return NewYliluoma2Dither(img, Windows16, 8)
-```
-
-
-### KnollDither Pattern
-
-
-
-![KnollDither Pattern](dither_knoll.png)
-
-```go
-	img := NewGopher()
-	return NewKnollDither(img, Windows16, 8)
-```
-
-
-### Null Pattern
-
-
-
-![Null Pattern](null.png)
-
-```go
-	i := NewNull()
-	f, err := os.Create(NullOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Warp Pattern
-
-
-
-![Warp Pattern](warp.png)
-
-```go
-	// Standard demo: Grid warped by noise
-	// We want a visual that clearly shows the warping effect.
-	// A checkerboard is good.
-
-	checker := NewChecker(
-		color.RGBA{200, 200, 200, 255},
-		color.RGBA{50, 50, 50, 255},
-	)
-
-	// Distortion noise
-	noise := NewNoise(NoiseSeed(99), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.03,
-		Octaves: 2,
-	}))
-
-	// Apply Warp
-	warped := NewWarp(checker,
-		WarpDistortion(noise),
-		WarpScale(10.0),
-	)
-
-	fmt.Println(warped.At(10, 10))
-	// Output: {50 50 50 255}
-```
-
-
-### Lava Pattern
-
-
-
-![Lava Pattern](lava.png)
-
-```go
-	// This function is for the testable example and documentation.
-	// It creates the file directly.
-	img := GenerateLava(image.Rect(0, 0, 150, 150))
-	f, err := os.Create(LavaOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	if err = png.Encode(f, img); err != nil {
-		panic(err)
-	}
-```
-
-
-### Stones Pattern
-
-
-
-![Stones Pattern](stones.png)
-
-```go
-	// F2-F1 gives distance to the border.
-	// Border is 0. Center is High.
-	noise := NewWorleyNoise(
-		SetFrequency(0.02),
-		SetSeed(100),
-		SetWorleyOutput(OutputF2MinusF1),
-		SetWorleyMetric(MetricEuclidean),
-	)
-
-	// Map:
-	// 0.0 - 0.1: Mortar (Dark)
-	// 0.1 - 0.3: Edge of stone (Darker Grey)
-	// 0.3 - 1.0: Stone Body (Grey/Blueish with gradient)
-
-	stones := NewColorMap(noise,
-		ColorStop{Position: 0.0, Color: color.RGBA{20, 15, 10, 255}},    // Mortar
-		ColorStop{Position: 0.15, Color: color.RGBA{40, 40, 45, 255}},   // Stone Edge
-		ColorStop{Position: 0.3, Color: color.RGBA{80, 80, 90, 255}},    // Stone Body
-		ColorStop{Position: 0.8, Color: color.RGBA{150, 150, 160, 255}}, // Highlight
-	)
-
-	f, err := os.Create(StonesOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, stones); err != nil {
-		panic(err)
-	}
-```
-
-
-### WorleyNoise Pattern
-
-
-
-![WorleyNoise Pattern](worley.png)
-
-```go
-	// Standard F1 Euclidean Worley Noise
-	i := NewWorleyNoise(
-		SetFrequency(0.05),
-		SetSeed(1),
-	)
-	f, err := os.Create(WorleyNoiseOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
 ```
 
 
@@ -1474,63 +1472,65 @@ These patterns are designed to be:
 ```
 
 
-### Warp_terrain Pattern
+### Yliluoma1Dither Pattern
 
 
 
-![Warp_terrain Pattern](warp_terrain.png)
+![Yliluoma1Dither Pattern](dither_yliluoma1.png)
 
 ```go
-	fbm := func(seed int64) image.Image {
-		return NewNoise(NoiseSeed(seed), SetNoiseAlgorithm(&PerlinNoise{
-			Frequency: 0.015,
-			Octaves: 6,
-			Persistence: 0.5,
-			Lacunarity: 2.0,
-		}))
-	}
-
-	base := fbm(101)
-
-	warp := NewNoise(NoiseSeed(202), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.01,
-		Octaves: 2,
-	}))
-
-	warped := NewWarp(base,
-		WarpDistortion(warp),
-		WarpScale(80.0),
-	)
-
-	stops := []ColorStop{
-		{0.0, color.RGBA{0, 0, 150, 255}},
-		{0.2, color.RGBA{0, 50, 200, 255}},
-		{0.22, color.RGBA{240, 230, 140, 255}},
-		{0.3, color.RGBA{34, 139, 34, 255}},
-		{0.6, color.RGBA{107, 142, 35, 255}},
-		{0.8, color.RGBA{139, 69, 19, 255}},
-		{0.9, color.RGBA{100, 100, 100, 255}},
-		{0.98, color.RGBA{255, 250, 250, 255}},
-	}
-
-	return NewColorMap(warped, stops...)
+	img := NewGopher()
+	return NewYliluoma1Dither(img, Windows16, 8)
 ```
 
 
-### Damascus Pattern
+### Shojo_blue Pattern
 
 
 
-![Damascus Pattern](damascus.png)
+![Shojo_blue Pattern](shojo_blue.png)
 
 ```go
-	img := GenerateDamascus(image.Rect(0, 0, 150, 150))
-	f, err := os.Create(DamascusOutputFilename)
+	i := NewShojo(
+		SetSpaceColor(color.RGBA{0, 0, 40, 255}),     // Dark blue bg
+		SetFillColor(color.RGBA{200, 220, 255, 255}), // Blueish sparkles
+	)
+	f, err := os.Create(Shojo_blueOutputFilename)
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
-	if err = png.Encode(f, img); err != nil {
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Shojo_pink Pattern
+
+
+
+![Shojo_pink Pattern](shojo_pink.png)
+
+```go
+	i := NewShojo(
+		SetSpaceColor(color.RGBA{20, 0, 10, 255}),    // Dark red/brown bg
+		SetFillColor(color.RGBA{255, 200, 220, 255}), // Pink sparkles
+	)
+	f, err := os.Create(Shojo_pinkOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
 ```
@@ -1701,36 +1701,6 @@ These patterns are designed to be:
 ```
 
 
-### BooleanAnd Pattern
-
-
-
-![BooleanAnd Pattern](boolean_and.png)
-
-```go
-	// Gopher AND Horizontal Stripes
-	g := NewGopher()
-	// Line: Black (Alpha 1). Space: White (Alpha 1).
-	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
-
-	// Default uses component-wise min if no TrueColor/FalseColor set.
-	i := NewAnd([]image.Image{g, h})
-
-	f, err := os.Create(BooleanAndOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### Rect Pattern
 
 
@@ -1805,6 +1775,36 @@ These patterns are designed to be:
 ```
 
 
+### BooleanAnd Pattern
+
+
+
+![BooleanAnd Pattern](boolean_and.png)
+
+```go
+	// Gopher AND Horizontal Stripes
+	g := NewGopher()
+	// Line: Black (Alpha 1). Space: White (Alpha 1).
+	h := NewHorizontalLine(SetLineSize(10), SetSpaceSize(10), SetLineColor(color.Black), SetSpaceColor(color.White))
+
+	// Default uses component-wise min if no TrueColor/FalseColor set.
+	i := NewAnd([]image.Image{g, h})
+
+	f, err := os.Create(BooleanAndOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
 ### MathsMandelbrot Pattern
 
 
@@ -1813,17 +1813,6 @@ These patterns are designed to be:
 
 ```go
 	// See GenerateMathsMandelbrot for implementation details
-```
-
-
-### MathsJulia Pattern
-
-
-
-![MathsJulia Pattern](maths_julia.png)
-
-```go
-	// See GenerateMathsJulia for implementation details
 ```
 
 
@@ -1855,14 +1844,14 @@ These patterns are designed to be:
 ```
 
 
-### MathsSine Pattern
+### MathsJulia Pattern
 
 
 
-![MathsSine Pattern](maths_sine.png)
+![MathsJulia Pattern](maths_julia.png)
 
 ```go
-	// See GenerateMathsSine for implementation details
+	// See GenerateMathsJulia for implementation details
 ```
 
 
@@ -1894,14 +1883,14 @@ These patterns are designed to be:
 ```
 
 
-### MathsWaves Pattern
+### MathsSine Pattern
 
 
 
-![MathsWaves Pattern](maths_waves.png)
+![MathsSine Pattern](maths_sine.png)
 
 ```go
-	// See GenerateMathsWaves for implementation details
+	// See GenerateMathsSine for implementation details
 ```
 
 
@@ -1933,14 +1922,14 @@ These patterns are designed to be:
 ```
 
 
-### Heatmap Pattern
+### MathsWaves Pattern
 
 
 
-![Heatmap Pattern](heatmap.png)
+![MathsWaves Pattern](maths_waves.png)
 
 ```go
-	// See GenerateHeatmap for implementation details
+	// See GenerateMathsWaves for implementation details
 ```
 
 
@@ -1967,6 +1956,44 @@ These patterns are designed to be:
 		}
 	}()
 	if err = png.Encode(f, c); err != nil {
+		panic(err)
+	}
+```
+
+
+### Heatmap Pattern
+
+
+
+![Heatmap Pattern](heatmap.png)
+
+```go
+	// See GenerateHeatmap for implementation details
+```
+
+
+### SpeedLines Pattern
+
+
+
+![SpeedLines Pattern](speedlines.png)
+
+```go
+	i := NewSpeedLines(
+		SetDensity(150),
+		SetMinRadius(30),
+		SetMaxRadius(80),
+	)
+	f, err := os.Create(SpeedLinesOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
 ```
@@ -2042,42 +2069,15 @@ These patterns are designed to be:
 ```
 
 
-### SpeedLines Pattern
+### SimpleZoom Pattern
 
 
 
-![SpeedLines Pattern](speedlines.png)
-
-```go
-	i := NewSpeedLines(
-		SetDensity(150),
-		SetMinRadius(30),
-		SetMaxRadius(80),
-	)
-	f, err := os.Create(SpeedLinesOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
-### Quantize Pattern
-
-
-
-![Quantize Pattern](quantize.png)
+![SimpleZoom Pattern](simplezoom.png)
 
 ```go
-	i := NewQuantize(NewGopher(), 4)
-	f, err := os.Create(QuantizeOutputFilename)
+	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
+	f, err := os.Create(SimpleZoomOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -2126,15 +2126,64 @@ These patterns are designed to be:
 ```
 
 
-### SimpleZoom Pattern
+### Quantize Pattern
 
 
 
-![SimpleZoom Pattern](simplezoom.png)
+![Quantize Pattern](quantize.png)
 
 ```go
-	i := NewSimpleZoom(NewChecker(color.Black, color.White), 2)
-	f, err := os.Create(SimpleZoomOutputFilename)
+	i := NewQuantize(NewGopher(), 4)
+	f, err := os.Create(QuantizeOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Transposed Pattern
+
+
+
+![Transposed Pattern](transposed.png)
+
+```go
+	i := NewTransposed(NewDemoNull(), 10, 10)
+	f, err := os.Create(TransposedOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Bayer2x2Dither Pattern
+
+
+
+![Bayer2x2Dither Pattern](bayer2x2.png)
+
+```go
+	// Black and White Palette
+	palette := []color.Color{color.Black, color.White}
+	i := NewBayer2x2Dither(NewGopher(), palette)
+
+	f, err := os.Create(Bayer2x2DitherOutputFilename)
 	if err != nil {
 		panic(err)
 	}
@@ -2172,29 +2221,6 @@ These patterns are designed to be:
 ```
 
 
-### Transposed Pattern
-
-
-
-![Transposed Pattern](transposed.png)
-
-```go
-	i := NewTransposed(NewDemoNull(), 10, 10)
-	f, err := os.Create(TransposedOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
-		panic(err)
-	}
-```
-
-
 ### RadialGradient Pattern
 
 
@@ -2210,27 +2236,24 @@ These patterns are designed to be:
 ```
 
 
-### Bayer2x2Dither Pattern
+### ConcentricRings Pattern
 
 
 
-![Bayer2x2Dither Pattern](bayer2x2.png)
+![ConcentricRings Pattern](concentric_rings.png)
 
 ```go
-	// Black and White Palette
-	palette := []color.Color{color.Black, color.White}
-	i := NewBayer2x2Dither(NewGopher(), palette)
-
-	f, err := os.Create(Bayer2x2DitherOutputFilename)
+	p := NewConcentricRings([]color.Color{
+		color.Black,
+		color.White,
+		color.RGBA{255, 0, 0, 255},
+	})
+	f, err := os.Create(ConcentricRingsOutputFilename)
 	if err != nil {
 		panic(err)
 	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
-		}
-	}()
-	if err = png.Encode(f, i); err != nil {
+	defer f.Close()
+	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
 ```
@@ -2259,29 +2282,6 @@ These patterns are designed to be:
 ```
 
 
-### ConcentricRings Pattern
-
-
-
-![ConcentricRings Pattern](concentric_rings.png)
-
-```go
-	p := NewConcentricRings([]color.Color{
-		color.Black,
-		color.White,
-		color.RGBA{255, 0, 0, 255},
-	})
-	f, err := os.Create(ConcentricRingsOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	if err := png.Encode(f, p); err != nil {
-		panic(err)
-	}
-```
-
-
 ### ConicGradient Pattern
 
 
@@ -2294,25 +2294,6 @@ These patterns are designed to be:
 		SetStartColor(color.RGBA{255, 0, 255, 255}),
 		SetEndColor(color.RGBA{0, 255, 255, 255}),
 	)
-```
-
-
-### Plasma Pattern
-
-
-
-![Plasma Pattern](plasma.png)
-
-```go
-	p := NewPlasma()
-	f, err := os.Create(PlasmaOutputFilename)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	if err := png.Encode(f, p); err != nil {
-		panic(err)
-	}
 ```
 
 
@@ -2334,6 +2315,25 @@ These patterns are designed to be:
 		}
 	}()
 	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
+```
+
+
+### Plasma Pattern
+
+
+
+![Plasma Pattern](plasma.png)
+
+```go
+	p := NewPlasma()
+	f, err := os.Create(PlasmaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
 ```
