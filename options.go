@@ -3,6 +3,7 @@ package pattern
 import (
 	"image"
 	"image/color"
+	"time"
 )
 
 // SpaceSize configures the size of spaces in a pattern.
@@ -23,6 +24,28 @@ func SetSpaceSize(v int) func(any) {
 	return func(i any) {
 		if h, ok := i.(hasSpaceSize); ok {
 			h.SetSpaceSize(v)
+		}
+	}
+}
+
+// Expiry configures the expiry duration.
+type Expiry struct {
+	Expiry time.Duration
+}
+
+func (s *Expiry) SetExpiry(v time.Duration) {
+	s.Expiry = v
+}
+
+type hasExpiry interface {
+	SetExpiry(time.Duration)
+}
+
+// SetExpiry creates an option to set the expiry.
+func SetExpiry(v time.Duration) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasExpiry); ok {
+			h.SetExpiry(v)
 		}
 	}
 }
