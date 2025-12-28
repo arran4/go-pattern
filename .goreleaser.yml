@@ -1,0 +1,24 @@
+version: 2
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    main: ./cmd/pattern-cli
+    binary: pattern
+
+archives:
+  - format: tar.gz
+    format_overrides:
+    - goos: windows
+      format: zip
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
