@@ -23,6 +23,16 @@ const (
 	OpBitwiseNot
 )
 
+type BooleanMode int
+
+const (
+	ModeAuto          BooleanMode = iota // Infer mode based on configuration
+	ModeFuzzy                            // Predicate -> Float Logic -> Interpolate
+	ModeThreshold                        // Predicate -> Threshold (0/1) -> Boolean Logic -> Select Color (Strict True/False)
+	ModeComponentWise                    // R=Min(Ra, Rb), etc.
+	ModeBitwise                          // R=Ra & Rb, etc.
+)
+
 // ColorPredicate converts a color to a fuzzy value between 0.0 and 1.0.
 type ColorPredicate func(c color.Color) float64
 
@@ -34,6 +44,8 @@ type BooleanImage struct {
 	Predicate ColorPredicate
 	TrueColor
 	FalseColor
+	Mode      BooleanMode
+	Threshold float64
 }
 
 func (bi *BooleanImage) At(x, y int) color.Color {
@@ -44,24 +56,44 @@ func (bi *BooleanImage) At(x, y int) color.Color {
 		return color.RGBA{}
 	}
 
-	// Check if we should use Component-wise Color Logic.
-	// This happens if TrueColor and FalseColor are both nil (or transparent zero value).
-	useColorLogic := isZeroColor(bi.TrueColor.TrueColor) && isZeroColor(bi.FalseColor.FalseColor)
-
-	// Force color logic for Bitwise ops regardless of True/False color (as they operate directly on colors)
-	if bi.Op >= OpBitwiseAnd {
-		useColorLogic = true
+	mode := bi.Mode
+	if mode == ModeAuto {
+		if bi.Op >= OpBitwiseAnd {
+			mode = ModeBitwise
+		} else if isZeroColor(bi.TrueColor.TrueColor) && isZeroColor(bi.FalseColor.FalseColor) {
+			mode = ModeComponentWise
+		} else {
+			mode = ModeFuzzy
+		}
 	}
 
-	if useColorLogic {
-		return bi.atColorLogic(x, y)
+	switch mode {
+	case ModeComponentWise:
+		return bi.atComponentWise(x, y)
+	case ModeBitwise:
+		return bi.atBitwise(x, y)
+	case ModeThreshold:
+		return bi.atThreshold(x, y)
+	case ModeFuzzy:
+		fallthrough
+	default:
+		return bi.atFuzzy(x, y)
 	}
+}
 
-	// Fuzzy Logic with Map
+func (bi *BooleanImage) atFuzzy(x, y int) color.Color {
 	var val float64
 
+	// Helper to get fuzzy value, handling nil inputs safely
+	getVal := func(img image.Image) float64 {
+		if img == nil {
+			return 0
+		}
+		return bi.Predicate(img.At(x, y))
+	}
+
 	switch bi.Op {
-	case OpAnd:
+	case OpAnd, OpBitwiseAnd:
 		val = 1.0
 		for _, input := range bi.Inputs {
 			if input == nil {
@@ -72,7 +104,7 @@ func (bi *BooleanImage) At(x, y int) color.Color {
 				val = v
 			}
 		}
-	case OpOr:
+	case OpOr, OpBitwiseOr:
 		val = 0.0
 		for _, input := range bi.Inputs {
 			if input == nil {
@@ -83,25 +115,21 @@ func (bi *BooleanImage) At(x, y int) color.Color {
 				val = v
 			}
 		}
-	case OpXor:
+	case OpXor, OpBitwiseXor:
 		val = 0.0
-		if len(bi.Inputs) >= 1 && bi.Inputs[0] != nil {
-			val = bi.Predicate(bi.Inputs[0].At(x, y))
+		if len(bi.Inputs) >= 1 {
+			val = getVal(bi.Inputs[0])
 		}
-		if len(bi.Inputs) >= 2 && bi.Inputs[1] != nil {
-			v := bi.Predicate(bi.Inputs[1].At(x, y))
+		if len(bi.Inputs) >= 2 {
+			v := getVal(bi.Inputs[1])
 			val = math.Abs(val - v)
 		}
-	case OpNot:
-		if len(bi.Inputs) > 0 && bi.Inputs[0] != nil {
-			val = 1.0 - bi.Predicate(bi.Inputs[0].At(x, y))
+	case OpNot, OpBitwiseNot:
+		if len(bi.Inputs) > 0 {
+			val = 1.0 - getVal(bi.Inputs[0])
 		}
 	}
 
-	// Interpolate between FalseColor and TrueColor based on val
-	// If colors are nil/zero, defaults (Black/White) should be used?
-	// New constructors initialized them to Black/White.
-	// But if we remove that initialization to support auto-detection, we need defaults here.
 	tc := bi.TrueColor.TrueColor
 	fc := bi.FalseColor.FalseColor
 	if tc == nil {
@@ -114,9 +142,78 @@ func (bi *BooleanImage) At(x, y int) color.Color {
 	return interpolateColor(fc, tc, val)
 }
 
-func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
+func (bi *BooleanImage) atThreshold(x, y int) color.Color {
+	// Logic is similar to Fuzzy, but intermediate values are binarized against Threshold
+	// Actually, "Based on threshold ... to determine true / false".
+	// Should we threshold the inputs? Or the result?
+	// Usually: Input -> Threshold -> Boolean Logic -> Output.
+
+	threshold := bi.Threshold
+	if threshold == 0 {
+		threshold = 0.5
+	}
+
+	getBool := func(img image.Image) bool {
+		if img == nil {
+			return false
+		}
+		return bi.Predicate(img.At(x, y)) >= threshold
+	}
+
+	var result bool
+
 	switch bi.Op {
-	case OpAnd:
+	case OpAnd, OpBitwiseAnd:
+		result = true
+		for _, input := range bi.Inputs {
+			if !getBool(input) {
+				result = false
+				break
+			}
+		}
+	case OpOr, OpBitwiseOr:
+		result = false
+		for _, input := range bi.Inputs {
+			if getBool(input) {
+				result = true
+				break
+			}
+		}
+	case OpXor, OpBitwiseXor:
+		b1 := false
+		b2 := false
+		if len(bi.Inputs) >= 1 {
+			b1 = getBool(bi.Inputs[0])
+		}
+		if len(bi.Inputs) >= 2 {
+			b2 = getBool(bi.Inputs[1])
+		}
+		result = b1 != b2
+	case OpNot, OpBitwiseNot:
+		if len(bi.Inputs) > 0 {
+			result = !getBool(bi.Inputs[0])
+		}
+	}
+
+	tc := bi.TrueColor.TrueColor
+	fc := bi.FalseColor.FalseColor
+	if tc == nil {
+		tc = color.White
+	}
+	if fc == nil {
+		fc = color.Black
+	}
+
+	if result {
+		return tc
+	}
+	return fc
+}
+
+func (bi *BooleanImage) atComponentWise(x, y int) color.Color {
+	// Maps OpBitwise... to normal behavior for ComponentWise
+	switch bi.Op {
+	case OpAnd, OpBitwiseAnd:
 		// Component-wise Min
 		var minC color.Color
 		for i, input := range bi.Inputs {
@@ -134,7 +231,7 @@ func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
 			return color.RGBA{}
 		}
 		return minC
-	case OpOr:
+	case OpOr, OpBitwiseOr:
 		// Component-wise Max
 		var maxC color.Color
 		for i, input := range bi.Inputs {
@@ -152,7 +249,7 @@ func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
 			return color.RGBA{}
 		}
 		return maxC
-	case OpXor:
+	case OpXor, OpBitwiseXor:
 		// Component-wise AbsDiff
 		if len(bi.Inputs) < 2 {
 			if len(bi.Inputs) == 1 && bi.Inputs[0] != nil {
@@ -163,12 +260,18 @@ func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
 		c1 := bi.Inputs[0].At(x, y)
 		c2 := bi.Inputs[1].At(x, y)
 		return absDiffColor(c1, c2)
-	case OpNot:
+	case OpNot, OpBitwiseNot:
 		if len(bi.Inputs) > 0 && bi.Inputs[0] != nil {
 			return invertColor(bi.Inputs[0].At(x, y))
 		}
 		return color.RGBA{}
-	case OpBitwiseAnd:
+	}
+	return color.RGBA{}
+}
+
+func (bi *BooleanImage) atBitwise(x, y int) color.Color {
+	switch bi.Op {
+	case OpAnd, OpBitwiseAnd:
 		var res color.Color
 		for i, input := range bi.Inputs {
 			if input == nil {
@@ -185,7 +288,7 @@ func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
 			return color.RGBA{}
 		}
 		return res
-	case OpBitwiseOr:
+	case OpOr, OpBitwiseOr:
 		var res color.Color
 		for i, input := range bi.Inputs {
 			if input == nil {
@@ -202,14 +305,13 @@ func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
 			return color.RGBA{}
 		}
 		return res
-	case OpBitwiseXor:
+	case OpXor, OpBitwiseXor:
 		if len(bi.Inputs) < 2 {
 			if len(bi.Inputs) == 1 && bi.Inputs[0] != nil {
 				return bi.Inputs[0].At(x, y)
 			}
 			return color.RGBA{}
 		}
-		// Chain XOR? Usually XOR is binary, but associative.
 		var res color.Color
 		for i, input := range bi.Inputs {
 			if input == nil {
@@ -226,7 +328,7 @@ func (bi *BooleanImage) atColorLogic(x, y int) color.Color {
 			return color.RGBA{}
 		}
 		return res
-	case OpBitwiseNot:
+	case OpNot, OpBitwiseNot:
 		if len(bi.Inputs) > 0 && bi.Inputs[0] != nil {
 			return bitwiseNotColor(bi.Inputs[0].At(x, y))
 		}
@@ -329,10 +431,7 @@ func bitwiseNotColor(c color.Color) color.Color {
 		R: ^n.R,
 		G: ^n.G,
 		B: ^n.B,
-		A: n.A, // Do not invert alpha? User said "full 8-bit variation". If we NOT alpha, transparency flips.
-		// Usually bitwise NOT on an image implies color inversion.
-		// InvertColor above did 0xFFFF - r.
-		// Here we do ^R. Which is essentially the same for 16-bit.
+		A: n.A,
 	})
 }
 
@@ -455,6 +554,40 @@ func SetPredicate(p ColorPredicate) func(any) {
 	return func(i any) {
 		if h, ok := i.(hasPredicate); ok {
 			h.SetPredicate(p)
+		}
+	}
+}
+
+// SetBooleanMode sets the mode for the boolean operation.
+type hasBooleanMode interface {
+	SetBooleanMode(BooleanMode)
+}
+
+func (bi *BooleanImage) SetBooleanMode(m BooleanMode) {
+	bi.Mode = m
+}
+
+func SetBooleanMode(m BooleanMode) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasBooleanMode); ok {
+			h.SetBooleanMode(m)
+		}
+	}
+}
+
+// SetThreshold sets the threshold for the boolean operation (used in ModeThreshold).
+type hasThreshold interface {
+	SetThreshold(float64)
+}
+
+func (bi *BooleanImage) SetThreshold(t float64) {
+	bi.Threshold = t
+}
+
+func SetThreshold(t float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasThreshold); ok {
+			h.SetThreshold(t)
 		}
 	}
 }
