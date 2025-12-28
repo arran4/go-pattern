@@ -3,11 +3,30 @@ package pattern
 import (
 	"image"
 	"image/color"
+	"image/png"
+	"os"
 )
 
 func ExampleNewCrossHatch() {
-	// This function body is empty because the bootstrap tool uses the function signature
-	// and the following variable to generate the documentation and image.
+	i := NewCrossHatch(
+		SetAngles(45, -45),
+		SetLineSize(2),
+		SetSpaceSize(8),
+		SetLineColor(color.RGBA{0, 0, 0, 255}),
+		SetSpaceColor(color.RGBA{255, 255, 255, 255}),
+	)
+	f, err := os.Create(CrossHatchOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err = png.Encode(f, i); err != nil {
+		panic(err)
+	}
 }
 
 var (

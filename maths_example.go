@@ -3,8 +3,10 @@ package pattern
 import (
 	"image"
 	"image/color"
+	"image/png"
 	"math"
 	"math/cmplx"
+	"os"
 )
 
 var MathsMandelbrotOutputFilename = "maths_mandelbrot.png"
@@ -14,7 +16,16 @@ const MathsMandelbrotOrder = 20
 // Mandelbrot Set
 // Generates a Mandelbrot set visualization.
 func ExampleNewMathsMandelbrot() {
-	// See GenerateMathsMandelbrot for implementation details
+	b := image.Rect(0, 0, 150, 150)
+	img := GenerateMathsMandelbrot(b)
+	f, err := os.Create(MathsMandelbrotOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err = png.Encode(f, img); err != nil {
+		panic(err)
+	}
 }
 
 func GenerateMathsMandelbrot(b image.Rectangle) image.Image {
@@ -54,7 +65,16 @@ const MathsJuliaOrder = 21
 // Julia Set
 // Generates a Julia set visualization.
 func ExampleNewMathsJulia() {
-	// See GenerateMathsJulia for implementation details
+	b := image.Rect(0, 0, 150, 150)
+	img := GenerateMathsJulia(b)
+	f, err := os.Create(MathsJuliaOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err = png.Encode(f, img); err != nil {
+		panic(err)
+	}
 }
 
 func GenerateMathsJulia(b image.Rectangle) image.Image {
@@ -87,7 +107,16 @@ const MathsSineOrder = 22
 // Sine Waves
 // Generates a sine wave pattern.
 func ExampleNewMathsSine() {
-	// See GenerateMathsSine for implementation details
+	b := image.Rect(0, 0, 150, 150)
+	img := GenerateMathsSine(b)
+	f, err := os.Create(MathsSineOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err = png.Encode(f, img); err != nil {
+		panic(err)
+	}
 }
 
 func GenerateMathsSine(b image.Rectangle) image.Image {
@@ -120,7 +149,16 @@ const MathsWavesOrder = 23
 // Interference Waves
 // Generates an interference pattern from multiple sine waves.
 func ExampleNewMathsWaves() {
-	// See GenerateMathsWaves for implementation details
+	b := image.Rect(0, 0, 150, 150)
+	img := GenerateMathsWaves(b)
+	f, err := os.Create(MathsWavesOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err = png.Encode(f, img); err != nil {
+		panic(err)
+	}
 }
 
 func GenerateMathsWaves(b image.Rectangle) image.Image {

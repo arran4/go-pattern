@@ -32,6 +32,12 @@ import (
 //go:embed "readme.md.gotmpl"
 var readmeTemplateRaw []byte
 
+//go:embed "gallery.md.gotmpl"
+var galleryTemplateRaw []byte
+
+//go:embed "recipes.md.gotmpl"
+var recipesTemplateRaw []byte
+
 type PatternDemo struct {
 	Name           string
 	OutputFilename string
@@ -48,6 +54,19 @@ type PatternDemo struct {
 	BaseLabel  string
 	ZoomLevels []int
 	Order      int
+
+	// CLI Info
+	FuncName   string
+	CLICommand string
+	CLIArgs    string
+	IsRecipe   bool
+}
+
+type CLICommandInfo struct {
+	Name      string
+	FuncName  string
+	Args      []string
+	TakesInput bool
 }
 
 func main() {
@@ -64,24 +83,60 @@ func main() {
 		return
 	}
 
-	patterns, err := discoverPatterns(".")
+	commands, err := scanCLICommands(".")
+	if err != nil {
+		log.Fatalf("Failed to scan CLI commands: %v", err)
+	}
+
+	patterns, err := discoverPatterns(".", commands)
 	if err != nil {
 		log.Fatalf("Failed to discover patterns: %v", err)
 	}
 
-	readmeTemplate, err := template.New("readme.md").Parse(string(readmeTemplateRaw))
-	if err != nil {
-		panic(err)
+	if err := generateFile("readme.md", readmeTemplateRaw, patterns); err != nil {
+		log.Fatalf("Error generating readme: %v", err)
 	}
-	f, err := os.Create(fn)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if e := f.Close(); e != nil {
-			panic(e)
+
+	// Filter patterns for Gallery (Core Patterns) vs Recipes
+	var galleryPatterns []PatternDemo
+	var recipePatterns []PatternDemo
+
+	for _, p := range patterns {
+		if p.IsRecipe {
+			recipePatterns = append(recipePatterns, p)
+		} else {
+			galleryPatterns = append(galleryPatterns, p)
 		}
-	}()
+	}
+
+	if err := generateFile("GALLERY.md", galleryTemplateRaw, galleryPatterns); err != nil {
+		log.Fatalf("Error generating gallery: %v", err)
+	}
+
+	if err := generateFile("RECIPES.md", recipesTemplateRaw, recipePatterns); err != nil {
+		log.Fatalf("Error generating recipes: %v", err)
+	}
+
+	sz := image.Rect(0, 0, 255, 255)
+	for _, p := range patterns {
+		DrawDemoPattern(&p, sz)
+	}
+
+	if err := generateCLIInit(commands, "pkg/pattern-cli/init_gen.go"); err != nil {
+		log.Fatalf("Error generating CLI init: %v", err)
+	}
+}
+
+func generateFile(filename string, tmplBytes []byte, patterns []PatternDemo) error {
+	tmpl, err := template.New(filename).Parse(string(tmplBytes))
+	if err != nil {
+		return err
+	}
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 
 	data := struct {
 		ProjectName string
@@ -90,22 +145,95 @@ func main() {
 		ProjectName: "go-pattern",
 		Patterns:    patterns,
 	}
-	sz := image.Rect(0, 0, 255, 255)
-	for _, p := range patterns {
-		DrawDemoPattern(&p, sz)
-	}
-	err = readmeTemplate.Execute(f, data)
-	if err != nil {
-		log.Fatalf("Error executing template: %v", err)
-	}
-	log.Printf("Generated %s successfully\n", fn)
 
-	if err := generateCLIInit(patterns, "pkg/pattern-cli/init_gen.go"); err != nil {
-		log.Fatalf("Error generating CLI init: %v", err)
+	if err := tmpl.Execute(f, data); err != nil {
+		return err
 	}
+	log.Printf("Generated %s successfully\n", filename)
+	return nil
 }
 
-func discoverPatterns(root string) ([]PatternDemo, error) {
+func scanCLICommands(root string) (map[string]CLICommandInfo, error) {
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, root, nil, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	commands := make(map[string]CLICommandInfo)
+
+	for _, pkg := range pkgs {
+		for filename, f := range pkg.Files {
+			if strings.HasSuffix(filename, "_test.go") || strings.HasSuffix(filename, "_example.go") {
+				continue
+			}
+
+			ast.Inspect(f, func(n ast.Node) bool {
+				fn, ok := n.(*ast.FuncDecl)
+				if !ok {
+					return true
+				}
+				if !strings.HasPrefix(fn.Name.Name, "New") {
+					return true
+				}
+
+				// The constructor name (e.g., NewRect) corresponds to the pattern Name in discovery (e.g., Rect)
+				// if we strip "New".
+				coreName := strings.TrimPrefix(fn.Name.Name, "New")
+				cmdName := toSnakeCase(coreName)
+
+				var args []string
+				takesInput := false
+
+				if fn.Type.Params != nil {
+					for i, param := range fn.Type.Params.List {
+						typeName := ""
+						isVariadic := false
+
+						if ident, ok := param.Type.(*ast.Ident); ok {
+							typeName = ident.Name
+						} else if sel, ok := param.Type.(*ast.SelectorExpr); ok {
+							if x, ok := sel.X.(*ast.Ident); ok {
+								typeName = x.Name + "." + sel.Sel.Name
+							}
+						} else if ell, ok := param.Type.(*ast.Ellipsis); ok {
+							isVariadic = true
+							if ident, ok := ell.Elt.(*ast.Ident); ok {
+								typeName = "..." + ident.Name
+							} else if _, ok := ell.Elt.(*ast.FuncType); ok {
+								typeName = "...func(any)"
+							}
+						}
+
+						for range param.Names {
+							if isVariadic {
+								if typeName == "...func(any)" {
+									continue
+								}
+								args = append(args, typeName)
+							} else if i == 0 && typeName == "image.Image" {
+								takesInput = true
+							} else {
+								args = append(args, typeName)
+							}
+						}
+					}
+				}
+
+				commands[coreName] = CLICommandInfo{
+					Name:      cmdName,
+					FuncName:  fn.Name.Name,
+					Args:      args,
+					TakesInput: takesInput,
+				}
+				return true
+			})
+		}
+	}
+	return commands, nil
+}
+
+func discoverPatterns(root string, commands map[string]CLICommandInfo) ([]PatternDemo, error) {
 	fset := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fset, root, nil, 0)
 	if err != nil {
@@ -116,12 +244,10 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 
 	for _, pkg := range pkgs {
 		for filename, f := range pkg.Files {
-			// We only care about _example.go files for metadata
 			if !strings.HasSuffix(filename, "_example.go") {
 				continue
 			}
 
-			// To extract source code properly, we need to read the file content
 			fileContent, err := os.ReadFile(filename)
 			if err != nil {
 				return nil, err
@@ -138,35 +264,57 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 
 				name := strings.TrimPrefix(fn.Name.Name, "ExampleNew")
 
-				// Extract Usage Sample
 				start := fset.Position(fn.Body.Lbrace).Offset + 1
 				end := fset.Position(fn.Body.Rbrace).Offset
 				usage := string(fileContent[start:end])
 				usage = strings.Trim(usage, "\n")
+				// Fix indentation
+				usage = unindent(usage)
 
 				pd := PatternDemo{
-					Name:          name + " Pattern",
+					Name:          name,
 					GoUsageSample: usage,
+				}
+
+				// Determine if it is a core pattern (Gallery) or Recipe
+				// If `name` matches a key in `commands`, it's a Core Pattern.
+				// Exception: if name contains underscore, treat as recipe unless explicit override.
+
+				// Heuristic:
+				// 1. Direct match with New<Name> -> Gallery
+				// 2. Otherwise -> Recipe
+
+				if cmd, ok := commands[name]; ok {
+					pd.FuncName = cmd.FuncName
+					pd.CLICommand = cmd.Name
+					pd.CLIArgs = strings.Join(cmd.Args, " ")
+					if cmd.TakesInput {
+						if len(pd.CLIArgs) > 0 {
+							pd.CLIArgs = "<image> " + pd.CLIArgs
+						} else {
+							pd.CLIArgs = "<image>"
+						}
+					}
+					pd.IsRecipe = false
+				} else {
+					pd.IsRecipe = true
 				}
 
 				if fn.Doc != nil {
 					pd.Description = strings.TrimSpace(fn.Doc.Text())
 				}
 
-				// Look up configuration in the AST of the same file
 				pd.OutputFilename = findStringVar(f, name+"OutputFilename")
 				pd.ZoomLevels = findIntSliceVar(f, fileContent, fset, name+"ZoomLevels")
 				pd.Order = findIntConst(f, name+"Order")
 				pd.BaseLabel = findStringConst(f, name+"BaseLabel")
 
-				// Look up Generator in Registry
 				if gen, ok := pattern.GlobalGenerators[name]; ok {
 					pd.Generator = gen
 				} else {
 					log.Printf("Warning: No generator found for %s", name)
 				}
 
-				// Look up References in Registry
 				if refsFunc, ok := pattern.GlobalReferences[name]; ok {
 					refMap, order := refsFunc()
 					for _, label := range order {
@@ -185,12 +333,51 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 		}
 	}
 
-	// Sort by Order
 	sort.Slice(patterns, func(i, j int) bool {
 		return patterns[i].Order < patterns[j].Order
 	})
 
 	return patterns, nil
+}
+
+func unindent(s string) string {
+	lines := strings.Split(s, "\n")
+	if len(lines) == 0 {
+		return s
+	}
+	// Find min indent
+	minIndent := -1
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		indent := 0
+		for _, r := range line {
+			if r == '\t' {
+				indent++
+			} else {
+				break
+			}
+		}
+		if minIndent == -1 || indent < minIndent {
+			minIndent = indent
+		}
+	}
+	if minIndent <= 0 {
+		return s
+	}
+	var sb strings.Builder
+	for i, line := range lines {
+		if i > 0 {
+			sb.WriteRune('\n')
+		}
+		if len(line) >= minIndent {
+			sb.WriteString(line[minIndent:])
+		} else {
+			sb.WriteString(line)
+		}
+	}
+	return sb.String()
 }
 
 func findStringVar(f *ast.File, name string) string {
@@ -296,7 +483,14 @@ func findIntSliceVar(f *ast.File, content []byte, fset *token.FileSet, name stri
 }
 
 func DrawDemoPattern(pattern *PatternDemo, size image.Rectangle) {
+	if pattern.OutputFilename == "" {
+		return
+	}
 	i := addBorder(pattern.Generate())
+	if i == nil {
+		log.Printf("Warning: Generated image for %s is nil", pattern.Name)
+		return
+	}
 	f, err := os.Create(pattern.OutputFilename)
 	if err != nil {
 		log.Fatalf("Error creating i file: %v", err)
@@ -325,7 +519,7 @@ func DrawDemoPattern(pattern *PatternDemo, size image.Rectangle) {
 
 func addBorder(img image.Image) image.Image {
 	if img == nil {
-		img = image.NewRGBA(image.Rect(0, 0, 150, 150))
+		return nil
 	}
 	b := img.Bounds()
 	borderWidth := 5
@@ -360,6 +554,10 @@ type LabelledTransformer struct {
 }
 
 func (p *PatternDemo) Generate() image.Image {
+	if p.Generator == nil {
+		return nil
+	}
+
 	sz := 150
 	b := image.Rect(0, 0, sz, sz)
 	padding := 10
@@ -457,93 +655,7 @@ func (p *PatternDemo) Generate() image.Image {
 	return dst
 }
 
-func generateCLIInit(demos []PatternDemo, outfile string) error {
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, ".", nil, 0)
-	if err != nil {
-		return err
-	}
-
-	type Command struct {
-		Name      string
-		FuncName  string
-		Args      []string
-		TakesInput bool
-	}
-	var commands []Command
-
-	for _, pkg := range pkgs {
-		for filename, f := range pkg.Files {
-			if strings.HasSuffix(filename, "_test.go") || strings.HasSuffix(filename, "_example.go") {
-				continue
-			}
-
-			ast.Inspect(f, func(n ast.Node) bool {
-				fn, ok := n.(*ast.FuncDecl)
-				if !ok {
-					return true
-				}
-				if !strings.HasPrefix(fn.Name.Name, "New") {
-					return true
-				}
-
-				cmdName := toSnakeCase(strings.TrimPrefix(fn.Name.Name, "New"))
-
-				var args []string
-				takesInput := false
-
-				if fn.Type.Params != nil {
-					for i, param := range fn.Type.Params.List {
-						// type string
-						typeName := ""
-						isVariadic := false
-
-						if ident, ok := param.Type.(*ast.Ident); ok {
-							typeName = ident.Name
-						} else if sel, ok := param.Type.(*ast.SelectorExpr); ok {
-							// e.g. color.Color
-							if x, ok := sel.X.(*ast.Ident); ok {
-								typeName = x.Name + "." + sel.Sel.Name
-							}
-						} else if ell, ok := param.Type.(*ast.Ellipsis); ok {
-							isVariadic = true
-							if ident, ok := ell.Elt.(*ast.Ident); ok {
-								typeName = "..." + ident.Name
-							} else if _, ok := ell.Elt.(*ast.FuncType); ok {
-								// ...func(any)
-								typeName = "...func(any)"
-							}
-						}
-
-						// Handle parameter names
-						for range param.Names {
-							if isVariadic {
-								if typeName == "...func(any)" {
-									// Skip this arg in CLI requirements
-									continue
-								}
-								// Treat other variadics as unsupported for now, or strings
-								args = append(args, typeName)
-							} else if i == 0 && typeName == "image.Image" {
-								takesInput = true
-							} else {
-								args = append(args, typeName)
-							}
-						}
-					}
-				}
-
-				commands = append(commands, Command{
-					Name:      cmdName,
-					FuncName:  fn.Name.Name,
-					Args:      args,
-					TakesInput: takesInput,
-				})
-				return true
-			})
-		}
-	}
-
+func generateCLIInit(commands map[string]CLICommandInfo, outfile string) error {
 	// Generate file content
 	var sb strings.Builder
 	sb.WriteString("// Code generated by cmd/bootstrap/main.go; DO NOT EDIT.\n")
@@ -558,7 +670,16 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 
 	sb.WriteString("func RegisterGeneratedCommands(fm dsl.FuncMap) {\n")
 
+	// Convert map to slice for sorting to ensure stable output
+	var sortedCmds []CLICommandInfo
 	for _, cmd := range commands {
+		sortedCmds = append(sortedCmds, cmd)
+	}
+	sort.Slice(sortedCmds, func(i, j int) bool {
+		return sortedCmds[i].Name < sortedCmds[j].Name
+	})
+
+	for _, cmd := range sortedCmds {
 		sb.WriteString(fmt.Sprintf("\tfm[\"%s\"] = func(args []string, input image.Image) (image.Image, error) {\n", cmd.Name))
 
 		// Check arg count
