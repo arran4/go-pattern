@@ -36,6 +36,10 @@ func (p *BlueNoise) SetSeed(v int64) {
 	p.Seed = v
 }
 
+func (p *BlueNoise) SetSeedUint64(v uint64) {
+	p.Seed = int64(v)
+}
+
 func (p *BlueNoise) generate() {
 	p.once.Do(func() {
 		w, h := p.bounds.Dx(), p.bounds.Dy()
@@ -112,4 +116,3 @@ func NewBlueNoise(ops ...func(any)) image.Image {
 	}
 	return p
 }
-

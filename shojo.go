@@ -17,14 +17,14 @@ type Shojo struct {
 	Seed       int64
 }
 
-// hash returns a pseudo-random float64 in [0, 1) based on coordinates and seed.
-func hash(x, y int, seed int64) float64 {
-	// Simple hashing based on integer coordinates
-	var h = uint64(seed) ^ (uint64(x)*73856093) ^ (uint64(y)*19349663)
-	h ^= h >> 15
-	h *= 0x735a2d97a6428a11
-	h ^= h >> 15
-	return float64(h&0xffffff) / 16777215.0
+// SetSeed sets the seed for the Shojo pattern.
+func (p *Shojo) SetSeed(v int64) {
+	p.Seed = v
+}
+
+// SetSeedUint64 sets the seed for the Shojo pattern.
+func (p *Shojo) SetSeedUint64(v uint64) {
+	p.Seed = int64(v)
 }
 
 // At returns the color of the pixel at (x, y).
@@ -60,17 +60,35 @@ func (p *Shojo) At(x, y int) color.Color {
 			cx := gx + dx
 			cy := gy + dy
 
-			// Deterministic random values using hash function
-			r1 := hash(cx, cy, p.Seed)
-			r2 := hash(cx, cy, p.Seed+1)
-			r3 := hash(cx, cy, p.Seed+2)
-			r4 := hash(cx, cy, p.Seed+3)
-			r5 := hash(cx, cy, p.Seed+4)
+			// Deterministic random values using StableHash
+			seed := uint64(p.Seed)
+			// We mix cx, cy into the seed via StableHash call
+			// Or we use StableHash to generate a value from coordinate + salt
+
+			// We need multiple random values per cell. We can use a counter or modify the seed.
+			// Hashing the cell coordinate gives a base hash.
+			h := StableHash(cx, cy, seed)
+
+			// Extract floats from h
+			// We can generate multiple floats by rehashing or splitting bits.
+			// StableHash gives 64 bits. We can get 4 16-bit values.
+
+			h1 := h
+			r1 := float64(h1&0xFFFF) / 65535.0 // Probability
 
 			// Random number of sparkles per cell (0 or 1 for simplicity and spacing)
 			if r1 > 0.4 { // 40% chance of a star (inverted check from previous > 0.6)
 				continue
 			}
+
+			// Get more random values by rehashing
+			h2 := StableHash(cx, cy, seed ^ 0x5555555555555555) // Salt 1
+			r2 := float64(h2&0xFFFF) / 65535.0 // Position X
+			r3 := float64((h2>>16)&0xFFFF) / 65535.0 // Position Y
+
+			h3 := StableHash(cx, cy, seed ^ 0xAAAAAAAAAAAAAAAA) // Salt 2
+			r4 := float64(h3&0xFFFF) / 65535.0 // Size
+			r5 := float64((h3>>16)&0xFFFF) / 65535.0 // Rotation
 
 			// Position within the cell
 			starX := float64(cx*gridSize) + r2*float64(gridSize)

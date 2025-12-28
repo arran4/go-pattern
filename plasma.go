@@ -27,6 +27,10 @@ func (p *Plasma) SetSeed(v int64) {
 	p.Seed = v
 }
 
+func (p *Plasma) SetSeedUint64(v uint64) {
+	p.Seed = int64(v)
+}
+
 func (p *Plasma) generate() {
 	p.once.Do(func() {
 		w := p.bounds.Dx()
