@@ -118,13 +118,7 @@ func (w *WorleyNoise) At(x, y int) color.Color {
 
 // hash is a stateless hash function based on coordinates and seed.
 func (w *WorleyNoise) hash(x, y int) uint64 {
-	// Mix x, y, and Seed using a robust hash function.
-	// We use similar constants as in HashNoise.
-	z := uint64(int64(x)*0x9e3779b9 + int64(y)*0x632be59b + w.Seed.Seed)
-	z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9
-	z = (z ^ (z >> 27)) * 0x94d049bb133111eb
-	z = z ^ (z >> 31)
-	return z
+	return StableHash(x, y, uint64(w.Seed.Seed))
 }
 
 // NewWorleyNoise creates a new WorleyNoise pattern.
