@@ -34,7 +34,11 @@ func ExampleNewRemap(ops ...func(any)) image.Image {
 		}
 	})
 	uv = NewCrop(uv, image.Rect(0, 0, 150, 150))
-	return NewRemap(src, uv, ops...)
+	// ops from bootstrap might override bounds.
+	// But NewRemap signature changed to NewRemap(src, ops...). Map must be passed via option.
+
+	newOps := append([]func(any){RemapMap(uv)}, ops...)
+	return NewRemap(src, newOps...)
 }
 
 func GenerateRemapReferences() (map[string]func(image.Rectangle) image.Image, []string) {
@@ -68,7 +72,7 @@ func GenerateRemapReferences() (map[string]func(image.Rectangle) image.Image, []
 				}
 			})
 			uv = NewCrop(uv, bounds)
-			return NewRemap(src, uv)
+			return NewRemap(src, RemapMap(uv))
 		},
 	}, []string{"Swirl"}
 }

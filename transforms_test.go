@@ -30,7 +30,7 @@ func TestStandardLibraryTransforms(t *testing.T) {
 
 	// 7. Remap
 	mapImg := NewNull()
-	_ = NewRemap(src, mapImg)
+	_ = NewRemap(src, RemapMap(mapImg))
 
 	// All transforms are present and accessible.
 }
@@ -102,7 +102,7 @@ func TestRemap(t *testing.T) {
 	})
 	uv = NewCrop(uv, image.Rect(0, 0, 100, 100))
 
-	remapped := NewRemap(src, uv)
+	remapped := NewRemap(src, RemapMap(uv))
 
 	// At x=10 (Left), u ~ 0.9 (Right). Source Right is White.
 	// So result should be White.

@@ -98,14 +98,21 @@ func (r *Remap) At(x, y int) color.Color {
 
 // NewRemap creates a new Remap pattern.
 // source: The image to sample from.
-// m: The map image (UV map). Red=X, Green=Y.
-func NewRemap(source, m image.Image, ops ...func(any)) image.Image {
+func NewRemap(source image.Image, ops ...func(any)) image.Image {
 	r := &Remap{
 		Source: source,
-		Map:    m,
 	}
 	for _, op := range ops {
 		op(r)
 	}
 	return r
+}
+
+// RemapMap sets the map image (UV map) for the Remap pattern.
+func RemapMap(m image.Image) func(any) {
+	return func(i any) {
+		if r, ok := i.(*Remap); ok {
+			r.Map = m
+		}
+	}
 }
