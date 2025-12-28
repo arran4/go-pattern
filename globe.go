@@ -191,6 +191,12 @@ func (p *Globe) getSphereCoords(dx, dy, dz, r float64) (rx, ry, rz, phi, lambda 
 	// Spherical coordinates
 	// Latitude phi: arcsin(ry)
 	// Longitude lambda: atan2(rz, rx)
+	// Clamp ry to [-1, 1] to avoid NaN from float precision errors
+	if ry > 1.0 {
+		ry = 1.0
+	} else if ry < -1.0 {
+		ry = -1.0
+	}
 	phi = math.Asin(ry)
 	lambda = math.Atan2(rz, rx)
 	return
