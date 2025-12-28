@@ -23,13 +23,37 @@ jobs:
           go-version-file: 'go.mod'
       - name: Generate README and Images
         run: go run ./cmd/bootstrap
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Update README and images
-          title: Update README and images for ${{ github.ref_name }}
-          body: Auto-generated updates for README and images.
-          branch: ${{ github.ref_name }}-updated
-          base: ${{ github.ref_name }}
-          delete-branch: true
+      - name: Update Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ -z $(git status --porcelain) ]]; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          BRANCH_NAME="${{ github.ref_name }}-updated"
+
+          # Create branch and commit
+          git checkout -B $BRANCH_NAME
+          git add .
+          git commit -m "Update README and images"
+
+          # Force push
+          git push -f origin $BRANCH_NAME
+
+          # Create or update PR
+          if gh pr view $BRANCH_NAME >/dev/null 2>&1; then
+            gh pr edit $BRANCH_NAME \
+              --title "Update README and images for ${{ github.ref_name }}" \
+              --body "Auto-generated updates for README and images."
+          else
+            gh pr create \
+              --base ${{ github.ref_name }} \
+              --head $BRANCH_NAME \
+              --title "Update README and images for ${{ github.ref_name }}" \
+              --body "Auto-generated updates for README and images."
+          fi
