@@ -534,3 +534,69 @@ func SetFrequencyY(v float64) func(any) {
 		}
 	}
 }
+
+// Tilt configures the tilt angle (usually X axis rotation).
+type Tilt struct {
+	Tilt float64
+}
+
+func (s *Tilt) SetTilt(v float64) {
+	s.Tilt = v
+}
+
+type hasTilt interface {
+	SetTilt(float64)
+}
+
+// SetTilt creates an option to set the tilt.
+func SetTilt(v float64) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasTilt); ok {
+			h.SetTilt(v)
+		}
+	}
+}
+
+// LatitudeLines configures the number of latitude lines.
+type LatitudeLines struct {
+	LatitudeLines int
+}
+
+func (s *LatitudeLines) SetLatitudeLines(v int) {
+	s.LatitudeLines = v
+}
+
+type hasLatitudeLines interface {
+	SetLatitudeLines(int)
+}
+
+// SetLatitudeLines creates an option to set the latitude lines.
+func SetLatitudeLines(v int) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasLatitudeLines); ok {
+			h.SetLatitudeLines(v)
+		}
+	}
+}
+
+// LongitudeLines configures the number of longitude lines.
+type LongitudeLines struct {
+	LongitudeLines int
+}
+
+func (s *LongitudeLines) SetLongitudeLines(v int) {
+	s.LongitudeLines = v
+}
+
+type hasLongitudeLines interface {
+	SetLongitudeLines(int)
+}
+
+// SetLongitudeLines creates an option to set the longitude lines.
+func SetLongitudeLines(v int) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasLongitudeLines); ok {
+			h.SetLongitudeLines(v)
+		}
+	}
+}
