@@ -8,6 +8,7 @@ import (
 var (
 	RoadOutputFilename = "road.png"
 	Road_markedOutputFilename = "road_marked.png"
+	Road_terrainOutputFilename = "road_terrain.png"
 )
 
 func ExampleNewRoad() image.Image {
@@ -25,12 +26,7 @@ func ExampleNewRoad() image.Image {
 		ColorStop{Position: 1.0, Color: color.RGBA{90, 90, 90, 255}},
 	)
 
-	// Cracks: Voronoi edges or Lightning-like noise
-	// Let's use Voronoi edges.
-	// We don't have direct edge access in Voronoi pattern, but we can do difference of Voronoi outputs?
-	// Or use `EdgeDetect` on a Voronoi pattern.
-
-	// Voronoi with colors
+	// Cracks: Voronoi edges
 	v2 := NewVoronoi(
 		[]image.Point{
 			{10, 10}, {50, 200}, {200, 50}, {220, 220},
@@ -53,30 +49,76 @@ func ExampleNewRoad_marked() image.Image {
 	road := ExampleNewRoad()
 
 	// Painted lines
-	// Yellow center line
+	// Yellow center line (dashed?)
+	// Let's do a solid double yellow or single yellow.
+	// VerticalLine pattern repeats.
+	// Image width is usually 255.
+	// We want one line in the center.
+	// LineSize 10. SpaceSize big enough to push next line off screen.
+
 	lines := NewVerticalLine(
-		SetLineSize(10),
-		SetSpaceSize(255), // Only one line in middle?
-		SetLineColor(color.RGBA{255, 200, 0, 255}),
+		SetLineSize(8),
+		SetSpaceSize(300),
+		SetLineColor(color.RGBA{255, 200, 0, 255}), // Paint
 		SetSpaceColor(color.Transparent),
+		SetPhase(123), // Center: ~127 minus half line width (4) = 123.
 	)
 
-	// Shift line to center?
-	// VerticalLine starts at x=0.
-	// We can use Padding or Translation? No translate pattern.
-	// But `VerticalLine` repeats.
-	// If we want it centered, we need to adjust phase or sizes.
+	// Composite lines over road using Normal blend (Paint on top)
+	return NewBlend(road, lines, BlendNormal)
+}
 
-	// Or use Rect with bounds?
-	// Let's use a Rect for the line.
-	// We don't have easy positioning for Rect.
+func ExampleNewRoad_terrain() image.Image {
+	// Winding road on grass
 
-	// Let's stick to VerticalLine, it will appear at left.
-	// We can offset it if we had offset.
-	// Maybe just accept it repeats.
+	// 1. Terrain (Grass)
+	grass := NewNoise(SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.1}))
+	grassColor := NewColorMap(grass,
+		ColorStop{0.0, color.RGBA{30, 100, 30, 255}},
+		ColorStop{1.0, color.RGBA{50, 150, 50, 255}},
+	)
 
-	// Composite lines over road
-	return NewBlend(road, lines, BlendOverlay) // Overlay blends it. Normal would be better if we had Alpha composite.
+	// 2. Road Mask (Winding curve)
+	// We can use a low freq noise thresholded to a thin band?
+	// Or use `ModuloStripe` or `Sine` warped.
+	// Let's use a warped VerticalLine.
+
+	roadPath := NewVerticalLine(
+		SetLineSize(40), // Road width
+		SetSpaceSize(300),
+		SetLineColor(color.White), // Mask: White = Road
+		SetSpaceColor(color.Black), // Mask: Black = Grass
+		SetPhase(105),
+	)
+
+	// Warp the road path to make it winding
+	warpNoise := NewNoise(NoiseSeed(999), SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.02}))
+	windingRoadMask := NewWarp(roadPath, WarpDistortionX(warpNoise), WarpScale(50.0))
+
+	// 3. Road Texture
+	// Use asphalt from ExampleNewRoad, but we need to map it to the winding path?
+	// A simple tiled asphalt is fine.
+	roadTex := ExampleNewRoad()
+
+	// 4. Composite
+	// We have Grass (Bg), RoadTex (Fg), Mask (windingRoadMask).
+	// We don't have a MaskedBlend.
+	// Workaround:
+	// GrassPart = Grass * (NOT Mask)
+	// RoadPart = RoadTex * Mask
+	// Result = GrassPart + RoadPart
+
+	// Invert mask
+	invMask := NewBitwiseNot(windingRoadMask)
+
+	// Masking requires BitwiseAnd?
+	// But BitwiseAnd operates on colors bits.
+	// If Mask is pure Black/White, it works like a stencil for RGB.
+
+	grassPart := NewBitwiseAnd([]image.Image{grassColor, invMask})
+	roadPart := NewBitwiseAnd([]image.Image{roadTex, windingRoadMask})
+
+	return NewBitwiseOr([]image.Image{grassPart, roadPart})
 }
 
 func GenerateRoad(rect image.Rectangle) image.Image {
@@ -87,7 +129,12 @@ func GenerateRoad_marked(rect image.Rectangle) image.Image {
 	return ExampleNewRoad_marked()
 }
 
+func GenerateRoad_terrain(rect image.Rectangle) image.Image {
+	return ExampleNewRoad_terrain()
+}
+
 func init() {
 	GlobalGenerators["Road"] = GenerateRoad
 	GlobalGenerators["Road_marked"] = GenerateRoad_marked
+	GlobalGenerators["Road_terrain"] = GenerateRoad_terrain
 }
