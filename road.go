@@ -117,7 +117,7 @@ func NewRoad(ops ...func(any)) image.Image {
 	r := &Road{
 		Null:         Null{bounds: image.Rect(0, 0, 255, 255)},
 		Lanes:        2,
-		Width:        100,
+		Width:        120,
 		Direction:    0,
 		Shape:        RoadStraight,
 		CurveRadius:  100,
@@ -131,8 +131,38 @@ func NewRoad(ops ...func(any)) image.Image {
 	return r
 }
 
+// smoothstep for anti-aliasing
+func smoothstep(edge0, edge1, x float64) float64 {
+	t := (x - edge0) / (edge1 - edge0)
+	if t < 0.0 {
+		return 0.0
+	}
+	if t > 1.0 {
+		return 1.0
+	}
+	return t * t * (3.0 - 2.0*t)
+}
+
+// lerp mixes colors
+func mixColors(c1, c2 color.Color, t float64) color.Color {
+	r1, g1, b1, a1 := c1.RGBA()
+	r2, g2, b2, a2 := c2.RGBA()
+
+	r := float64(r1)*(1.0-t) + float64(r2)*t
+	g := float64(g1)*(1.0-t) + float64(g2)*t
+	b := float64(b1)*(1.0-t) + float64(b2)*t
+	a := float64(a1)*(1.0-t) + float64(a2)*t
+
+	return color.RGBA64{
+		R: uint16(r), G: uint16(g), B: uint16(b), A: uint16(a),
+	}
+}
+
 func (r *Road) At(x, y int) color.Color {
-	// 1. Transform to local coordinates relative to Center and rotated by Direction.
+	// 1. Transform p to local coordinates (relative to Center, rotated)
+	// For rotation: standard 2D rotation matrix.
+	// We want to rotate the *world* by -Direction so the road aligns with X axis (for straight).
+
 	dx := float64(x - r.CenterX)
 	dy := float64(y - r.CenterY)
 
@@ -140,165 +170,249 @@ func (r *Road) At(x, y int) color.Color {
 	cos := math.Cos(-rad)
 	sin := math.Sin(-rad)
 
-	rx := dx*cos - dy*sin
-	ry := dx*sin + dy*cos
+	px := dx*cos - dy*sin
+	py := dx*sin + dy*cos
 
-	// 2. Determine if we are on the road.
-	onRoad := false
-	u, v := 0.0, 0.0 // curvilinear coordinates: u = longitudinal, v = lateral (-Width/2 to Width/2)
+	// 2. Calculate Signed Distance (sd) to the road shape.
+	// sd < 0 is inside, sd > 0 is outside.
+	// We use half-width.
+	halfWidth := r.Width / 2.0
 
-	halfW := r.Width / 2.0
+	var sd float64
+	var u, v float64 // Texture/Marking coordinates (v is lateral distance from center)
+
+	// Valid flags for where markings should be drawn
+	drawMarkings := false
 
 	switch r.Shape {
 	case RoadStraight:
-		// Horizontal road along X axis
-		if math.Abs(ry) <= halfW {
-			onRoad = true
-			u = rx
-			v = ry
-		}
+		// Infinite strip along X axis.
+		// Distance is |py| - halfWidth.
+		sd = math.Abs(py) - halfWidth
+		u = px
+		v = py
+		drawMarkings = true
+
 	case RoadIntersection:
-		// Union of Horizontal and Vertical
-		// Horizontal
-		if math.Abs(ry) <= halfW {
-			onRoad = true
-			u = rx
-			v = ry
-		} else if math.Abs(rx) <= halfW {
-			// Vertical
-			onRoad = true
-			u = ry // Swap for vertical so markings run along it?
-			v = rx
-			// Note: Intersection area is tricky for markings.
-			// Simple union: The markings might overlap weirdly.
-			// For "macro view", overlapping markings is okay or we can prioritize one.
-		}
-	case RoadTIntersection:
-		// Horizontal (Through) + Vertical (Stem) coming from +Y?
-		// Let's say Horizontal is the top bar of T. Vertical comes from bottom.
-		// Horizontal: abs(ry) <= halfW
-		// Vertical: abs(rx) <= halfW AND ry >= 0 (or ry >= -halfW to merge)
-		if math.Abs(ry) <= halfW {
-			onRoad = true
-			u = rx
-			v = ry
-		} else if math.Abs(rx) <= halfW && ry >= 0 {
-			onRoad = true
-			u = ry
-			v = rx
-		}
-	case RoadCurved:
-		// Arc. Center of curvature at (0, R) relative to the start point?
-		// Let's define the curve as: center at (0, CurveRadius).
-		// Road is annulus with radius [CurveRadius - halfW, CurveRadius + halfW].
-		// Angle range needs handling.
-		// Let's assume the curve is centered at (0, r.CurveRadius) in local coords?
-		// No, usually "Center" is the pivot.
-		// Let's say Center is the center of the arc.
-		// Then dist = sqrt(rx^2 + ry^2).
-		// if dist in [Radius - halfW, Radius + halfW] -> on road.
-		// And check angle.
+		// Union of Horizontal (along X) and Vertical (along Y).
+		// sdH = |py| - halfWidth
+		// sdV = |px| - halfWidth
+		// sd = min(sdH, sdV)
+		sdH := math.Abs(py) - halfWidth
+		sdV := math.Abs(px) - halfWidth
+		sd = math.Min(sdH, sdV)
 
-		// Let's shift so that (0,0) is the center of the road arc.
-		// But `r.Center` is the image placement.
-		// So `rx, ry` are relative to arc center.
+		// Markings logic for intersection:
+		// Only draw markings if we are clearly in one arm and NOT in the central box.
+		// Central box is where both |px| < halfWidth AND |py| < halfWidth.
+		inCenter := (math.Abs(px) < halfWidth) && (math.Abs(py) < halfWidth)
 
-		dist := math.Sqrt(rx*rx + ry*ry)
-		if dist >= r.CurveRadius-halfW && dist <= r.CurveRadius+halfW {
-			// Check angle
-			angle := math.Atan2(ry, rx) * 180.0 / math.Pi
-			// Normalize angle to [0, 360) or similar.
-			// Let's assume curve is valid within some angle range.
-			// If CurveAngle is 90, maybe from -45 to 45? or 0 to 90?
-			// Let's assume -CurveAngle/2 to +CurveAngle/2 for symmetry around X axis?
-			// Or 0 to CurveAngle.
-			// Let's go with symmetry around Y axis (top)?
-			// Simpler: 0 to CurveAngle.
-			// Need to normalize angle.
-			// Atan2 returns -180 to 180.
-
-			// Let's simplify: Full circle if CurveAngle >= 360.
-			if r.CurveAngle >= 360 || (angle >= -r.CurveAngle/2 && angle <= r.CurveAngle/2) {
-				onRoad = true
-				u = angle * r.CurveRadius * (math.Pi / 180.0) // Arc length
-				v = dist - r.CurveRadius
+		if !inCenter {
+			if sdH < sdV {
+				// Horizontal arm
+				u = px
+				v = py
+				drawMarkings = true
+			} else {
+				// Vertical arm
+				u = py // Swap for markings to run along road
+				v = px
+				drawMarkings = true
 			}
 		}
-	}
 
-	if onRoad {
-		// Draw Road
-		var c color.Color
+	case RoadTIntersection:
+		// Horizontal (Top bar) + Vertical (Stem, usually from bottom up to 0)
+		// Let's say Horizontal is along X.
+		// Vertical is along Y, for y > 0 (or y < 0 depending on coord sys).
+		// In image coords, +y is down. Let's make the stem go "down" (positive y) or "up" (negative y).
+		// Let's assume stem is for py > 0 (Bottom T).
 
-		// Surface
-		if r.Asphalt != nil {
-			c = r.Asphalt.At(x, y)
+		sdH := math.Abs(py) - halfWidth
+
+		// Vertical segment: |px| - halfWidth, but only for py > -halfWidth
+		// Actually, let's just do union of Line(y=0) and Ray(x=0, y>0).
+		// sdV = max(|px| - halfWidth, -py) ? No.
+		// SDF for a generic segment or ray is cleaner.
+		// But keeping it simple: Union of H-Road and V-Road(clipped).
+
+		sdV := math.Abs(px) - halfWidth
+		// Clip sdV: It's only valid if we are "below" the top edge of the horizontal road?
+		// Actually, T-intersection implies they merge.
+		// sd = min(sdH, sdV intersected with y > 0 area)
+		// A simple way: Union of Box(Horizontal) and Box(Vertical, starts at 0).
+		// Vertical box: x in [-w/2, w/2], y in [-w/2, infinity].
+
+		// Let's refine:
+		// Horizontal Strip: |py| <= w/2
+		// Vertical Strip: |px| <= w/2 AND py >= 0
+
+		// Combined SDF:
+		// d1 = |py| - w/2
+		// d2 = max(|px| - w/2, -py) (Ray starting at 0 going +y) -> No, this is for finite segment.
+		// Let's just use:
+		// d2 = |px| - w/2.
+		// But we need to cut d2 at py = -something?
+		// Effectively, if py < -halfWidth, we are far from the vertical road stem.
+		// So sd = min(sdH, max(sdV, - (py + halfWidth))) ?
+		// If py is very negative (top of image), -(py+halfWidth) is large positive -> sdV is masked.
+
+		// Let's simplify:
+		// Just min(sdH, sdV) is a full cross.
+		// If we want T (removing top arm of vertical):
+		// If py < -halfWidth, distance is to the horizontal strip.
+
+		if py < -halfWidth {
+			sd = sdH
 		} else {
-			c = color.RGBA{60, 60, 60, 255} // Default dark grey
+			sd = math.Min(sdH, sdV)
 		}
 
 		// Markings
-		// v is distance from center line.
-		// Lanes setup.
-		// Lane width = Width / Lanes
-		laneWidth := r.Width / float64(r.Lanes)
-
-		// Line width
-		lineWidth := 2.0 // Fixed for now, or configurable?
-
-		// Check if we are on a line
-		// Lines are at v = -Width/2 + i * laneWidth
-		// i goes from 0 to Lanes.
-
-		// Map v to lane coordinates
-		// Shift v to start from edge: v' = v + Width/2
-		vp := v + halfW
-
-		// Check distance to nearest line
-		// i = round(vp / laneWidth)
-		// dist = abs(vp - i * laneWidth)
-
-		i := math.Round(vp / laneWidth)
-		distToLine := math.Abs(vp - i * laneWidth)
-
-		if distToLine < lineWidth/2 {
-			// It is a line.
-			// Determine line type.
-			// Edge lines (i == 0 or i == Lanes): Solid
-			// Middle lines: Dashed?
-			// Center line (if Lanes is even, i == Lanes/2): Double Solid? or Dashed?
-
-			isEdge := (i == 0 || int(i) == r.Lanes)
-
-			if isEdge {
-				// Solid edge line
-				c = r.MarkingColor
-			} else {
-				// Inner line.
-				// Dash pattern. Based on u.
-				// Dash length e.g. 20.
-				dashLen := 20.0
-				gapLen := 20.0
-				cycle := dashLen + gapLen
-
-				// Determine phase
-				phase := math.Mod(math.Abs(u), cycle)
-				if phase < dashLen {
-					c = r.MarkingColor
-				}
+		inCenter := (math.Abs(px) < halfWidth) && (math.Abs(py) < halfWidth)
+		if !inCenter {
+			if math.Abs(py) <= halfWidth {
+				// Horizontal arm
+				u = px
+				v = py
+				drawMarkings = true
+			} else if math.Abs(px) <= halfWidth && py > 0 {
+				// Vertical arm (stem)
+				u = py
+				v = px
+				drawMarkings = true
 			}
 		}
 
-		return c
+	case RoadCurved:
+		// Arc.
+		// Center of arc is at (0, CurveRadius) in transformed space?
+		// Let's put the pivot at (0,0).
+		// Road is an annulus segment.
+		// Distance to circle of radius R.
+		// p is (px, py).
+		// We want the road to curve "away".
+		// Let's assume the road starts at (0,0) going +X, and curves towards +Y.
+		// Then the center of curvature is at (0, R).
+		// d = | length(p - (0, R)) - R | - w/2.
+
+		cx, cy := 0.0, r.CurveRadius
+		// But wait, if we rotate by Direction, (0,0) is our anchor.
+		// If we want the road to pass through (0,0), then yes, distance from center (0, R) is R.
+
+		distToCenter := math.Sqrt((px-cx)*(px-cx) + (py-cy)*(py-cy))
+		sd = math.Abs(distToCenter - r.CurveRadius) - halfWidth
+
+		// Angle check for segment?
+		// Vector from center to p: (px, py-R).
+		// Angle: atan2(py-R, px).
+		// At (0,0), vector is (0, -R). Angle is -90 (or 270).
+		// We want to limit the arc length.
+		// Let's assume full circle if Angle is large, or clipped.
+		// For simplicity in this demo, let's do a full ring or half ring.
+		// To clip properly, we'd need sdBox logic on the angle.
+		// Let's just use the infinite ring for "Curved" to ensure it looks good and "takes up space".
+		// Or clamp it.
+		// Let's use the Ring.
+
+		// u, v for markings.
+		// v = distToCenter - Radius
+		// u = Angle * Radius
+		angle := math.Atan2(py-cy, px-cx)
+		// Normalize angle so u is continuous-ish?
+		u = angle * r.CurveRadius
+		v = distToCenter - r.CurveRadius
+		drawMarkings = true
 	}
 
-	// Background
+	// 3. Rendering
+	// Anti-aliasing factor
+	aaWidth := 1.0
+	alpha := 1.0 - smoothstep(0.0, aaWidth, sd)
+
+	if alpha <= 0.0 {
+		// Pure Background
+		if r.Background != nil {
+			return r.Background.At(x, y)
+		}
+		// Default Grass
+		return color.RGBA{34, 139, 34, 255}
+	}
+
+	// We are on road (or edge).
+	// Sample Asphalt
+	var roadColor color.Color
+	if r.Asphalt != nil {
+		// Use world coordinates for texture to avoid warping/seams
+		roadColor = r.Asphalt.At(x, y)
+	} else {
+		roadColor = color.RGBA{60, 60, 60, 255}
+	}
+
+	// Apply Markings
+	if drawMarkings {
+		// Lane logic
+		laneWidth := r.Width / float64(r.Lanes)
+		lineWidth := 3.0
+
+		// Shift v to be 0 at left edge
+		// v is centered at 0. range [-w/2, w/2]
+		// v' = v + w/2
+		vp := v + halfWidth
+
+		// Which lane line?
+		// i = round(vp / laneWidth)
+		// Location of line i: i * laneWidth
+		i := math.Round(vp / laneWidth)
+		linePos := i * laneWidth
+
+		distToLine := math.Abs(vp - linePos)
+
+		// Draw line if close
+		if distToLine < lineWidth {
+			// AA for line
+			lineAlpha := 1.0 - smoothstep(lineWidth/2.0 - 0.5, lineWidth/2.0 + 0.5, distToLine)
+
+			if lineAlpha > 0 {
+				isEdge := (i == 0 || int(i) == r.Lanes)
+				isCenter := (!isEdge && r.Lanes%2 == 0 && int(i) == r.Lanes/2)
+
+				shouldDraw := false
+
+				if isEdge {
+					shouldDraw = true
+				} else if isCenter {
+					// Double line? Or simple solid/dashed.
+					// Let's do dashed for center usually, or double solid.
+					// Let's do Dashed for center.
+					dashLen := 20.0
+					if math.Mod(math.Abs(u), dashLen*2) < dashLen {
+						shouldDraw = true
+					}
+				} else {
+					// Other dividers: Dashed
+					dashLen := 20.0
+					if math.Mod(math.Abs(u), dashLen*2) < dashLen {
+						shouldDraw = true
+					}
+				}
+
+				if shouldDraw {
+					roadColor = mixColors(roadColor, r.MarkingColor, lineAlpha)
+				}
+			}
+		}
+	}
+
+	// Mix Road with Background at edges
+	bg := color.RGBA{34, 139, 34, 255}
 	if r.Background != nil {
-		return r.Background.At(x, y)
+		c := r.Background.At(x, y)
+		r1, g1, b1, a1 := c.RGBA()
+		bg = color.RGBA{uint8(r1 >> 8), uint8(g1 >> 8), uint8(b1 >> 8), uint8(a1 >> 8)}
 	}
 
-	// Default grass-like color
-	return color.RGBA{34, 139, 34, 255}
+	return mixColors(bg, roadColor, alpha)
 }
 
 func (r *Road) Bounds() image.Rectangle {

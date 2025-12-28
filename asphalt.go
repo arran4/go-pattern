@@ -5,57 +5,59 @@ import (
 	"image/color"
 )
 
-// NewAsphalt creates a procedural asphalt texture.
-// It uses noise for grain and Voronoi for potential cracks or aggregate.
+// NewAsphalt creates a procedural asphalt concrete texture (Micro view).
+// It combines fine grain noise, larger aggregate stones, and variations.
 func NewAsphalt() image.Image {
-	// 1. Base Grain (High frequency noise)
-	// Simulates the bitumen and small stones.
+	// 1. Fine Grain (Bitumen/Sand)
+	// High frequency noise
 	grain := NewNoise(
-		NoiseSeed(100),
-		SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.8, Octaves: 4, Persistence: 0.6}),
+		NoiseSeed(101),
+		SetNoiseAlgorithm(&PerlinNoise{Frequency: 1.5, Octaves: 3, Persistence: 0.7}),
 	)
 
-	// Map to dark greys
+	// Map grain to dark grey/black asphalt colors
 	base := NewColorMap(grain,
-		ColorStop{0.0, color.RGBA{30, 30, 30, 255}},
-		ColorStop{0.5, color.RGBA{50, 50, 50, 255}},
-		ColorStop{1.0, color.RGBA{70, 70, 70, 255}},
+		ColorStop{0.0, color.RGBA{20, 20, 20, 255}},
+		ColorStop{1.0, color.RGBA{60, 60, 60, 255}},
 	)
 
-	// 2. Larger Aggregate (Specks)
-	// We can use a Scatter pattern or high threshold noise.
-	specksNoise := NewNoise(
-		NoiseSeed(200),
-		SetNoiseAlgorithm(&PerlinNoise{Frequency: 2.0}),
+	// 2. Aggregate (Stones)
+	// Medium/High frequency noise, thresholded to create "spots"
+	stonesNoise := NewNoise(
+		NoiseSeed(202),
+		SetNoiseAlgorithm(&PerlinNoise{Frequency: 2.5, Octaves: 1}),
 	)
-	// Threshold to get sparse dots
-	specks := NewColorMap(specksNoise,
+
+	// White/Grey stones, sparse
+	stones := NewColorMap(stonesNoise,
 		ColorStop{0.0, color.RGBA{0, 0, 0, 0}},   // Transparent
-		ColorStop{0.7, color.RGBA{0, 0, 0, 0}},
-		ColorStop{0.75, color.RGBA{180, 180, 180, 255}}, // Light stones
+		ColorStop{0.65, color.RGBA{0, 0, 0, 0}},
+		ColorStop{0.70, color.RGBA{100, 100, 100, 255}}, // Dark stone
+		ColorStop{0.85, color.RGBA{180, 180, 180, 255}}, // Light stone
 		ColorStop{1.0, color.RGBA{200, 200, 200, 255}},
 	)
 
-	// 3. Tar/Dark patches (Low freq)
-	patchesNoise := NewNoise(
-		NoiseSeed(300),
-		SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.05}),
+	// 3. Surface Variation (Patches/Wear)
+	// Low frequency noise
+	wearNoise := NewNoise(
+		NoiseSeed(303),
+		SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.1}),
 	)
-	patches := NewColorMap(patchesNoise,
-		ColorStop{0.0, color.RGBA{0, 0, 0, 50}}, // Darken
-		ColorStop{0.5, color.RGBA{0, 0, 0, 0}},  // No change
-		ColorStop{1.0, color.RGBA{255, 255, 255, 10}}, // Slight lighten
+
+	wear := NewColorMap(wearNoise,
+		ColorStop{0.0, color.RGBA{0, 0, 0, 40}}, // Darker patches (oil/tar)
+		ColorStop{0.5, color.RGBA{0, 0, 0, 0}},
+		ColorStop{1.0, color.RGBA{255, 255, 255, 10}}, // Lighter patches (dry)
 	)
 
 	// Composite
-	// Base + Specks + Patches
+	// Base + Stones + Wear
 
-	// Blend specks over base
-	layer1 := NewBlend(base, specks, BlendNormal)
+	// Add stones to base
+	step1 := NewBlend(base, stones, BlendNormal)
 
-	// Blend patches (Overlay or Multiply)
-	// Simple alpha blending handles the patches logic defined above.
-	final := NewBlend(layer1, patches, BlendNormal)
+	// Apply wear
+	step2 := NewBlend(step1, wear, BlendNormal)
 
-	return final
+	return step2
 }

@@ -9,13 +9,19 @@ var (
 	RoadOutputFilename = "road.png"
 	Road_curvedOutputFilename = "road_curved.png"
 	Road_intersectionOutputFilename = "road_intersection.png"
+	AsphaltOutputFilename = "asphalt.png"
 )
 
-// ExampleNewRoad demonstrates a straight road with markings.
+// ExampleNewAsphalt demonstrates the Micro view (Asphalt concrete texture).
+func ExampleNewAsphalt() image.Image {
+	return NewAsphalt()
+}
+
+// ExampleNewRoad demonstrates the Macro view (Straight Road).
 func ExampleNewRoad() image.Image {
 	return NewRoad(
 		SetLanes(2),
-		SetWidth(100),
+		SetWidth(120),
 		SetDirection(0), // Horizontal
 		SetShape(RoadStraight),
 		SetAsphalt(NewAsphalt()),
@@ -28,14 +34,14 @@ func ExampleNewRoad() image.Image {
 func ExampleNewRoad_curved() image.Image {
 	return NewRoad(
 		SetLanes(2),
-		SetWidth(80),
+		SetWidth(100),
 		SetDirection(0),
 		SetShape(RoadCurved),
-		SetCurveRadius(80),
-		SetCurveAngle(180), // Semi-circle
+		SetCurveRadius(100),
+		SetCurveAngle(180),
 		SetAsphalt(NewAsphalt()),
-		SetMarkingColor(color.RGBA{255, 255, 0, 255}), // Yellow lines
-		SetCenter(127, 200), // Move center down so arc is visible
+		SetMarkingColor(color.RGBA{255, 255, 0, 255}), // Yellow
+		SetCenter(127, 240), // Anchor at bottom to show arc
 	)
 }
 
@@ -43,34 +49,14 @@ func ExampleNewRoad_curved() image.Image {
 func ExampleNewRoad_intersection() image.Image {
 	return NewRoad(
 		SetLanes(4),
-		SetWidth(120),
-		SetDirection(45), // Rotated intersection
+		SetWidth(80),
+		SetDirection(45), // Rotated
 		SetShape(RoadIntersection),
 		SetAsphalt(NewAsphalt()),
 		SetMarkingColor(color.White),
 		SetCenter(127, 127),
 	)
 }
-
-// ExampleNewAsphalt is already defined in asphalt.go?
-// No, I put it there but `asphalt.go` is not an example file (doesn't end in _example.go).
-// Wait, `asphalt.go` is a source file.
-// But I added `ExampleNewAsphalt` inside `asphalt.go`.
-// The bootstrap tool looks for `ExampleNew*` in `_example.go` files usually?
-// "The bootstrap tool identifies documentation targets by looking for functions named `ExampleNew<Pattern>` in `_example.go` files"
-// So `ExampleNewAsphalt` in `asphalt.go` (if I put it there) might be ignored for doc generation if it's not in an `_example.go` file.
-// I should move `ExampleNewAsphalt` to here or `asphalt_example.go`.
-// Since I haven't created `asphalt_example.go` and user said "replace road examples", I will put it here.
-// I will remove it from `asphalt.go` later or just ignore it there.
-
-// Redefining here would cause conflict if it's exported in `asphalt.go`.
-// Let's check `asphalt.go` content. I defined `ExampleNewAsphalt` there.
-// I should probably rename `asphalt.go` to `asphalt_example.go` OR move the Example function here.
-// But `NewAsphalt` (the generator) should be in `asphalt.go`.
-// So I will fix `asphalt.go` to NOT have the Example function, and put it here.
-// Or just create `asphalt_example.go`.
-
-// Let's assume I will fix `asphalt.go`.
 
 func GenerateRoad(rect image.Rectangle) image.Image {
 	return ExampleNewRoad()
@@ -84,9 +70,13 @@ func GenerateRoad_intersection(rect image.Rectangle) image.Image {
 	return ExampleNewRoad_intersection()
 }
 
+func GenerateAsphalt(rect image.Rectangle) image.Image {
+	return ExampleNewAsphalt()
+}
+
 func init() {
 	GlobalGenerators["Road"] = GenerateRoad
 	GlobalGenerators["Road_curved"] = GenerateRoad_curved
 	GlobalGenerators["Road_intersection"] = GenerateRoad_intersection
-	// Asphalt generator will be registered in asphalt_example.go if I make it.
+	GlobalGenerators["Asphalt"] = GenerateAsphalt
 }
