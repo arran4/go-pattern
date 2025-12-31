@@ -124,7 +124,7 @@ func applyUnaryOp(img image.Image, op func(float64) float64) image.Image {
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
 			c := img.At(bounds.Min.X+x, bounds.Min.Y+y)
-			r, g, b, a := c.RGBA()
+			r, _, _, _ := c.RGBA()
 			// Use avg or R?
 			v := float64(r)/65535.0 // 0-1
 			// Scale? Users might expect `x` to be large.
