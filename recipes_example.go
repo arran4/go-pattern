@@ -214,6 +214,7 @@ func GenerateCircuitImpl(rect image.Rectangle) image.Image {
 		SetScatterFrequency(0.04), // Larger grid for chips
 		SetScatterDensity(1.0),
 		SetScatterGenerator(chipGen),
+		SetSpaceColor(color.Transparent), // Important: Transparent background!
 		func(i any) { if p, ok := i.(*Scatter); ok { p.Seed = 200 } },
 	)
 
@@ -366,7 +367,7 @@ func ExampleNewCarpet() image.Image {
 	return l3
 }
 
-// Persian Rug: Ornate patterns (Redesigned + Internals)
+// Persian Rug: Ornate patterns (Redesigned + Internals Improved)
 func GeneratePersianRugImpl(rect image.Rectangle) image.Image {
 	// Base: Deep Red
 	bg := NewRect(SetFillColor(color.RGBA{60, 10, 10, 255}), SetBounds(rect))
@@ -393,6 +394,13 @@ func GeneratePersianRugImpl(rect image.Rectangle) image.Image {
 			color.Transparent,
 			SetSpaceSize(20),
 		), 45)
+
+	// Textured Background for Field (Worley)
+	fieldTexture := NewWorleyNoise(SetFrequency(0.5))
+	fieldOverlay := NewColorMap(fieldTexture,
+		ColorStop{0.0, color.RGBA{0, 0, 0, 30}},
+		ColorStop{0.5, color.Transparent},
+	)
 
 	// Small flowers in grid
 	flowers := NewGeneric(func(x, y int) color.Color {
@@ -436,12 +444,13 @@ func GeneratePersianRugImpl(rect image.Rectangle) image.Image {
 		return color.Transparent
 	})
 
-	l1 := NewBlend(bg, lattice, BlendNormal)
-	l2 := NewBlend(l1, flowers, BlendNormal) // Internal Details
-	l3 := NewBlend(l2, medColor, BlendNormal)
-	l4 := NewBlend(l3, borderGen, BlendNormal)
+	l1 := NewBlend(bg, fieldOverlay, BlendOverlay) // Add texture
+	l2 := NewBlend(l1, lattice, BlendNormal)
+	l3 := NewBlend(l2, flowers, BlendNormal) // Internal Details
+	l4 := NewBlend(l3, medColor, BlendNormal)
+	l5 := NewBlend(l4, borderGen, BlendNormal)
 
-	return l4
+	return l5
 }
 
 func ExampleNewPersianRug() image.Image {
