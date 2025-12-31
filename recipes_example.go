@@ -89,57 +89,46 @@ func ExampleNewIce() image.Image {
 	return layer2
 }
 
-// Circuit: Thin orthogonal traces with small nodes (Fixed)
-func ExampleNewCircuit() image.Image {
+// Circuit: Thin orthogonal traces with small nodes (Fixed again)
+func GenerateCircuit(rect image.Rectangle) image.Image {
 	// Base: Dark Green PCB
-	bg := NewRect(SetFillColor(color.RGBA{0, 60, 20, 255}))
+	// Ensure background covers the area
+	bg := NewRect(SetFillColor(color.RGBA{0, 60, 20, 255}), SetBounds(rect))
 
-	// Create orthogonal traces using Worley Manhattan.
-	// F2-F1 creates edges. We want to see if we can get lines.
-	// Worley output ranges from 0 to ~1+.
-	// F2-F1 is 0 at cell centers, max at edges? No.
-	// F1 is dist to 1st closest. F2 is dist to 2nd closest.
-	// F2-F1 is 0 at Voronoi boundaries (edges).
-	// So small values = edges.
-
-	// Let's use F2-F1 and verify thresholds.
-	// Increased range to ensure visibility.
+	// Traces: Use Manhattan Worley
+	// Increase frequency slightly to get more lines in 150px
 	traces := NewWorleyNoise(
 		SetWorleyMetric(MetricManhattan),
 		SetWorleyOutput(OutputF2MinusF1),
-		SetFrequency(0.15), // Increased freq
+		SetFrequency(0.12),
 		NoiseSeed(100),
 	)
 
+	// Map to lines. F2-F1 is low at edges.
+	// Make traces brighter/lighter green.
 	traceLayer := NewColorMap(traces,
-		// If value < 0.05 -> Line
-		ColorStop{0.0, color.RGBA{100, 200, 100, 255}},
-		ColorStop{0.08, color.RGBA{100, 200, 100, 255}}, // Wider traces
-		ColorStop{0.1, color.Transparent},
-	)
-
-	// Pads/Vias at cell centers (F1 small)
-	pads := NewWorleyNoise(
-		SetWorleyMetric(MetricManhattan),
-		SetWorleyOutput(OutputF1),
-		SetFrequency(0.15),
-		NoiseSeed(100),
-	)
-	padLayer := NewColorMap(pads,
-		ColorStop{0.0, color.RGBA{200, 200, 50, 255}}, // Gold Pad
-		ColorStop{0.1, color.RGBA{200, 200, 50, 255}},
+		ColorStop{0.0, color.RGBA{80, 180, 80, 255}}, // Brighter Green
+		ColorStop{0.1, color.RGBA{80, 180, 80, 255}},
 		ColorStop{0.12, color.Transparent},
 	)
 
+	// Pads/Vias
+	pads := NewWorleyNoise(
+		SetWorleyMetric(MetricManhattan),
+		SetWorleyOutput(OutputF1),
+		SetFrequency(0.12),
+		NoiseSeed(100),
+	)
+	padLayer := NewColorMap(pads,
+		ColorStop{0.0, color.RGBA{200, 180, 50, 255}}, // Gold
+		ColorStop{0.15, color.RGBA{200, 180, 50, 255}},
+		ColorStop{0.17, color.Transparent},
+	)
+
 	chipGen := func(u, v float64, hash uint64) (color.Color, float64) {
-		// Use StableHash to determine if chip exists
-		if (hash & 255) < 50 { // ~20% chance
-			// Draw Rect
-			// u, v are local coords from center of cell.
-			// Cell size 1/0.04 = 25px.
-			// Chip size random
-			w := 0.4 + float64(hash>>8&255)/512.0 // 0.4-0.9
-			h := 0.4 + float64(hash>>16&255)/512.0
+		if (hash & 255) < 60 {
+			w := 0.5
+			h := 0.5
 			if math.Abs(u) < w/2 && math.Abs(v) < h/2 {
 				return color.RGBA{20, 20, 20, 255}, 1.0
 			}
@@ -148,8 +137,8 @@ func ExampleNewCircuit() image.Image {
 	}
 
 	chips := NewScatter(
-		SetScatterFrequency(0.08),
-		SetScatterDensity(1.0), // Control via generator
+		SetScatterFrequency(0.06),
+		SetScatterDensity(1.0),
 		SetScatterGenerator(chipGen),
 		func(i any) { if p, ok := i.(*Scatter); ok { p.Seed = 101 } },
 	)
@@ -159,6 +148,10 @@ func ExampleNewCircuit() image.Image {
 	l3 := NewBlend(l2, chips, BlendNormal)
 
 	return l3
+}
+
+func ExampleNewCircuit() image.Image {
+	return GenerateCircuit(image.Rect(0, 0, 150, 150))
 }
 
 // Fence: Diagonal diamond grid (Chain link)
@@ -300,59 +293,76 @@ func ExampleNewCarpet() image.Image {
 	return l3
 }
 
-// Persian Rug: Ornate patterns (Improved)
-func ExampleNewPersianRug() image.Image {
-	// Base: Deep Blue
-	bg := NewRect(SetFillColor(color.RGBA{10, 10, 60, 255}))
+// Persian Rug: Ornate patterns (Redesigned)
+func GeneratePersianRug(rect image.Rectangle) image.Image {
+	// Base: Deep Red/Blue
+	bg := NewRect(SetFillColor(color.RGBA{60, 10, 10, 255}), SetBounds(rect))
 
-	// Center Medallion using Concentric Rings + Mask
-	// We want diamond shape medallion?
-	// Or just concentric.
-	center := NewConcentricRings(
-		[]color.Color{color.Black, color.White},
-		SetCenter(75, 75),
-		SetFrequency(0.5),
+	// Central Medallion: Intricate layers
+	cx, cy := rect.Dx()/2, rect.Dy()/2
+
+	// Layer 1: Large starburst/medallion base (Blue)
+	medBase := NewConcentricRings(
+		[]color.Color{color.Transparent}, // Placeholder
+		SetCenter(cx, cy),
+		SetFrequency(0.8),
 	)
-	medallion := NewColorMap(center,
-		ColorStop{0.0, color.RGBA{200, 50, 50, 255}}, // Red Center
-		ColorStop{0.3, color.RGBA{200, 180, 100, 255}}, // Gold Ring
-		ColorStop{0.5, color.RGBA{10, 10, 60, 255}}, // Blue Gap
-		ColorStop{0.7, color.RGBA{200, 50, 50, 255}}, // Red Ring
-		ColorStop{1.0, color.Transparent},
+	medColor := NewColorMap(medBase,
+		ColorStop{0.0, color.RGBA{20, 20, 80, 255}}, // Center Blue
+		ColorStop{0.3, color.RGBA{150, 120, 50, 255}}, // Gold Ring
+		ColorStop{0.35, color.RGBA{20, 20, 80, 255}}, // Blue Ring
+		ColorStop{0.6, color.Transparent},
 	)
 
-	// Symmetrical Patterns
-	// Use Checker rotated 45 degrees to create diamond lattice
-	lattice := NewRotate(
-		NewChecker(
-			color.Transparent,
-			color.RGBA{255, 255, 255, 20},
-			SetSpaceSize(20),
-		), 45)
-
-	// Borders: Multiple layers
-	// Outer border
-	// Removed unused NewRect declarations
-
-	// Actually, if we use a generic generator for the frame, it's easier.
-
-	frameGen := NewGeneric(func(x, y int) color.Color {
-		w, h := 150, 150 // Assuming fixed size for recipe
-		d := 0
-		// distance to edge
-		if x < w-1-x { d = x } else { d = w-1-x }
-		if y < h-1-y { if y < d { d = y } } else { if h-1-y < d { d = h-1-y } }
-
-		if d < 10 { return color.RGBA{100, 20, 20, 255} } // Outer Red
-		if d < 15 { return color.RGBA{200, 180, 50, 255} } // Inner Gold
+	// Field Pattern: Small repeating floral/geometric motif
+	// Use Checker with generic fill? Or small generic pattern.
+	fieldPattern := NewGeneric(func(x, y int) color.Color {
+		// Tiled 20x20
+		tx, ty := x%20, y%20
+		// Small flower shape
+		dx, dy := tx-10, ty-10
+		dist := math.Sqrt(float64(dx*dx + dy*dy))
+		if dist < 4 {
+			return color.RGBA{200, 200, 180, 50} // Light motif
+		}
 		return color.Transparent
 	})
 
-	l1 := NewBlend(bg, lattice, BlendNormal)
-	l2 := NewBlend(l1, medallion, BlendNormal)
-	l3 := NewBlend(l2, frameGen, BlendNormal)
+	// Complex Border System
+	// We use a distance-based generator to draw multiple border bands
+	borderGen := NewGeneric(func(x, y int) color.Color {
+		w, h := rect.Dx(), rect.Dy()
+		// Dist to nearest edge
+		d := x
+		if w-1-x < d { d = w-1-x }
+		if y < d { d = y }
+		if h-1-y < d { d = h-1-y }
+
+		// Bands
+		if d < 10 { return color.RGBA{20, 20, 60, 255} } // Outer Dark Blue
+		if d < 12 { return color.RGBA{180, 160, 100, 255} } // Gold line
+		if d < 25 {
+			// Main Border band (Red with pattern?)
+			// Simple pattern: alternating blocks?
+			if (x+y)%10 < 5 {
+				return color.RGBA{100, 30, 30, 255}
+			}
+			return color.RGBA{120, 40, 40, 255}
+		}
+		if d < 27 { return color.RGBA{180, 160, 100, 255} } // Gold line
+
+		return color.Transparent // Inside field
+	})
+
+	l1 := NewBlend(bg, fieldPattern, BlendNormal)
+	l2 := NewBlend(l1, medColor, BlendNormal)
+	l3 := NewBlend(l2, borderGen, BlendNormal)
 
 	return l3
+}
+
+func ExampleNewPersianRug() image.Image {
+	return GeneratePersianRug(image.Rect(0, 0, 150, 150))
 }
 
 // Lava Flow: Dark base + bright streaks + subtle noise
@@ -510,9 +520,6 @@ func GenerateDungeon(rect image.Rectangle) image.Image {
 func GenerateIce(rect image.Rectangle) image.Image {
 	return ExampleNewIce()
 }
-func GenerateCircuit(rect image.Rectangle) image.Image {
-	return ExampleNewCircuit()
-}
 func GenerateFence(rect image.Rectangle) image.Image {
 	return ExampleNewFence()
 }
@@ -534,16 +541,13 @@ func GenerateWaveBorder(rect image.Rectangle) image.Image {
 func GenerateCarpet(rect image.Rectangle) image.Image {
 	return ExampleNewCarpet()
 }
-func GeneratePersianRug(rect image.Rectangle) image.Image {
-	return ExampleNewPersianRug()
-}
 func GenerateLavaFlow(rect image.Rectangle) image.Image {
 	return ExampleNewLavaFlow()
 }
 func GenerateMetalPlate(rect image.Rectangle) image.Image {
 	return ExampleNewMetalPlate()
 }
-// GenerateFantasyFrame is defined above
+// GenerateFantasyFrame, GenerateCircuit, GeneratePersianRug are already defined as functions and registered below
 
 func init() {
 	RegisterGenerator("Dungeon", GenerateDungeon)
