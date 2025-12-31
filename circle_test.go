@@ -82,7 +82,8 @@ func TestCircle_BorderAndFill(t *testing.T) {
 
 func TestCircle_FillImage(t *testing.T) {
 	// Use Checker as fill source.
-	check := NewChecker(color.White, color.Black)
+	// We explicitly set SpaceSize(1) to restore legacy 1x1 behavior for this test.
+	check := NewChecker(color.White, color.Black, SetSpaceSize(1))
 	// Circle with check fill, no border.
 	c := NewCircle(
 		SetBounds(image.Rect(0, 0, 10, 10)),
