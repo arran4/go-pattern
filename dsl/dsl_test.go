@@ -1,84 +1,171 @@
 package dsl
 
 import (
+	"fmt"
+	"image"
 	"testing"
 )
 
-func TestParseAndString(t *testing.T) {
-	cases := []string{
-		"checkers black white | zoom 10 | save out.png",
-		"null | transposed 10 20",
-		"  checkers   red   blue    |   zoom 5  ",
-		"",
-		"   ",
-		"|",
-		"cmd |",
-		"| cmd",
-		"cmd1 arg1 | cmd2 arg2 arg3",
-		"cmd1 | cmd2 | cmd3",
+func TestLexer(t *testing.T) {
+	input := `cmd arg1 arg2 | next key=val (sub cmd) ^ (other)`
+	l := NewLexer(input)
+
+	tests := []struct {
+		expectedType    TokenType
+		expectedLiteral string
+	}{
+		{IDENT, "cmd"},
+		{IDENT, "arg1"},
+		{IDENT, "arg2"},
+		{PIPE, "|"},
+		{IDENT, "next"},
+		{IDENT, "key"},
+		{EQUALS, "="},
+		{IDENT, "val"},
+		{LPAREN, "("},
+		{IDENT, "sub"},
+		{IDENT, "cmd"},
+		{RPAREN, ")"},
+		{CARET, "^"},
+		{LPAREN, "("},
+		{IDENT, "other"},
+		{RPAREN, ")"},
+		{EOF, ""},
 	}
 
-	for _, c := range cases {
-		p, err := Parse(c)
-		if err != nil {
-			t.Errorf("Parse(%q) failed: %v", c, err)
-			continue
+	for i, tt := range tests {
+		tok := l.NextToken()
+		if tok.Type != tt.expectedType {
+			t.Errorf("tests[%d] - tokentype wrong. expected=%q, got=%q", i, tt.expectedType, tok.Type)
 		}
-
-		generated := p.String()
-
-		// Parse the generated string again to ensure cycle consistency
-		p2, err := Parse(generated)
-		if err != nil {
-			t.Errorf("Parse(%q) failed: %v", generated, err)
-			continue
-		}
-
-		if len(p) != len(p2) {
-			t.Errorf("Length mismatch for %q: %d vs %d", c, len(p), len(p2))
-		}
-
-		for i := range p {
-			if p[i].Name != p2[i].Name {
-				t.Errorf("Command name mismatch at %d: %q vs %q", i, p[i].Name, p2[i].Name)
-			}
-			if len(p[i].Args) != len(p2[i].Args) {
-				t.Errorf("Args length mismatch at %d: %d vs %d", i, len(p[i].Args), len(p2[i].Args))
-			}
-			for j := range p[i].Args {
-				if p[i].Args[j] != p2[i].Args[j] {
-					t.Errorf("Arg mismatch at %d,%d: %q vs %q", i, j, p[i].Args[j], p2[i].Args[j])
-				}
-			}
+		if tok.Literal != tt.expectedLiteral {
+			t.Errorf("tests[%d] - literal wrong. expected=%q, got=%q", i, tt.expectedLiteral, tok.Literal)
 		}
 	}
 }
 
-func TestParseEdgeCases(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected int // number of commands
-	}{
-		{"", 0},
-		{"   ", 0},
-		{"|", 0},
-		{" | ", 0},
-		{"cmd", 1},
-		{"cmd arg", 1},
-		{"cmd | cmd", 2},
-		{"cmd |", 1},
-		{"| cmd", 1},
-		{"cmd || cmd", 2}, // empty command in middle should be ignored
+func TestParserPipeline(t *testing.T) {
+	input := `cmd1 arg1 | cmd2 arg2`
+	l := NewLexer(input)
+	p := NewParser(l)
+	node, err := p.ParsePipeline()
+	if err != nil {
+		t.Fatalf("ParsePipeline error: %v", err)
 	}
 
-	for _, tt := range tests {
-		p, err := Parse(tt.input)
-		if err != nil {
-			t.Errorf("Parse(%q) unexpected error: %v", tt.input, err)
-			continue
+	pipe, ok := node.(*PipelineNode)
+	if !ok {
+		t.Fatalf("Expected PipelineNode, got %T", node)
+	}
+	if len(pipe.Nodes) != 2 {
+		t.Fatalf("Expected 2 nodes, got %d", len(pipe.Nodes))
+	}
+
+	cmd1, ok := pipe.Nodes[0].(*CommandNode)
+	if !ok || cmd1.Name != "cmd1" {
+		t.Errorf("First node not cmd1")
+	}
+	cmd2, ok := pipe.Nodes[1].(*CommandNode)
+	if !ok || cmd2.Name != "cmd2" {
+		t.Errorf("Second node not cmd2")
+	}
+}
+
+func TestParserGroupAndOp(t *testing.T) {
+	input := `(a) ^ (b)`
+	l := NewLexer(input)
+	p := NewParser(l)
+	node, err := p.ParsePipeline()
+	if err != nil {
+		t.Fatalf("ParsePipeline error: %v", err)
+	}
+
+	bin, ok := node.(*BinaryNode)
+	if !ok {
+		t.Fatalf("Expected BinaryNode, got %T", node)
+	}
+	if bin.Operator != "^" {
+		t.Errorf("Expected ^, got %s", bin.Operator)
+	}
+
+	// Left should be GroupNode(CommandNode(a))
+	leftGroup, ok := bin.Left.(*GroupNode)
+	if !ok {
+		t.Fatalf("Left not GroupNode")
+	}
+	leftCmd, ok := leftGroup.Inner.(*CommandNode)
+	if !ok || leftCmd.Name != "a" {
+		t.Errorf("Left inner not command a")
+	}
+}
+
+func TestEvaluator(t *testing.T) {
+	fm := make(FuncMap)
+	fm["mkimg"] = func(args []string, input image.Image) (image.Image, error) {
+		return image.NewRGBA(image.Rect(0, 0, 10, 10)), nil
+	}
+	fm["check"] = func(args []string, input image.Image) (image.Image, error) {
+		if input == nil {
+			return nil, fmt.Errorf("input is nil")
 		}
-		if len(p) != tt.expected {
-			t.Errorf("Parse(%q) expected %d commands, got %d", tt.input, tt.expected, len(p))
+		return input, nil
+	}
+	fm["op_xor"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("xor needs 1 arg")
 		}
+		return image.NewRGBA(image.Rect(0, 0, 10, 10)), nil
+	}
+
+	ctx := NewContext(fm)
+
+	// Test basic pipeline
+	input := `mkimg | check`
+	p, err := Parse(input)
+	if err != nil {
+		t.Fatalf("Parse error: %v", err)
+	}
+	_, err = Execute(p, ctx, nil)
+	if err != nil {
+		t.Fatalf("Execute error: %v", err)
+	}
+
+	// Test XOR
+	input2 := `(mkimg) ^ (mkimg)`
+	p2, err := Parse(input2)
+	if err != nil {
+		t.Fatalf("Parse error: %v", err)
+	}
+	_, err = Execute(p2, ctx, nil)
+	if err != nil {
+		t.Fatalf("Execute error: %v", err)
+	}
+}
+
+func TestJoinArgs(t *testing.T) {
+	fm := make(FuncMap)
+	fm["gen"] = func(args []string, input image.Image) (image.Image, error) {
+		return image.NewRGBA(image.Rect(0, 0, 1, 1)), nil
+	}
+	fm["join"] = func(args []string, input image.Image) (image.Image, error) {
+		// Expect args[0] = mode, args[1] = handle
+		if len(args) < 2 {
+			return nil, fmt.Errorf("missing args")
+		}
+		if args[0] != "overlay" {
+			return nil, fmt.Errorf("wrong mode")
+		}
+		return nil, nil
+	}
+
+	ctx := NewContext(fm)
+	input := `join overlay (gen)`
+	p, err := Parse(input)
+	if err != nil {
+		t.Fatalf("Parse error: %v", err)
+	}
+	_, err = Execute(p, ctx, nil)
+	if err != nil {
+		t.Fatalf("Execute error: %v", err)
 	}
 }
