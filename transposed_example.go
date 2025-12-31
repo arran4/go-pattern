@@ -32,7 +32,8 @@ func ExampleNewTransposed() {
 
 func demoTransposedInput(b image.Rectangle) image.Image {
 	// The original demo used NewSimpleZoom(NewChecker..., 20)
-	return NewSimpleZoom(NewChecker(color.Black, color.White, SetBounds(b)), 20, SetBounds(b))
+	// Explicitly set SpaceSize to 1 to match legacy 1x1 checker behavior expected by this demo.
+	return NewSimpleZoom(NewChecker(color.Black, color.White, SetBounds(b), SetSpaceSize(1)), 20, SetBounds(b))
 }
 
 func GenerateTransposed(b image.Rectangle) image.Image {

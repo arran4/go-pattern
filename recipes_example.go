@@ -12,11 +12,12 @@ var (
 	CircuitOutputFilename = "circuit.png"
 	FenceOutputFilename = "fence.png"
 	StripeOutputFilename = "stripe.png"
-	CrystalOutputFilename = "crystal.png"
+	AbstractArtOutputFilename = "abstract_art.png" // Renamed from Crystal
 	PixelCamoOutputFilename = "pixel_camo.png"
 	CheckerBorderOutputFilename = "checker_border.png"
 	WaveBorderOutputFilename = "wave_border.png"
 	CarpetOutputFilename = "carpet.png"
+	PersianRugOutputFilename = "persian_rug.png"
 	LavaFlowOutputFilename = "lava_flow.png"
 	MetalPlateOutputFilename = "metal_plate.png"
 	FantasyFrameOutputFilename = "fantasy_frame.png"
@@ -24,81 +25,56 @@ var (
 
 // Dungeon: Stone brick + moss speckles + edge cracks
 func ExampleNewDungeon() image.Image {
-	// 1. Base Stone Brick
-	// We use Worley Noise for stone texture
 	stoneTex := NewWorleyNoise(SetFrequency(0.2), NoiseSeed(1))
 	stoneCol := NewColorMap(stoneTex,
 		ColorStop{0.0, color.RGBA{60, 60, 65, 255}},
 		ColorStop{1.0, color.RGBA{40, 40, 45, 255}},
 	)
-
-	// Create square tiles (dungeon floor)
 	tiles := NewBrick(
 		SetBrickSize(50, 50),
 		SetMortarSize(4),
-		SetBrickOffset(0), // Aligned grid
+		SetBrickOffset(0),
 		SetBrickImages(stoneCol),
 		SetMortarImage(NewRect(SetFillColor(color.RGBA{10, 10, 10, 255}))),
 	)
-
-	// 2. Cracks
-	// Use high frequency Voronoi or cellular noise for cracks
 	cracks := NewWorleyNoise(
 		SetFrequency(0.1),
-		SetWorleyOutput(OutputF2MinusF1), // Good for edges/cracks
+		SetWorleyOutput(OutputF2MinusF1),
 		NoiseSeed(2),
 	)
-	// Threshold to get thin lines
 	crackMask := NewColorMap(cracks,
-		ColorStop{0.0, color.Black}, // Crack
+		ColorStop{0.0, color.Black},
 		ColorStop{0.05, color.Black},
 		ColorStop{0.1, color.Transparent},
 	)
-
-	// 3. Moss Speckles
-	// Perlin noise for patchiness
 	mossNoise := NewNoise(SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.05}), NoiseSeed(3))
-	// High freq noise for detail
 	mossDetail := NewNoise(SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.5}), NoiseSeed(4))
-
-	// Combine: Where mossNoise is high, show mossDetail
 	mossMask := NewBlend(mossNoise, mossDetail, BlendMultiply)
 	mossCol := NewColorMap(mossMask,
 		ColorStop{0.4, color.Transparent},
-		ColorStop{0.6, color.RGBA{50, 100, 50, 150}}, // Semi-transparent green
+		ColorStop{0.6, color.RGBA{50, 100, 50, 150}},
 	)
-
-	// Layer: Tiles -> Cracks -> Moss
-	withCracks := NewBlend(tiles, crackMask, BlendNormal) // Cracks on top
-	withMoss := NewBlend(withCracks, mossCol, BlendNormal) // Moss on top
-
+	withCracks := NewBlend(tiles, crackMask, BlendNormal)
+	withMoss := NewBlend(withCracks, mossCol, BlendNormal)
 	return withMoss
 }
 
 // Ice: Pale base + thin cracks + faint gradient
 func ExampleNewIce() image.Image {
-	// Base: White/Blueish gradient
 	base := NewColorMap(
 		NewNoise(SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.02}), NoiseSeed(10)),
 		ColorStop{0.0, color.RGBA{220, 230, 255, 255}},
 		ColorStop{1.0, color.RGBA{240, 250, 255, 255}},
 	)
-
-	// Cracks: Voronoi edges
-	// OutputF2MinusF1 gives cellular borders
 	cracks := NewWorleyNoise(
 		SetFrequency(0.08),
 		SetWorleyOutput(OutputF2MinusF1),
 		NoiseSeed(11),
 	)
-
-	// Thin white lines for subsurface cracks
 	crackLines := NewColorMap(cracks,
 		ColorStop{0.0, color.RGBA{255, 255, 255, 180}},
 		ColorStop{0.05, color.Transparent},
 	)
-
-	// Deep cracks (darker)
 	deepCracks := NewWorleyNoise(
 		SetFrequency(0.04),
 		SetWorleyOutput(OutputF2MinusF1),
@@ -108,86 +84,95 @@ func ExampleNewIce() image.Image {
 		ColorStop{0.0, color.RGBA{180, 200, 220, 200}},
 		ColorStop{0.02, color.Transparent},
 	)
-
 	layer1 := NewBlend(base, crackLines, BlendNormal)
 	layer2 := NewBlend(layer1, deepCrackLines, BlendNormal)
-
 	return layer2
 }
 
-// Circuit: Thin orthogonal traces with small nodes
+// Circuit: Thin orthogonal traces with small nodes (Refined)
 func ExampleNewCircuit() image.Image {
-	// Background: Dark Green
-	bg := NewRect(SetFillColor(color.RGBA{10, 40, 20, 255}))
+	// Base: Dark Green PCB
+	bg := NewRect(SetFillColor(color.RGBA{0, 60, 20, 255}))
 
-	// Traces: Use `Worley` with Manhattan distance for blocky/orthogonal shapes
-	// F2 - F1 gives us "distance to edges" of cells.
-	// With Manhattan, edges are orthogonal.
+	// Create orthogonal traces using a specialized approach.
+	// Since we don't have a maze generator, we can use Worley F1-F2 with Manhattan distance
+	// but thresholded strictly to create "roads".
+	// Or use `NewGrid` with random connections.
 
-	// Trace mask
-	traceNoise := NewWorleyNoise(
+	// Let's try Worley Manhattan again but with cleaner thresholding.
+	// Low frequency for main buses.
+	traces := NewWorleyNoise(
 		SetWorleyMetric(MetricManhattan),
 		SetWorleyOutput(OutputF2MinusF1),
-		SetFrequency(0.15),
-		NoiseSeed(25),
+		SetFrequency(0.1),
+		NoiseSeed(100),
 	)
 
-	// Map to lines
-	traces := NewColorMap(traceNoise,
-		ColorStop{0.0, color.RGBA{30, 100, 40, 255}}, // Center of "road"
-		ColorStop{0.1, color.RGBA{50, 150, 60, 255}}, // Trace
-		ColorStop{0.2, color.Transparent},            // Gap
+	// Traces are where F2-F1 is small (centers of edges).
+	// Let's make lines.
+	traceLayer := NewColorMap(traces,
+		ColorStop{0.0, color.RGBA{100, 200, 100, 255}}, // Trace color
+		ColorStop{0.05, color.RGBA{100, 200, 100, 255}},
+		ColorStop{0.06, color.Transparent},
 	)
 
-	// Scatter "Nodes" (Pads)
-	// Circle or Square pads
-	padGen := func(u, v float64, hash uint64) (color.Color, float64) {
-		dist := math.Sqrt(u*u + v*v)
-		if dist < 0.3 {
-			// Silver/Gold pad
-			return color.RGBA{200, 180, 50, 255}, 1.0
+	// Pads/Vias at cell centers (F1 small)
+	pads := NewWorleyNoise(
+		SetWorleyMetric(MetricManhattan),
+		SetWorleyOutput(OutputF1),
+		SetFrequency(0.1),
+		NoiseSeed(100), // Same seed to align with traces
+	)
+	padLayer := NewColorMap(pads,
+		ColorStop{0.0, color.RGBA{200, 200, 50, 255}}, // Gold Pad
+		ColorStop{0.15, color.RGBA{200, 200, 50, 255}},
+		ColorStop{0.16, color.Transparent},
+	)
+
+	// Add chips (black rectangles)
+	// We use Brick with large spacing? Or Scatter?
+	// Let's use Scatter with a rect generator.
+
+	chipGen := func(u, v float64, hash uint64) (color.Color, float64) {
+		// Draw Rect
+		if math.Abs(u) < 0.6 && math.Abs(v) < 0.6 {
+			return color.RGBA{20, 20, 20, 255}, 1.0
 		}
 		return color.Transparent, 0
 	}
 
-	pads := NewScatter(
-		SetScatterFrequency(0.15), // Match trace frequency roughly
+	chips := NewScatter(
+		SetScatterFrequency(0.04), // Sparse
 		SetScatterDensity(0.4),
-		SetScatterGenerator(padGen),
-		func(i any) { if p, ok := i.(*Scatter); ok { p.Seed = 26 } },
+		SetScatterGenerator(chipGen),
+		func(i any) { if p, ok := i.(*Scatter); ok { p.Seed = 101 } },
 	)
 
-	// Combine
-	l1 := NewBlend(bg, traces, BlendNormal)
-	l2 := NewBlend(l1, pads, BlendNormal)
+	l1 := NewBlend(bg, traceLayer, BlendNormal)
+	l2 := NewBlend(l1, padLayer, BlendNormal)
+	l3 := NewBlend(l2, chips, BlendNormal)
 
-	return l2
+	return l3
 }
 
 // Fence: Diagonal diamond grid (Chain link)
 func ExampleNewFence() image.Image {
-	// CrossHatch with 45 and 135 degrees
 	wires := NewCrossHatch(
 		SetLineSize(2),
 		SetSpaceSize(18),
 		SetAngles(45, 135),
 		SetLineColor(color.RGBA{180, 180, 180, 255}),
 	)
-
-	// Background: Transparent or blurred scene?
-	// Let's put a green background (grass) behind it.
 	grass := NewNoise(SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.1}), NoiseSeed(30))
 	bg := NewColorMap(grass,
 		ColorStop{0.0, color.RGBA{20, 100, 20, 255}},
 		ColorStop{1.0, color.RGBA{30, 150, 30, 255}},
 	)
-
 	return NewBlend(bg, wires, BlendNormal)
 }
 
 // Warning Stripe: Diagonal alternating yellow/black
 func ExampleNewStripe() image.Image {
-	// Or `CrossHatch` with single angle and thick lines.
 	stripes := NewCrossHatch(
 		SetLineSize(20),
 		SetSpaceSize(20),
@@ -195,295 +180,262 @@ func ExampleNewStripe() image.Image {
 		SetLineColor(color.RGBA{255, 200, 0, 255}), // Yellow
 		SetSpaceColor(color.RGBA{20, 20, 20, 255}), // Black
 	)
-
 	return stripes
 }
 
-// Crystal: Triangular facets in light/dark blues
-func ExampleNewCrystal() image.Image {
-	// Voronoi gives polygonal cells
-	// We want sharp, angular facets.
-
+// Abstract Art: Renamed from Crystal (Original implementation)
+func ExampleNewAbstractArt() image.Image {
 	v := NewVoronoi(
-		// Random points are generated if we don't provide them.
 		makePoints(30, 150, 150),
-		// Palette of blues
 		[]color.Color{
-			color.RGBA{200, 220, 255, 255}, // Pale Blue
-			color.RGBA{100, 150, 250, 255}, // Medium Blue
-			color.RGBA{50, 100, 200, 255},  // Dark Blue
-			color.RGBA{150, 200, 240, 255}, // Light Cyan
-			color.RGBA{20, 40, 100, 255},   // Deep Blue
+			color.RGBA{200, 220, 255, 255},
+			color.RGBA{100, 150, 250, 255},
+			color.RGBA{50, 100, 200, 255},
+			color.RGBA{150, 200, 240, 255},
+			color.RGBA{20, 40, 100, 255},
 		},
 	)
-
-	// Let's add a reflective sheen using a large gradients.
 	shine := NewLinearGradient(
 		SetStartColor(color.RGBA{255, 255, 255, 50}),
 		SetEndColor(color.Transparent),
 		SetAngle(30),
 	)
-
 	return NewBlend(v, shine, BlendOverlay)
 }
 
 // Pixel Camo: Clustered 2x2 blocks in 3-4 colors
 func ExampleNewPixelCamo() image.Image {
-	// Instantiate noise source
 	pn := &PerlinNoise{Frequency: 0.04, Seed: 60}
-
 	return NewGeneric(func(x, y int) color.Color {
-		s := 10 // Block size
-		// Quantize coordinates
+		s := 10
 		qx := (x / s) * s
 		qy := (y / s) * s
-
-		// Sample noise at quantized coordinate
 		c := pn.At(qx, qy)
-		// Extract value (0-255) from gray
 		g := c.(color.Gray).Y
 		v := float64(g) / 255.0
-
-		// Map to 3-4 Camo Colors
 		if v < 0.3 {
-			return color.RGBA{30, 25, 20, 255} // Dark Brown
+			return color.RGBA{30, 25, 20, 255}
 		} else if v < 0.5 {
-			return color.RGBA{60, 80, 40, 255} // Army Green
+			return color.RGBA{60, 80, 40, 255}
 		} else if v < 0.7 {
-			return color.RGBA{140, 130, 100, 255} // Khaki
+			return color.RGBA{140, 130, 100, 255}
 		}
-		return color.RGBA{10, 10, 10, 255} // Black
+		return color.RGBA{10, 10, 10, 255}
 	})
 }
 
 // Checker Border: Classic black/white border strip
 func ExampleNewCheckerBorder() image.Image {
-	// Create a checker pattern
 	check := NewChecker(
 		color.White,
 		color.Black,
-		SetSpaceSize(20), // 20px squares
+		SetSpaceSize(20),
 	)
-
-	// Mask it to be a border
-	// We want a strip.
-	// Use Padding? No, Padding adds space around.
-	// We want to return an image that IS a border.
-	// If the image size is fixed, we can just mask the center.
-
-	// Let's make a frame: White transparent center, solid border.
-	// Use `NewRect` to make a hole?
-
-	// 1. Full Checker
-	// 2. Center mask (Black = Transparent, White = Opaque)
-
-	// Actually, `NewRect` with `LineSize` draws a border.
-	// If `LineImageSource` is the checker pattern...
-
 	return NewRect(
 		SetLineSize(20),
 		SetLineImageSource(check),
-		SetFillColor(color.Transparent), // Transparent center
+		SetFillColor(color.Transparent),
 	)
 }
 
 // Wave Border: Repeating sinusoidal edge
 func ExampleNewWaveBorder() image.Image {
-	// Create a straight line (vertical or horizontal)
-	// Let's make a horizontal wave at the bottom.
-
-	// Base: A filled rectangle at the bottom half.
-	// But we want the edge to be wavy.
-
-	// Use `NewWarp` on a straight split.
-
 	split := NewGeneric(func(x, y int) color.Color {
-		if y > 75 { // Halfway
-			return color.RGBA{50, 100, 150, 255} // Blue Sea
+		if y > 75 {
+			return color.RGBA{50, 100, 150, 255}
 		}
 		return color.Transparent
 	})
-
-	// Warp it
-	// Sine wave distortion
 	sine := NewGeneric(func(x, y int) color.Color {
-		// Value varies by X
-		v := math.Sin(float64(x) * 0.1) * 10.0 // Amplitude 10, Freq 0.1
-		// Map to gray 0-255 centered at 128?
-		// Warp pattern uses luminance.
-		// Gray = 128 + v
+		v := math.Sin(float64(x) * 0.1) * 10.0
 		val := 128.0 + v
 		return color.Gray{Y: uint8(val)}
 	})
-
-	// Distortion in Y direction
 	warp := NewWarp(split,
 		WarpDistortion(sine),
 		WarpYScale(1.0),
-		WarpXScale(0.0), // No X distortion
+		WarpXScale(0.0),
 	)
-
 	return warp
 }
 
-// Carpet: Repeating diamond/chevron motifs
+// Carpet: Visual interest increased
 func ExampleNewCarpet() image.Image {
-	// Use `NewTile` or `NewChecker` rotated?
+	bg := NewRect(SetFillColor(color.RGBA{80, 0, 0, 255})) // Dark Red Base
 
-	// Base: Red
-	bg := NewRect(SetFillColor(color.RGBA{100, 20, 20, 255}))
-
-	// Pattern: Gold Diamonds
-	// Rotated Checkers
-	diamonds := NewRotate(
+	// Main Pattern: Large Diamonds
+	d1 := NewRotate(
 		NewChecker(
-			color.RGBA{200, 180, 50, 255}, // Gold
+			color.RGBA{160, 120, 40, 255}, // Gold
 			color.Transparent,
-			SetSpaceSize(15),
-		),
-		45, // Rotate 45 degrees
-	)
-	// NewRotate creates a black background by default where it's undefined?
-	// `rotate.go` implementation might crop or fill.
-	// It just rotates coordinates. Infinite plane.
-
-	// Add some detail?
-	// Smaller diamonds inside?
-	diamondsSmall := NewRotate(
-		NewChecker(
-			color.Transparent,
-			color.RGBA{0, 0, 0, 50}, // Shadow
-			SetSpaceSize(15),
+			SetSpaceSize(30),
 		),
 		45,
 	)
 
-	// Combine
-	l1 := NewBlend(bg, diamonds, BlendNormal)
-	l2 := NewBlend(l1, diamondsSmall, BlendNormal) // Might not align perfectly without offset
+	// Secondary Pattern: Smaller overlay diamonds
+	d2 := NewRotate(
+		NewChecker(
+			color.Transparent,
+			color.RGBA{0, 0, 0, 60}, // Shadow
+			SetSpaceSize(10),
+		),
+		45,
+	)
 
-	return l2
+	// Border Elements?
+	// Striped background for texture
+	stripes := NewCrossHatch(SetLineSize(1), SetSpaceSize(3), SetAngle(0), SetLineColor(color.RGBA{0,0,0,30}))
+
+	l1 := NewBlend(bg, stripes, BlendNormal)
+	l2 := NewBlend(l1, d1, BlendNormal)
+	l3 := NewBlend(l2, d2, BlendNormal)
+
+	return l3
+}
+
+// Persian Rug: Ornate patterns
+func ExampleNewPersianRug() image.Image {
+	// Base: Deep Blue
+	bg := NewRect(SetFillColor(color.RGBA{10, 10, 60, 255}))
+
+	// Medallion (Center)
+	// Use Concentric Rings with color map
+	// NewConcentricRings takes []color.Color as first arg
+	center := NewConcentricRings(
+		[]color.Color{color.Black, color.White}, // Placeholder, using ColorMap over it
+		SetCenter(75, 75),
+		SetFrequency(0.5),
+	)
+	medallion := NewColorMap(center,
+		ColorStop{0.0, color.RGBA{200, 50, 50, 255}}, // Red Center
+		ColorStop{0.2, color.RGBA{200, 180, 100, 255}}, // Gold Ring
+		ColorStop{0.4, color.RGBA{10, 10, 60, 255}}, // Blue Gap
+		ColorStop{0.5, color.RGBA{200, 50, 50, 255}}, // Red Ring
+		ColorStop{1.0, color.Transparent},
+	)
+
+	// Field Pattern: Small intricate details (Worley)
+	fieldNoise := NewWorleyNoise(SetFrequency(0.3), NoiseSeed(200))
+	field := NewColorMap(fieldNoise,
+		ColorStop{0.0, color.RGBA{100, 100, 200, 100}},
+		ColorStop{0.5, color.Transparent},
+	)
+
+	// Borders
+	border := NewRect(
+		SetLineSize(15),
+		SetLineColor(color.RGBA{150, 30, 30, 255}), // Red Border
+		SetFillColor(color.Transparent),
+	)
+
+	// Combine
+	l1 := NewBlend(bg, field, BlendNormal)
+	l2 := NewBlend(l1, medallion, BlendNormal)
+	l3 := NewBlend(l2, border, BlendNormal)
+
+	return l3
 }
 
 // Lava Flow: Dark base + bright streaks + subtle noise
 func ExampleNewLavaFlow() image.Image {
-	// Base: Dark rock (Red/Black)
 	base := NewColorMap(
 		NewNoise(SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.05}), NoiseSeed(70)),
 		ColorStop{0.0, color.RGBA{20, 0, 0, 255}},
 		ColorStop{0.6, color.RGBA{60, 10, 0, 255}},
 		ColorStop{1.0, color.RGBA{100, 20, 0, 255}},
 	)
-
-	// Streaks: Warped noise (Lava rivers)
-	// High contrast noise
 	rivers := NewColorMap(
 		NewNoise(SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.03}), NoiseSeed(71)),
 		ColorStop{0.0, color.RGBA{255, 200, 0, 255}}, // Bright Yellow
 		ColorStop{0.2, color.RGBA{255, 50, 0, 255}},  // Red
 		ColorStop{0.4, color.Transparent},            // Cooled rock
 	)
-
-	// Warp the rivers to make them flow
 	flow := NewWarp(rivers,
 		WarpDistortion(NewNoise(SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.02}), NoiseSeed(72))),
 		WarpScale(20.0),
 	)
-
-	return NewBlend(base, flow, BlendNormal) // Rivers on top of base
+	return NewBlend(base, flow, BlendNormal)
 }
 
-// Metal Plate: Grid + rivet dots + small highlights
+// Metal Plate: Improved texture
 func ExampleNewMetalPlate() image.Image {
-	// Base: Grey metal
-	bg := NewRect(SetFillColor(color.RGBA{100, 100, 105, 255}))
+	// Base: Brushed Metal
+	// Use directional noise
+	noise := NewNoise(SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.2, Octaves: 5}))
+	// Scale X/Y differently to make it "brushed"
+	// We don't have scale options on PerlinNoise directly.
+	// We can use NewScale pattern.
+	brushed := NewScale(noise, ScaleX(1.0), ScaleY(0.1))
 
-	// Grid lines (grooves)
-	grid := NewCrossHatch(
-		SetLineSize(1),
-		SetSpaceSize(49), // 50px grid
-		SetAngles(0, 90),
-		SetLineColor(color.RGBA{50, 50, 55, 255}), // Dark groove
+	metalBase := NewColorMap(brushed,
+		ColorStop{0.0, color.RGBA{100, 100, 105, 255}},
+		ColorStop{1.0, color.RGBA{180, 180, 190, 255}},
 	)
 
-	// Rivets at intersections?
-	// Use Scatter with grid alignment?
-	// Or `NewGrid` with dot image?
-
-	// Let's use `NewScatter` with very high density and no randomness to simulate grid points?
-	// Scatter has randomness.
-
-	// Custom Generic pattern for rivets at grid corners
+	// Rivets
 	rivets := NewGeneric(func(x, y int) color.Color {
-		// Grid 50
 		s := 50
-		// Nearest intersection
 		nx := (x + s/2) / s * s
 		ny := (y + s/2) / s * s
-
 		dx := x - nx
 		dy := y - ny
 		dist := math.Sqrt(float64(dx*dx + dy*dy))
 
-		if dist < 4 {
-			return color.RGBA{180, 180, 190, 255} // Light Rivet
-		} else if dist < 5 {
-			return color.RGBA{40, 40, 45, 255} // Shadow ring
+		if dist < 6 {
+			// Rivet shading (simple gradient)
+			v := uint8(255 - dist*20)
+			return color.RGBA{v, v, v, 255}
 		}
 		return color.Transparent
 	})
 
-	// Scratches/Noise
-	scratch := NewNoise(SetNoiseAlgorithm(&PerlinNoise{Frequency: 0.5}), NoiseSeed(80))
-	scratchLayer := NewColorMap(scratch,
-		ColorStop{0.0, color.RGBA{255, 255, 255, 20}},
-		ColorStop{0.5, color.Transparent},
-	)
-
-	l1 := NewBlend(bg, grid, BlendNormal)
-	l2 := NewBlend(l1, rivets, BlendNormal)
-	l3 := NewBlend(l2, scratchLayer, BlendOverlay)
-
-	return l3
+	return NewBlend(metalBase, rivets, BlendNormal)
 }
 
-// Fantasy Frame: Wave border + checker border + inset line
+// Fantasy Frame: Ornate
 func ExampleNewFantasyFrame() image.Image {
-	// This implies a composite border.
-	// Since we are generating a square tile, let's make a corner or edge piece?
-	// Or a full frame around the 150x150 area.
+	// Background: Dark Wood or Stone
+	bg := NewRect(SetFillColor(color.RGBA{40, 20, 10, 255}))
 
-	// 1. Checker Border (Outer)
-	chk := ExampleNewCheckerBorder()
-
-	// 2. Wave Border (Inner)
-	// We need a wave that goes around? Hard with current `NewWarp`.
-	// Let's just layer a gold line.
-
-	gold := NewRect(
-		SetLineSize(22), // Slightly inside the 20px checker? No, outside?
-		// Let's put gold line *inside* the checker. Checker is 20px.
-		// So gold line at 22px (2px width).
-		SetLineColor(color.RGBA{200, 180, 50, 255}),
-		SetFillColor(color.Transparent),
+	// 1. Ornate Border Pattern (Gold Scrolls)
+	// Use a pattern that looks scroll-like? Maybe Worley?
+	scrolls := NewWorleyNoise(SetFrequency(0.15), NoiseSeed(300))
+	goldScrolls := NewColorMap(scrolls,
+		ColorStop{0.0, color.RGBA{220, 200, 50, 255}}, // Gold
+		ColorStop{0.3, color.Transparent},
 	)
-	// Wait, `NewRect` draws border from edge inwards?
-	// `rect.go`: "If LineSize > 0... draws border".
-	// Implementation usually draws `LineSize` thick border.
 
-	// If we want a line at offset, we need Padding?
-	// `NewPadding` adds space *around*.
+	// Mask for border area (e.g. outer 20px)
+	borderMask := NewRect(
+		SetLineSize(25),
+		SetLineImageSource(goldScrolls),
+		SetFillColor(color.Transparent), // Transparent center (to show image... or just black here)
+	)
 
-	// Let's just stack borders.
-	// Bottom layer: Checker (20px)
-	// Top layer: Gold Line (start at 20, end at 22).
-	// We can use `NewRect` with `LineSize 22` but masked?
+	// Corner Gems?
+	gems := NewGeneric(func(x, y int) color.Color {
+		// Corners of 150x150: (0,0), (150,0), ...
+		// But generic doesn't know bounds.
+		// Assuming 150x150 for demo.
+		w, h := 150, 150
+		distTL := math.Sqrt(float64(x*x + y*y))
+		distTR := math.Sqrt(float64((x-w)*(x-w) + y*y))
+		distBL := math.Sqrt(float64(x*x + (y-h)*(y-h)))
+		distBR := math.Sqrt(float64((x-w)*(x-w) + (y-h)*(y-h)))
 
-	// Easier: Just return the checker border combined with wave for now.
-	// The prompt was "Wave border + checker border".
+		if distTL < 20 || distTR < 20 || distBL < 20 || distBR < 20 {
+			return color.RGBA{255, 50, 50, 255} // Ruby
+		}
+		return color.Transparent
+	})
 
-	return NewBlend(chk, gold, BlendNormal)
+	l1 := NewBlend(bg, borderMask, BlendNormal)
+	l2 := NewBlend(l1, gems, BlendNormal)
+
+	return l2
 }
+
 
 // --- Generic Helper ---
 
@@ -524,8 +476,8 @@ func GenerateFence(rect image.Rectangle) image.Image {
 func GenerateStripe(rect image.Rectangle) image.Image {
 	return ExampleNewStripe()
 }
-func GenerateCrystal(rect image.Rectangle) image.Image {
-	return ExampleNewCrystal()
+func GenerateAbstractArt(rect image.Rectangle) image.Image {
+	return ExampleNewAbstractArt()
 }
 func GeneratePixelCamo(rect image.Rectangle) image.Image {
 	return ExampleNewPixelCamo()
@@ -538,6 +490,9 @@ func GenerateWaveBorder(rect image.Rectangle) image.Image {
 }
 func GenerateCarpet(rect image.Rectangle) image.Image {
 	return ExampleNewCarpet()
+}
+func GeneratePersianRug(rect image.Rectangle) image.Image {
+	return ExampleNewPersianRug()
 }
 func GenerateLavaFlow(rect image.Rectangle) image.Image {
 	return ExampleNewLavaFlow()
@@ -555,11 +510,12 @@ func init() {
 	RegisterGenerator("Circuit", GenerateCircuit)
 	RegisterGenerator("Fence", GenerateFence)
 	RegisterGenerator("Stripe", GenerateStripe)
-	RegisterGenerator("Crystal", GenerateCrystal)
+	RegisterGenerator("AbstractArt", GenerateAbstractArt)
 	RegisterGenerator("PixelCamo", GeneratePixelCamo)
 	RegisterGenerator("CheckerBorder", GenerateCheckerBorder)
 	RegisterGenerator("WaveBorder", GenerateWaveBorder)
 	RegisterGenerator("Carpet", GenerateCarpet)
+	RegisterGenerator("PersianRug", GeneratePersianRug)
 	RegisterGenerator("LavaFlow", GenerateLavaFlow)
 	RegisterGenerator("MetalPlate", GenerateMetalPlate)
 	RegisterGenerator("FantasyFrame", GenerateFantasyFrame)
@@ -572,11 +528,12 @@ func init() {
 	RegisterReferences("Circuit", ref)
 	RegisterReferences("Fence", ref)
 	RegisterReferences("Stripe", ref)
-	RegisterReferences("Crystal", ref)
+	RegisterReferences("AbstractArt", ref)
 	RegisterReferences("PixelCamo", ref)
 	RegisterReferences("CheckerBorder", ref)
 	RegisterReferences("WaveBorder", ref)
 	RegisterReferences("Carpet", ref)
+	RegisterReferences("PersianRug", ref)
 	RegisterReferences("LavaFlow", ref)
 	RegisterReferences("MetalPlate", ref)
 	RegisterReferences("FantasyFrame", ref)
