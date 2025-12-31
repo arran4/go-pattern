@@ -15,15 +15,15 @@ func TestEdgeDetect_At(t *testing.T) {
 	// Coordinates:
 	// x=0,1 are Black. x=2,3 are White.
 
-	src := NewChecker(color.Black, color.White)
-	// Checker is 1x1 by default? No, NewChecker logic: At(x,y) if x%2==y%2.
-	// x%2 == y%2.
+	// Explicitly set SpaceSize to 1 to match legacy 1x1 checker behavior expected by this test.
+	src := NewChecker(color.Black, color.White, SetSpaceSize(1))
+	// Checker is 1x1.
 	// (0,0): 0==0 -> Black
 	// (1,0): 1!=0 -> White
 	// (2,0): 0==0 -> Black
 	// So Checker is 1 pixel wide alternating. This is very high frequency.
 
-	// Let's use NewSimpleZoom(checker, 2).
+	// NewSimpleZoom(src, 2).
 	// Pixels 0,0 and 1,0 map to checker 0,0 (Black).
 	// Pixels 2,0 and 3,0 map to checker 1,0 (White).
 

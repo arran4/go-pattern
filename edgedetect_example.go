@@ -38,7 +38,8 @@ func GenerateEdgeDetectReferences() (map[string]func(image.Rectangle) image.Imag
 	// We want to show the original image vs the edge detected one
 
 	sourceGen := func(b image.Rectangle) image.Image {
-		chk := NewChecker(color.Black, color.White, SetBounds(b))
+		// Explicitly set SpaceSize to 1 to match legacy 1x1 checker behavior expected by this demo.
+		chk := NewChecker(color.Black, color.White, SetBounds(b), SetSpaceSize(1))
 		return NewSimpleZoom(chk, 20, SetBounds(b))
 	}
 
