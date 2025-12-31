@@ -89,46 +89,120 @@ func ExampleNewIce() image.Image {
 	return layer2
 }
 
-// Circuit: Thin orthogonal traces with small nodes (Fixed again)
-func GenerateCircuit(rect image.Rectangle) image.Image {
+// Circuit: Thin orthogonal traces with small nodes (Redesigned from foundations)
+func GenerateCircuitImpl(rect image.Rectangle) image.Image {
 	// Base: Dark Green PCB
-	// Ensure background covers the area
 	bg := NewRect(SetFillColor(color.RGBA{0, 60, 20, 255}), SetBounds(rect))
 
-	// Traces: Use Manhattan Worley
-	// Increase frequency slightly to get more lines in 150px
-	traces := NewWorleyNoise(
-		SetWorleyMetric(MetricManhattan),
-		SetWorleyOutput(OutputF2MinusF1),
-		SetFrequency(0.12),
-		NoiseSeed(100),
-	)
+	// Use a grid-based approach.
+	// Divide into cells. Each cell contains a trace segment.
 
-	// Map to lines. F2-F1 is low at edges.
-	// Make traces brighter/lighter green.
-	traceLayer := NewColorMap(traces,
-		ColorStop{0.0, color.RGBA{80, 180, 80, 255}}, // Brighter Green
-		ColorStop{0.1, color.RGBA{80, 180, 80, 255}},
-		ColorStop{0.12, color.Transparent},
-	)
+	traces := NewGeneric(func(x, y int) color.Color {
+		cellSize := 20
+		cx, cy := x/cellSize, y/cellSize
 
-	// Pads/Vias
-	pads := NewWorleyNoise(
-		SetWorleyMetric(MetricManhattan),
-		SetWorleyOutput(OutputF1),
-		SetFrequency(0.12),
-		NoiseSeed(100),
-	)
-	padLayer := NewColorMap(pads,
-		ColorStop{0.0, color.RGBA{200, 180, 50, 255}}, // Gold
-		ColorStop{0.15, color.RGBA{200, 180, 50, 255}},
-		ColorStop{0.17, color.Transparent},
-	)
+		// Stable hash for cell type
+		h := StableHash(cx, cy, 123)
 
+		// Type of trace:
+		// 0: Empty
+		// 1: Horizontal Line
+		// 2: Vertical Line
+		// 3: Corner (Top-Left)
+		// 4: Corner (Top-Right)
+		// 5: Corner (Bottom-Left)
+		// 6: Corner (Bottom-Right)
+		// 7: Cross
+		// 8: Pad
+
+		// Bias towards connections
+		t := (h % 100)
+		typeCode := 0
+		if t < 10 {
+			typeCode = 0 // Empty
+		} else if t < 40 {
+			typeCode = 1 // Horizontal
+		} else if t < 70 {
+			typeCode = 2 // Vertical
+		} else if t < 75 {
+			typeCode = 3
+		} else if t < 80 {
+			typeCode = 4
+		} else if t < 85 {
+			typeCode = 5
+		} else if t < 90 {
+			typeCode = 6
+		} else if t < 95 {
+			typeCode = 7
+		} else {
+			typeCode = 8 // Pad
+		}
+
+		// Local coordinates centered in cell
+		// u, v range roughly -10 to 10
+		ux := float64(x%cellSize) - float64(cellSize)/2.0
+		uy := float64(y%cellSize) - float64(cellSize)/2.0
+
+		thickness := 2.0
+
+		// Helper for drawing lines
+		drawLine := func(x1, y1, x2, y2 float64) bool {
+			// Distance from point to line segment
+			l2 := (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)
+			if l2 == 0 { return math.Sqrt((ux-x1)*(ux-x1) + (uy-y1)*(uy-y1)) < thickness }
+			tVal := ((ux-x1)*(x2-x1) + (uy-y1)*(y2-y1)) / l2
+			if tVal < 0 { tVal = 0 }
+			if tVal > 1 { tVal = 1 }
+			px, py := x1 + tVal*(x2-x1), y1 + tVal*(y2-y1)
+			dist := math.Sqrt((ux-px)*(ux-px) + (uy-py)*(uy-py))
+			return dist < thickness
+		}
+
+		drawPad := func() bool {
+			dist := math.Sqrt(ux*ux + uy*uy)
+			return dist < 5.0
+		}
+
+		isTrace := false
+		isPad := false
+
+		half := float64(cellSize)/2.0
+
+		switch typeCode {
+		case 1: // Horiz
+			isTrace = drawLine(-half, 0, half, 0)
+		case 2: // Vert
+			isTrace = drawLine(0, -half, 0, half)
+		case 3: // Corner TL (Left to Top)
+			isTrace = drawLine(-half, 0, 0, 0) || drawLine(0, -half, 0, 0)
+		case 4: // Corner TR (Right to Top)
+			isTrace = drawLine(half, 0, 0, 0) || drawLine(0, -half, 0, 0)
+		case 5: // Corner BL (Left to Bottom)
+			isTrace = drawLine(-half, 0, 0, 0) || drawLine(0, half, 0, 0)
+		case 6: // Corner BR (Right to Bottom)
+			isTrace = drawLine(half, 0, 0, 0) || drawLine(0, half, 0, 0)
+		case 7: // Cross
+			isTrace = drawLine(-half, 0, half, 0) || drawLine(0, -half, 0, half)
+		case 8: // Pad
+			isPad = drawPad()
+			// And connect to a neighbor? Let's just be a dot for now.
+		}
+
+		if isPad {
+			return color.RGBA{200, 180, 50, 255} // Gold
+		}
+		if isTrace {
+			return color.RGBA{100, 200, 100, 255} // Light Green
+		}
+
+		return color.Transparent
+	})
+
+	// Add Chips (Black Rectangles) on top
 	chipGen := func(u, v float64, hash uint64) (color.Color, float64) {
-		if (hash & 255) < 60 {
-			w := 0.5
-			h := 0.5
+		if (hash & 255) < 30 {
+			w, h := 0.6, 0.4
+			if (hash & 1) == 1 { w, h = 0.4, 0.6 }
 			if math.Abs(u) < w/2 && math.Abs(v) < h/2 {
 				return color.RGBA{20, 20, 20, 255}, 1.0
 			}
@@ -137,21 +211,20 @@ func GenerateCircuit(rect image.Rectangle) image.Image {
 	}
 
 	chips := NewScatter(
-		SetScatterFrequency(0.06),
+		SetScatterFrequency(0.04), // Larger grid for chips
 		SetScatterDensity(1.0),
 		SetScatterGenerator(chipGen),
-		func(i any) { if p, ok := i.(*Scatter); ok { p.Seed = 101 } },
+		func(i any) { if p, ok := i.(*Scatter); ok { p.Seed = 200 } },
 	)
 
-	l1 := NewBlend(bg, traceLayer, BlendNormal)
-	l2 := NewBlend(l1, padLayer, BlendNormal)
-	l3 := NewBlend(l2, chips, BlendNormal)
+	l1 := NewBlend(bg, traces, BlendNormal)
+	l2 := NewBlend(l1, chips, BlendNormal)
 
-	return l3
+	return l2
 }
 
 func ExampleNewCircuit() image.Image {
-	return GenerateCircuit(image.Rect(0, 0, 150, 150))
+	return GenerateCircuitImpl(image.Rect(0, 0, 150, 150))
 }
 
 // Fence: Diagonal diamond grid (Chain link)
@@ -293,76 +366,86 @@ func ExampleNewCarpet() image.Image {
 	return l3
 }
 
-// Persian Rug: Ornate patterns (Redesigned)
-func GeneratePersianRug(rect image.Rectangle) image.Image {
-	// Base: Deep Red/Blue
+// Persian Rug: Ornate patterns (Redesigned + Internals)
+func GeneratePersianRugImpl(rect image.Rectangle) image.Image {
+	// Base: Deep Red
 	bg := NewRect(SetFillColor(color.RGBA{60, 10, 10, 255}), SetBounds(rect))
 
-	// Central Medallion: Intricate layers
+	// Central Medallion
 	cx, cy := rect.Dx()/2, rect.Dy()/2
-
-	// Layer 1: Large starburst/medallion base (Blue)
 	medBase := NewConcentricRings(
-		[]color.Color{color.Transparent}, // Placeholder
+		[]color.Color{color.Transparent},
 		SetCenter(cx, cy),
 		SetFrequency(0.8),
 	)
 	medColor := NewColorMap(medBase,
 		ColorStop{0.0, color.RGBA{20, 20, 80, 255}}, // Center Blue
-		ColorStop{0.3, color.RGBA{150, 120, 50, 255}}, // Gold Ring
-		ColorStop{0.35, color.RGBA{20, 20, 80, 255}}, // Blue Ring
+		ColorStop{0.3, color.RGBA{150, 120, 50, 255}}, // Gold
+		ColorStop{0.35, color.RGBA{20, 20, 80, 255}}, // Blue
 		ColorStop{0.6, color.Transparent},
 	)
 
-	// Field Pattern: Small repeating floral/geometric motif
-	// Use Checker with generic fill? Or small generic pattern.
-	fieldPattern := NewGeneric(func(x, y int) color.Color {
-		// Tiled 20x20
-		tx, ty := x%20, y%20
-		// Small flower shape
-		dx, dy := tx-10, ty-10
-		dist := math.Sqrt(float64(dx*dx + dy*dy))
-		if dist < 4 {
-			return color.RGBA{200, 200, 180, 50} // Light motif
+	// Field Pattern: Intricate Internals
+	// Rotate 45 Checker + Floral motifs
+	lattice := NewRotate(
+		NewChecker(
+			color.RGBA{100, 30, 30, 255},
+			color.Transparent,
+			SetSpaceSize(20),
+		), 45)
+
+	// Small flowers in grid
+	flowers := NewGeneric(func(x, y int) color.Color {
+		// Grid 20x20 offset
+		tx, ty := (x+10)%20, (y+10)%20
+		dx, dy := float64(tx)-10.0, float64(ty)-10.0
+		dist := math.Sqrt(dx*dx + dy*dy)
+		if dist < 5 {
+			// Flower petals logic?
+			// Just a soft dot for now
+			return color.RGBA{200, 180, 150, 100}
 		}
 		return color.Transparent
 	})
 
 	// Complex Border System
-	// We use a distance-based generator to draw multiple border bands
 	borderGen := NewGeneric(func(x, y int) color.Color {
 		w, h := rect.Dx(), rect.Dy()
-		// Dist to nearest edge
 		d := x
 		if w-1-x < d { d = w-1-x }
 		if y < d { d = y }
 		if h-1-y < d { d = h-1-y }
 
-		// Bands
-		if d < 10 { return color.RGBA{20, 20, 60, 255} } // Outer Dark Blue
-		if d < 12 { return color.RGBA{180, 160, 100, 255} } // Gold line
+		// Outer Band (Blue)
+		if d < 10 { return color.RGBA{20, 20, 60, 255} }
+		// Gold Line
+		if d < 12 { return color.RGBA{180, 160, 100, 255} }
+		// Main Border Band (Red with pattern)
 		if d < 25 {
-			// Main Border band (Red with pattern?)
-			// Simple pattern: alternating blocks?
-			if (x+y)%10 < 5 {
+			// Detailed border pattern
+			// Alternating geometric shapes
+			pat := (x + y) / 5
+			if pat%2 == 0 {
 				return color.RGBA{100, 30, 30, 255}
 			}
 			return color.RGBA{120, 40, 40, 255}
 		}
-		if d < 27 { return color.RGBA{180, 160, 100, 255} } // Gold line
+		// Gold Line
+		if d < 27 { return color.RGBA{180, 160, 100, 255} }
 
-		return color.Transparent // Inside field
+		return color.Transparent
 	})
 
-	l1 := NewBlend(bg, fieldPattern, BlendNormal)
-	l2 := NewBlend(l1, medColor, BlendNormal)
-	l3 := NewBlend(l2, borderGen, BlendNormal)
+	l1 := NewBlend(bg, lattice, BlendNormal)
+	l2 := NewBlend(l1, flowers, BlendNormal) // Internal Details
+	l3 := NewBlend(l2, medColor, BlendNormal)
+	l4 := NewBlend(l3, borderGen, BlendNormal)
 
-	return l3
+	return l4
 }
 
 func ExampleNewPersianRug() image.Image {
-	return GeneratePersianRug(image.Rect(0, 0, 150, 150))
+	return GeneratePersianRugImpl(image.Rect(0, 0, 150, 150))
 }
 
 // Lava Flow: Dark base + bright streaks + subtle noise
@@ -520,6 +603,9 @@ func GenerateDungeon(rect image.Rectangle) image.Image {
 func GenerateIce(rect image.Rectangle) image.Image {
 	return ExampleNewIce()
 }
+func GenerateCircuit(rect image.Rectangle) image.Image {
+	return GenerateCircuitImpl(rect)
+}
 func GenerateFence(rect image.Rectangle) image.Image {
 	return ExampleNewFence()
 }
@@ -541,13 +627,16 @@ func GenerateWaveBorder(rect image.Rectangle) image.Image {
 func GenerateCarpet(rect image.Rectangle) image.Image {
 	return ExampleNewCarpet()
 }
+func GeneratePersianRug(rect image.Rectangle) image.Image {
+	return GeneratePersianRugImpl(rect)
+}
 func GenerateLavaFlow(rect image.Rectangle) image.Image {
 	return ExampleNewLavaFlow()
 }
 func GenerateMetalPlate(rect image.Rectangle) image.Image {
 	return ExampleNewMetalPlate()
 }
-// GenerateFantasyFrame, GenerateCircuit, GeneratePersianRug are already defined as functions and registered below
+// GenerateFantasyFrame is defined above
 
 func init() {
 	RegisterGenerator("Dungeon", GenerateDungeon)
