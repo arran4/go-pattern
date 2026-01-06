@@ -3,10 +3,10 @@ package pattern_cli
 
 import (
 	"fmt"
+	"github.com/arran4/go-pattern"
+	"github.com/arran4/go-pattern/dsl"
 	"image"
 	"strconv"
-	"github.com/arran4/go-pattern/dsl"
-	"github.com/arran4/go-pattern"
 )
 
 func RegisterGeneratedCommands(fm dsl.FuncMap) {
@@ -127,6 +127,18 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("curvature requires an input image")
 		}
 		return pattern.NewCurvature(input), nil
+	}
+	fm["subpixel_lines"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) < 0 {
+			return nil, fmt.Errorf("subpixel_lines requires 0 arguments")
+		}
+		return pattern.NewSubpixelLines(), nil
+	}
+	fm["demo_subpixel_lines"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) < 0 {
+			return nil, fmt.Errorf("demo_subpixel_lines requires 0 arguments")
+		}
+		return pattern.NewDemoSubpixelLines(), nil
 	}
 	fm["xor_pattern"] = func(args []string, input image.Image) (image.Image, error) {
 		if len(args) < 0 {
