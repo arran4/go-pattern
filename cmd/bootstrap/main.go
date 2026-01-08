@@ -185,12 +185,21 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 		}
 	}
 
-	// Sort by Order
+	// Sort by Order, then by name for stability
 	sort.Slice(patterns, func(i, j int) bool {
-		return patterns[i].Order < patterns[j].Order
+		if patterns[i].Order != patterns[j].Order {
+			return patterns[i].Order < patterns[j].Order
+		}
+		return patterns[i].Name < patterns[j].Name
 	})
 
 	return patterns, nil
+}
+
+func sortCommands(commands []Command) {
+	sort.Slice(commands, func(i, j int) bool {
+		return commands[i].Name < commands[j].Name
+	})
 }
 
 func findStringVar(f *ast.File, name string) string {
@@ -457,6 +466,13 @@ func (p *PatternDemo) Generate() image.Image {
 	return dst
 }
 
+type Command struct {
+	Name       string
+	FuncName   string
+	Args       []string
+	TakesInput bool
+}
+
 func generateCLIInit(demos []PatternDemo, outfile string) error {
 	fset := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fset, ".", nil, 0)
@@ -464,12 +480,6 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 		return err
 	}
 
-	type Command struct {
-		Name      string
-		FuncName  string
-		Args      []string
-		TakesInput bool
-	}
 	var commands []Command
 
 	for _, pkg := range pkgs {
@@ -543,6 +553,8 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 			})
 		}
 	}
+
+	sortCommands(commands)
 
 	// Generate file content
 	var sb strings.Builder
