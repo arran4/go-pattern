@@ -5,9 +5,9 @@ import (
 )
 
 var (
-	ChippedBrickOutputFilename = "chipped_brick.png"
+	ChippedBrickOutputFilename = "brick_weathered.png"
 	ChippedBrickZoomLevels     = []int{}
-	ChippedBrickBaseLabel      = "ChippedBrick"
+	ChippedBrickBaseLabel      = "Brick Weathered"
 )
 
 func init() {

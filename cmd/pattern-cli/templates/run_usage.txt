@@ -1,5 +1,8 @@
-Usage: pattern-cli run <subcommand> [arguments]
+Usage: pattern-cli run [flags...]
 
 Subcommands:
+    help         Print this help message
+    usage        Print this usage message
 
-    version      Print version information
+Flags:
+    --pipeline string
