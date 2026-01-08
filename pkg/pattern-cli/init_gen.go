@@ -662,4 +662,32 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		}
 		return nil, fmt.Errorf("command aligned has unsupported argument types")
 	}
+	fm["concentric_water"] = func(args []string, input image.Image) (image.Image, error) {
+		var ops []func(any)
+		if len(args) > 0 {
+			spacing, err := strconv.ParseFloat(args[0], 64)
+			if err != nil {
+				return nil, fmt.Errorf("argument 0 (ring_spacing) must be a float: %v", err)
+			}
+			ops = append(ops, pattern.ConcentricWaterRingSpacing(spacing))
+		}
+		if len(args) > 1 {
+			amplitude, err := strconv.ParseFloat(args[1], 64)
+			if err != nil {
+				return nil, fmt.Errorf("argument 1 (amplitude) must be a float: %v", err)
+			}
+			ops = append(ops, pattern.ConcentricWaterAmplitude(amplitude))
+		}
+		if len(args) > 2 {
+			falloff, err := strconv.ParseFloat(args[2], 64)
+			if err != nil {
+				return nil, fmt.Errorf("argument 2 (falloff) must be a float: %v", err)
+			}
+			ops = append(ops, pattern.ConcentricWaterAmplitudeFalloff(falloff))
+		}
+		if len(args) > 3 {
+			return nil, fmt.Errorf("too many arguments for concentric_water, expects at most 3")
+		}
+		return pattern.NewConcentricWater(ops...), nil
+	}
 }

@@ -3749,6 +3749,24 @@ These patterns are designed to be:
 
 
 
+### ConcentricWater Pattern
+
+
+
+![ConcentricWater Pattern](concentric_water.png)
+
+```go
+	return NewConcentricWater(
+		ConcentricWaterRingSpacing(14.0),
+		ConcentricWaterAmplitude(1.1),
+		ConcentricWaterAmplitudeFalloff(0.018),
+		ConcentricWaterBaseTint(color.RGBA{24, 104, 168, 255}),
+		ConcentricWaterNormalStrength(4.0),
+	)
+```
+
+
+
 ## License
 
 This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
