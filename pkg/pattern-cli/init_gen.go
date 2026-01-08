@@ -524,8 +524,14 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		}
 		return pattern.NewChecker(arg0, arg1), nil
 	}
+	fm["chunky_bands"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("chunky_bands requires 0 arguments")
+		}
+		return pattern.NewChunkyBands(), nil
+	}
 	fm["demo_checker"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
+		if len(args) != 0 {
 			return nil, fmt.Errorf("demo_checker requires 0 arguments")
 		}
 		return pattern.NewDemoChecker(), nil
