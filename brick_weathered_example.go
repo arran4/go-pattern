@@ -27,7 +27,7 @@ func GenerateBrickWeathered(bounds image.Rectangle) image.Image {
 	)
 }
 
-// ExampleNewChippedBrick provides a sample for documentation use.
-func ExampleNewChippedBrick() image.Image {
+// ExampleNewBrick_weathered provides a sample for documentation use.
+func ExampleNewBrick_weathered() image.Image {
 	return GenerateBrickWeathered(image.Rect(0, 0, 300, 300))
 }
