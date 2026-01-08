@@ -13,6 +13,21 @@ These patterns are designed to be:
 ## Patterns
 
 
+### PaintedPlanks Pattern
+
+![PaintedPlanks Pattern](painted_planks.png)
+
+```go
+	return NewPaintedPlanks(
+		SetPlankBaseWidth(72),
+		SetPlankWidthVariance(0.32),
+		SetGrainIntensity(0.75),
+		SetPaintWearAmount(0.42),
+		SetPaintColor(color.RGBA{177, 202, 214, 255}),
+	)
+```
+
+
 ### PersianRug Pattern
 
 

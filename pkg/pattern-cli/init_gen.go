@@ -662,4 +662,10 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		}
 		return nil, fmt.Errorf("command aligned has unsupported argument types")
 	}
+	fm["painted_planks"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) > 0 {
+			return nil, fmt.Errorf("painted_planks does not take any arguments")
+		}
+		return pattern.NewPaintedPlanks(), nil
+	}
 }
