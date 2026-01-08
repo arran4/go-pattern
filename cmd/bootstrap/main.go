@@ -185,9 +185,12 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 		}
 	}
 
-	// Sort by Order
+	// Sort by Order, then by Name for stability
 	sort.Slice(patterns, func(i, j int) bool {
-		return patterns[i].Order < patterns[j].Order
+		if patterns[i].Order != patterns[j].Order {
+			return patterns[i].Order < patterns[j].Order
+		}
+		return patterns[i].Name < patterns[j].Name
 	})
 
 	return patterns, nil
