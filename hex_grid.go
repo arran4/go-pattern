@@ -127,8 +127,6 @@ func axialRound(q, r float64) (int, int) {
 
 	if xDiff > yDiff && xDiff > zDiff {
 		rx = -ry - rz
-	} else if yDiff > zDiff {
-		ry = -rx - rz
 	} else {
 		rz = -rx - ry
 	}
