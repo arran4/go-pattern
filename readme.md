@@ -3752,3 +3752,23 @@ These patterns are designed to be:
 ## License
 
 This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
+
+### SubpixelLines Pattern
+Subpixel lines with per-channel offset and vignette.
+![SubpixelLines](subpixel_lines.png)
+```go
+	i := NewSubpixelLines(
+		SetLineThickness(2),
+		SetOffsetStrength(0.65),
+		SetVignetteRadius(0.82),
+	)
+	f, err := os.Create(SubpixelLinesOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	err = png.Encode(f, i)
+	if err != nil {
+		panic(err)
+	}
+```

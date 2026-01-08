@@ -662,4 +662,16 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		}
 		return nil, fmt.Errorf("command aligned has unsupported argument types")
 	}
+	fm["subpixel_lines"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) > 0 {
+			return nil, fmt.Errorf("subpixel_lines requires 0 arguments")
+		}
+		return pattern.NewSubpixelLines(), nil
+	}
+	fm["demo_subpixel_lines"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) > 0 {
+			return nil, fmt.Errorf("demo_subpixel_lines requires 0 arguments")
+		}
+		return pattern.NewDemoSubpixelLines(), nil
+	}
 }
