@@ -1,5 +1,5 @@
-Usage: pattern-cli repl <subcommand> [arguments]
+Usage: pattern-cli repl
 
 Subcommands:
-
-    version      Print version information
+    help         Print this help message
+    usage        Print this usage message
