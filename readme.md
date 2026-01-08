@@ -13,6 +13,34 @@ These patterns are designed to be:
 ## Patterns
 
 
+### WindRidges Pattern
+
+
+
+![WindRidges Pattern](wind.png)
+
+```go
+	// Base white noise
+	noise := NewNoise(
+		SetBounds(b),
+		SetNoiseAlgorithm(&PerlinNoise{
+			Seed:        2024,
+			Frequency:   0.08,
+			Octaves:     3,
+			Persistence: 0.55,
+		}),
+	)
+
+	return NewWindRidges(
+		SetBounds(b),
+		SetWindNoise(noise),
+		SetWindAngle(28.0),
+		SetStreakLength(22),
+		SetWindContrast(1.3),
+	)
+```
+
+
 ### PersianRug Pattern
 
 
