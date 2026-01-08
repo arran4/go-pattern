@@ -198,7 +198,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return pattern.NewDemoHorizontalLine(), nil
 	}
 	fm["vertical_line"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
+		if len(args) != 0 {
 			return nil, fmt.Errorf("vertical_line requires 0 arguments")
 		}
 		return pattern.NewVerticalLine(), nil

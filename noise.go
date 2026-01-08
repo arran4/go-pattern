@@ -217,6 +217,37 @@ func (n *PerlinNoise) noise(x, y float64) float64 {
 		lerp(u, grad(n.p[A+1], x, y-1), grad(n.p[B+1], x-1, y-1)))
 }
 
+// Sample returns the Perlin noise value in the range [0,1] at floating-point coordinates.
+// This allows downstream patterns to query the same noise with custom coordinate transforms.
+func (n *PerlinNoise) Sample(x, y float64) float64 {
+	n.init()
+
+	total := 0.0
+	maxAmplitude := 0.0
+	amplitude := 1.0
+	frequency := n.Frequency
+
+	for i := 0; i < n.Octaves; i++ {
+		total += n.noise(x*frequency, y*frequency) * amplitude
+		maxAmplitude += amplitude
+		amplitude *= n.Persistence
+		frequency *= n.Lacunarity
+	}
+
+	if maxAmplitude == 0 {
+		return 0.5
+	}
+
+	normalized := (total/maxAmplitude + 1.0) * 0.5
+	if normalized < 0 {
+		return 0
+	}
+	if normalized > 1 {
+		return 1
+	}
+	return normalized
+}
+
 func fade(t float64) float64 {
 	return t * t * t * (t*(t*6-15) + 10)
 }
