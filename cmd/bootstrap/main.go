@@ -185,9 +185,12 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 		}
 	}
 
-	// Sort by Order
+	// Sort by Order, then by Name for stability
 	sort.Slice(patterns, func(i, j int) bool {
-		return patterns[i].Order < patterns[j].Order
+		if patterns[i].Order != patterns[j].Order {
+			return patterns[i].Order < patterns[j].Order
+		}
+		return patterns[i].Name < patterns[j].Name
 	})
 
 	return patterns, nil
@@ -543,6 +546,11 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 			})
 		}
 	}
+
+	// Sort commands by name for stable output
+	sort.Slice(commands, func(i, j int) bool {
+		return commands[i].Name < commands[j].Name
+	})
 
 	// Generate file content
 	var sb strings.Builder
