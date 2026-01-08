@@ -5,13 +5,13 @@ import (
 )
 
 var (
-	ChippedBrickOutputFilename = "chipped_brick.png"
+	ChippedBrickOutputFilename = "brick_weathered.png"
 	ChippedBrickZoomLevels     = []int{}
-	ChippedBrickBaseLabel      = "ChippedBrick"
+	ChippedBrickBaseLabel      = "Brick Weathered"
 )
 
 func init() {
-	RegisterGenerator(ChippedBrickBaseLabel, GenerateBrickWeathered)
+	RegisterGenerator("ChippedBrick", GenerateBrickWeathered)
 }
 
 // GenerateChippedBrick builds a chipped brick wall example with hue variation and recessed mortar.

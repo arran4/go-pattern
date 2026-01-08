@@ -547,7 +547,6 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 		}
 	}
 
-	// Sort commands by name for stable output
 	sort.Slice(commands, func(i, j int) bool {
 		return commands[i].Name < commands[j].Name
 	})
