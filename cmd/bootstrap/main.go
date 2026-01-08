@@ -187,7 +187,10 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 
 	// Sort by Order
 	sort.Slice(patterns, func(i, j int) bool {
-		return patterns[i].Order < patterns[j].Order
+		if patterns[i].Order != patterns[j].Order {
+			return patterns[i].Order < patterns[j].Order
+		}
+		return patterns[i].Name < patterns[j].Name
 	})
 
 	return patterns, nil
@@ -299,11 +302,11 @@ func DrawDemoPattern(pattern *PatternDemo, size image.Rectangle) {
 	i := addBorder(pattern.Generate())
 	f, err := os.Create(pattern.OutputFilename)
 	if err != nil {
-		log.Fatalf("Error creating i file: %v", err)
+		log.Fatalf("Error creating image file: %v", err)
 	}
 	defer func() {
 		if e := f.Close(); e != nil {
-			log.Fatalf("Error closing i file: %v", e)
+			log.Fatalf("Error closing image file: %v", e)
 		}
 	}()
 	e := path.Ext(pattern.OutputFilename)
@@ -315,12 +318,12 @@ func DrawDemoPattern(pattern *PatternDemo, size image.Rectangle) {
 	case ".gif":
 		err = gif.Encode(f, i, nil)
 	default:
-		log.Fatalf("Unknown i format: %s", e)
+		log.Fatalf("Unknown image format: %s", e)
 	}
 	if err != nil {
-		log.Fatalf("Error encoding i: %v", err)
+		log.Fatalf("Error encoding image: %v", err)
 	}
-	log.Printf("Generated i %s successfully\n", pattern.OutputFilename)
+	log.Printf("Generated image %s successfully\n", pattern.OutputFilename)
 }
 
 func addBorder(img image.Image) image.Image {
@@ -543,6 +546,11 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 			})
 		}
 	}
+
+	// Sort commands by name for stable output
+	sort.Slice(commands, func(i, j int) bool {
+		return commands[i].Name < commands[j].Name
+	})
 
 	// Generate file content
 	var sb strings.Builder

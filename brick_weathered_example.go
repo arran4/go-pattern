@@ -5,12 +5,16 @@ import (
 )
 
 var (
+	ChippedBrickOutputFilename    = "chipped_brick.png"
+	ChippedBrickZoomLevels        = []int{}
+	ChippedBrickBaseLabel         = "Chipped Brick"
 	Brick_weatheredOutputFilename = "brick_weathered.png"
 	Brick_weatheredZoomLevels     = []int{}
 	Brick_weatheredBaseLabel      = "Brick Weathered"
 )
 
 func init() {
+	RegisterGenerator(ChippedBrickBaseLabel, GenerateBrickWeathered)
 	RegisterGenerator(Brick_weatheredBaseLabel, GenerateBrickWeathered)
 }
 
