@@ -6,6 +6,50 @@ import (
 	"time"
 )
 
+// BlockSize configures the size of pixel blocks in a pattern.
+type BlockSize struct {
+	BlockSize int
+}
+
+func (s *BlockSize) SetBlockSize(v int) {
+	s.BlockSize = v
+}
+
+type hasBlockSize interface {
+	SetBlockSize(int)
+}
+
+// SetBlockSize creates an option to set the block size.
+func SetBlockSize(v int) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasBlockSize); ok {
+			h.SetBlockSize(v)
+		}
+	}
+}
+
+// Palette configures a list of colors used by a pattern.
+type Palette struct {
+	Palette []color.Color
+}
+
+func (s *Palette) SetPalette(v []color.Color) {
+	s.Palette = v
+}
+
+type hasPalette interface {
+	SetPalette([]color.Color)
+}
+
+// SetPalette creates an option to set a color palette.
+func SetPalette(v ...color.Color) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasPalette); ok {
+			h.SetPalette(v)
+		}
+	}
+}
+
 // SpaceSize configures the size of spaces in a pattern.
 type SpaceSize struct {
 	SpaceSize int
@@ -642,6 +686,49 @@ func SetLongitudeLines(v int) func(any) {
 	return func(i any) {
 		if h, ok := i.(hasLongitudeLines); ok {
 			h.SetLongitudeLines(v)
+		}
+	}
+}
+// BlockSize configures the size of pixel blocks in a pattern.
+type BlockSize struct {
+	BlockSize int
+}
+
+func (s *BlockSize) SetBlockSize(v int) {
+	s.BlockSize = v
+}
+
+type hasBlockSize interface {
+	SetBlockSize(int)
+}
+
+// SetBlockSize creates an option to set the block size.
+func SetBlockSize(v int) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasBlockSize); ok {
+			h.SetBlockSize(v)
+		}
+	}
+}
+
+// Palette configures a list of colors used by a pattern.
+type Palette struct {
+	Palette []color.Color
+}
+
+func (s *Palette) SetPalette(v []color.Color) {
+	s.Palette = v
+}
+
+type hasPalette interface {
+	SetPalette([]color.Color)
+}
+
+// SetPalette creates an option to set a color palette.
+func SetPalette(v ...color.Color) func(any) {
+	return func(i any) {
+		if h, ok := i.(hasPalette); ok {
+			h.SetPalette(v)
 		}
 	}
 }

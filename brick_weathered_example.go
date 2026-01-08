@@ -5,17 +5,17 @@ import (
 )
 
 var (
-	ChippedBrickOutputFilename = "brick_weathered.png"
+	ChippedBrickOutputFilename = "chipped_brick.png"
 	ChippedBrickZoomLevels     = []int{}
-	ChippedBrickBaseLabel      = "Brick Weathered"
+	ChippedBrickBaseLabel      = "ChippedBrick"
 )
 
 func init() {
-	RegisterGenerator("ChippedBrick", GenerateBrickWeathered)
+	RegisterGenerator(ChippedBrickBaseLabel, GenerateBrickWeathered)
 }
 
-// GenerateBrickWeathered builds a chipped brick wall example with hue variation and recessed mortar.
-func GenerateBrickWeathered(bounds image.Rectangle) image.Image {
+// GenerateChippedBrick builds a chipped brick wall example with hue variation and recessed mortar.
+func GenerateChippedBrick(bounds image.Rectangle) image.Image {
 	return NewChippedBrick(
 		SetBounds(bounds),
 		SetBrickSize(48, 22),
@@ -29,5 +29,5 @@ func GenerateBrickWeathered(bounds image.Rectangle) image.Image {
 
 // ExampleNewChippedBrick provides a sample for documentation use.
 func ExampleNewChippedBrick() image.Image {
-	return GenerateBrickWeathered(image.Rect(0, 0, 300, 300))
+	return GenerateChippedBrick(image.Rect(0, 0, 300, 300))
 }
