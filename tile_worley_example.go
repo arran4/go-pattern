@@ -8,7 +8,7 @@ import (
 var (
 	WorleyTilesOutputFilename = "tile_worley.png"
 	WorleyTilesZoomLevels     = []int{}
-	WorleyTilesBaseLabel      = "Tile_worley"
+	WorleyTilesBaseLabel      = "WorleyTiles"
 )
 
 func init() {

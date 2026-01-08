@@ -11,7 +11,7 @@ var (
 )
 
 func init() {
-	RegisterGenerator(ChippedBrickBaseLabel, GenerateBrickWeathered)
+	RegisterGenerator(ChippedBrickBaseLabel, GenerateChippedBrick)
 }
 
 // GenerateChippedBrick builds a chipped brick wall example with hue variation and recessed mortar.

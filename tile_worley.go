@@ -171,8 +171,9 @@ func (w *WorleyTiles) At(x, y int) color.Color {
 	}
 	stoneMask := smoothStep(mortarWidth, mortarWidth*1.7, borderDistance)
 
-	baseColor := w.palette()[int(closestHash)%len(w.palette())]
-	jittered := jitterColor(baseColor, w.PaletteSpread, closestHash, closestCellX, closestCellY)
+	palette := w.palette()
+	baseColor := palette[int(closestHash%uint64(len(palette)))]
+	jittered := tileJitterColor(baseColor, w.PaletteSpread, closestHash, closestCellX, closestCellY)
 
 	edgeLight := 0.75 + 0.25*smoothStep(mortarWidth*0.5, 1.0, borderDistance)
 	centerLight := 0.8 + 0.2*(1.0-minNorm)
@@ -184,7 +185,7 @@ func (w *WorleyTiles) At(x, y int) color.Color {
 	return final
 }
 
-func jitterColor(c color.RGBA, spread float64, h uint64, cellX, cellY int) color.RGBA {
+func tileJitterColor(c color.RGBA, spread float64, h uint64, cellX, cellY int) color.RGBA {
 	if spread <= 0 {
 		return c
 	}
@@ -193,14 +194,14 @@ func jitterColor(c color.RGBA, spread float64, h uint64, cellX, cellY int) color
 	seedG := StableHash(cellX-11, cellY+23, h>>1)
 	seedB := StableHash(cellX+5, cellY+5, h<<1)
 
-	r := jitterChannel(float64(c.R), spread, seedR)
-	g := jitterChannel(float64(c.G), spread, seedG)
-	b := jitterChannel(float64(c.B), spread, seedB)
+	r := tileJitterChannel(float64(c.R), spread, seedR)
+	g := tileJitterChannel(float64(c.G), spread, seedG)
+	b := tileJitterChannel(float64(c.B), spread, seedB)
 
 	return color.RGBA{uint8(r), uint8(g), uint8(b), c.A}
 }
 
-func jitterChannel(base float64, spread float64, h uint64) float64 {
+func tileJitterChannel(base float64, spread float64, h uint64) float64 {
 	rand := float64(h&0xFFFF) / 65535.0
 	scale := 1 + (rand-0.5)*2*spread
 	return clamp255(base * scale)
@@ -213,36 +214,6 @@ func scaleColor(c color.RGBA, scale float64) color.RGBA {
 		B: uint8(clamp255(float64(c.B) * scale)),
 		A: c.A,
 	}
-}
-
-func lerpRGBA(a, b color.RGBA, t float64) color.RGBA {
-	t = clamp01(t)
-	return color.RGBA{
-		R: uint8(clamp255(float64(a.R) + (float64(b.R)-float64(a.R))*t)),
-		G: uint8(clamp255(float64(a.G) + (float64(b.G)-float64(a.G))*t)),
-		B: uint8(clamp255(float64(a.B) + (float64(b.B)-float64(a.B))*t)),
-		A: uint8(clamp255(float64(a.A) + (float64(b.A)-float64(a.A))*t)),
-	}
-}
-
-func clamp01(v float64) float64 {
-	if v < 0 {
-		return 0
-	}
-	if v > 1 {
-		return 1
-	}
-	return v
-}
-
-func clamp255(v float64) float64 {
-	if v < 0 {
-		return 0
-	}
-	if v > 255 {
-		return 255
-	}
-	return v
 }
 
 func smoothStep(edge0, edge1, x float64) float64 {

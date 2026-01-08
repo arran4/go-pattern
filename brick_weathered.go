@@ -211,16 +211,6 @@ func mortarColor(x, y, brickMinX, brickMaxX, brickMinY, brickMaxY, depth float64
 	}
 }
 
-func clamp01(v float64) float64 {
-	if v < 0 {
-		return 0
-	}
-	if v > 1 {
-		return 1
-	}
-	return v
-}
-
 func clampColor(v float64) uint8 {
 	if v < 0 {
 		return 0
@@ -229,16 +219,6 @@ func clampColor(v float64) uint8 {
 		return 255
 	}
 	return uint8(v)
-}
-
-func clampFloatRange(v, min, max float64) float64 {
-	if v < min {
-		return min
-	}
-	if v > max {
-		return max
-	}
-	return v
 }
 
 func lerpBrick(a, b, t float64) float64 {

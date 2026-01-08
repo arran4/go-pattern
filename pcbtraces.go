@@ -220,18 +220,6 @@ func (p *PCBTraces) At(x, y int) color.Color {
 	return mask
 }
 
-func jitterColor(c color.RGBA, x, y int, seed int64) color.RGBA {
-	noise := float64(StableHash(x, y, uint64(seed)^0xdecafbad)) / float64(^uint64(0))
-	// Center noise around 0 and give it a small amplitude.
-	delta := (noise - 0.5) * 14
-	return color.RGBA{
-		R: clampChannel(float64(c.R) + delta),
-		G: clampChannel(float64(c.G) + delta*0.8),
-		B: clampChannel(float64(c.B) + delta*0.6),
-		A: c.A,
-	}
-}
-
 func toRGBA(c color.Color) color.RGBA {
 	if rgba, ok := c.(color.RGBA); ok {
 		return rgba
@@ -254,14 +242,4 @@ func mixRGBA(a, b color.RGBA, t float64) color.RGBA {
 		B: clampChannel(float64(a.B)*inv + float64(b.B)*t),
 		A: clampChannel(float64(a.A)*inv + float64(b.A)*t),
 	}
-}
-
-func clampChannel(v float64) uint8 {
-	if v < 0 {
-		return 0
-	}
-	if v > 255 {
-		return 255
-	}
-	return uint8(v + 0.5)
 }
