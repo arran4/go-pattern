@@ -498,6 +498,12 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		}
 		return pattern.NewVHS(input), nil
 	}
+	fm["p_c_b_traces"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) < 0 {
+			return nil, fmt.Errorf("p_c_b_traces requires 0 arguments")
+		}
+		return pattern.NewPCBTraces(), nil
+	}
 	fm["speed_lines"] = func(args []string, input image.Image) (image.Image, error) {
 		if len(args) < 0 {
 			return nil, fmt.Errorf("speed_lines requires 0 arguments")

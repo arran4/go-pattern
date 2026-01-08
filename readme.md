@@ -13,6 +13,17 @@ These patterns are designed to be:
 ## Patterns
 
 
+### PCBTraces Pattern
+
+
+
+![PCBTraces Pattern](pcbtraces.png)
+
+```go
+	return GeneratePCBTraces(image.Rect(0, 0, 192, 192))
+```
+
+
 ### PersianRug Pattern
 
 
