@@ -136,15 +136,6 @@ func hueToRGB(h, s, v float64) color.RGBA {
 	}
 }
 
-func clamp255(v float64) float64 {
-	if v < 0 {
-		return 0
-	}
-	if v > 255 {
-		return 255
-	}
-	return v
-}
 
 // Option helpers
 

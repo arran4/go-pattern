@@ -53,13 +53,6 @@ func quantize(v, step int) int {
 	return int(f * float64(step))
 }
 
-func posMod(v, m int) int {
-	r := v % m
-	if r < 0 {
-		r += m
-	}
-	return r
-}
 
 // NewChunkyBands creates a new ChunkyBands pattern.
 func NewChunkyBands(ops ...func(any)) image.Image {

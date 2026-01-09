@@ -106,15 +106,6 @@ func (p *SubpixelLines) vignette(x, y float64) float64 {
 	return clamp01(1.0 - fade)
 }
 
-func clamp01(v float64) float64 {
-	if v < 0 {
-		return 0
-	}
-	if v > 1 {
-		return 1
-	}
-	return v
-}
 
 func smoothstep(edge0, edge1, x float64) float64 {
 	if edge1 == edge0 {

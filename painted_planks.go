@@ -121,9 +121,6 @@ func (p *PaintedPlanks) sampleNoise(n *PerlinNoise, x, y int) float64 {
 	return float64(r) / 65535.0
 }
 
-func lerpFloat(a, b, t float64) float64 {
-	return a + (b-a)*t
-}
 
 // NewPaintedPlanks creates a plank wall pattern with configurable wood grain and paint wear.
 func NewPaintedPlanks(ops ...func(any)) image.Image {
@@ -239,12 +236,3 @@ func (p *PaintedPlanks) SetGrainIntensity(v float64)     { p.GrainIntensity = v 
 func (p *PaintedPlanks) SetPaintWear(v float64)          { p.PaintWear = v }
 func (p *PaintedPlanks) SetPaintColor(c color.RGBA)      { p.PaintColor = c }
 
-func lerpRGBA(a, b color.RGBA, t float64) color.RGBA {
-	t = clamp01(t)
-	return color.RGBA{
-		R: uint8(lerpFloat(float64(a.R), float64(b.R), t)),
-		G: uint8(lerpFloat(float64(a.G), float64(b.G), t)),
-		B: uint8(lerpFloat(float64(a.B), float64(b.B), t)),
-		A: 255,
-	}
-}

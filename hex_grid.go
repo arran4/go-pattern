@@ -186,26 +186,6 @@ func pointSegmentDistance(p, a, b floatPoint) float64 {
 	return math.Hypot(dx, dy)
 }
 
-func posMod(v, m int) int {
-	if m == 0 {
-		return 0
-	}
-	r := v % m
-	if r < 0 {
-		r += m
-	}
-	return r
-}
-
-func clampFloatRange(v, min, max float64) float64 {
-	if v < min {
-		return min
-	}
-	if v > max {
-		return max
-	}
-	return v
-}
 
 // SetHexPalette creates an option to set the palette used by the HexGrid.
 func SetHexPalette(pal color.Palette) func(any) {

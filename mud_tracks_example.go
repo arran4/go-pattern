@@ -207,16 +207,6 @@ func darken(c color.RGBA, factor float64) color.RGBA {
 	}
 }
 
-func clamp01(v float64) float64 {
-	switch {
-	case v < 0:
-		return 0
-	case v > 1:
-		return 1
-	default:
-		return v
-	}
-}
 
 func init() {
 	RegisterGenerator(MudTracksBaseLabel, GenerateMudTracks)
