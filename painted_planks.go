@@ -121,9 +121,6 @@ func (p *PaintedPlanks) sampleNoise(n *PerlinNoise, x, y int) float64 {
 	return float64(r) / 65535.0
 }
 
-func lerpFloat(a, b, t float64) float64 {
-	return a + (b-a)*t
-}
 
 // NewPaintedPlanks creates a plank wall pattern with configurable wood grain and paint wear.
 func NewPaintedPlanks(ops ...func(any)) image.Image {
