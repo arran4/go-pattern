@@ -18,11 +18,11 @@ func ExampleNewWood() image.Image {
 	// 1. Wood Palette
 	// Dark brown (Late wood / Rings) -> Light Tan (Early wood) -> Dark
 	woodPalette := []ColorStop{
-		{0.0, color.RGBA{101, 67, 33, 255}},  // Dark Brown (Ring Edge)
+		{0.0, color.RGBA{101, 67, 33, 255}},   // Dark Brown (Ring Edge)
 		{0.15, color.RGBA{160, 120, 80, 255}}, // Transition
 		{0.5, color.RGBA{222, 184, 135, 255}}, // Light Tan (Center - Burlywood)
 		{0.85, color.RGBA{160, 120, 80, 255}}, // Transition
-		{1.0, color.RGBA{101, 67, 33, 255}},  // Back to Edge
+		{1.0, color.RGBA{101, 67, 33, 255}},   // Back to Edge
 	}
 
 	// 2. Base "Heightmap" Generator
@@ -49,7 +49,7 @@ func ExampleNewWood() image.Image {
 	// Warp maps intensity to offset.
 	wobbleNoise := NewNoise(NoiseSeed(101), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.015,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	// Apply warp.
@@ -65,7 +65,7 @@ func ExampleNewWood() image.Image {
 	// This simulates the jagged edges of the grain.
 	fiberDistortion := NewNoise(NoiseSeed(303), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.1, // Higher freq
-		Octaves: 3,     // More detail
+		Octaves:   3,   // More detail
 	}))
 
 	// Chain Warps: WarpedRings -> Warp again with fiber distortion

@@ -512,7 +512,7 @@ func PredicateAverageGrayAbove(threshold uint8) ColorPredicate {
 	t := uint32(threshold)
 	return func(c color.Color) float64 {
 		r, g, b, _ := c.RGBA()
-		avg := (r+g+b) / 3
+		avg := (r + g + b) / 3
 		if (avg >> 8) >= t {
 			return 1.0
 		}
@@ -695,9 +695,9 @@ func NewNot(input image.Image, ops ...func(any)) image.Image {
 func NewBitwiseAnd(inputs []image.Image, ops ...func(any)) image.Image {
 	p := &And{
 		BooleanImage: BooleanImage{
-			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
-			Op:        OpBitwiseAnd,
-			Inputs:    inputs,
+			Null:   Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:     OpBitwiseAnd,
+			Inputs: inputs,
 		},
 	}
 	for _, op := range ops {
@@ -710,9 +710,9 @@ func NewBitwiseAnd(inputs []image.Image, ops ...func(any)) image.Image {
 func NewBitwiseOr(inputs []image.Image, ops ...func(any)) image.Image {
 	p := &Or{
 		BooleanImage: BooleanImage{
-			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
-			Op:        OpBitwiseOr,
-			Inputs:    inputs,
+			Null:   Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:     OpBitwiseOr,
+			Inputs: inputs,
 		},
 	}
 	for _, op := range ops {
@@ -728,9 +728,9 @@ func NewBitwiseXor(inputs []image.Image, ops ...func(any)) image.Image {
 	}
 	p := &Xor{
 		BooleanImage: BooleanImage{
-			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
-			Op:        OpBitwiseXor,
-			Inputs:    inputs,
+			Null:   Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:     OpBitwiseXor,
+			Inputs: inputs,
 		},
 	}
 	for _, op := range ops {
@@ -743,9 +743,9 @@ func NewBitwiseXor(inputs []image.Image, ops ...func(any)) image.Image {
 func NewBitwiseNot(input image.Image, ops ...func(any)) image.Image {
 	p := &Not{
 		BooleanImage: BooleanImage{
-			Null:      Null{bounds: image.Rect(0, 0, 255, 255)},
-			Op:        OpBitwiseNot,
-			Inputs:    []image.Image{input},
+			Null:   Null{bounds: image.Rect(0, 0, 255, 255)},
+			Op:     OpBitwiseNot,
+			Inputs: []image.Image{input},
 		},
 	}
 	for _, op := range ops {

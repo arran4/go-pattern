@@ -53,12 +53,12 @@ func ExampleNewIslands() {
 	// 0.6 - 1.0: Water
 
 	islands := NewColorMap(mixed,
-		ColorStop{Position: 0.0, Color: color.RGBA{250, 250, 250, 255}}, // Snow
+		ColorStop{Position: 0.0, Color: color.RGBA{250, 250, 250, 255}},  // Snow
 		ColorStop{Position: 0.15, Color: color.RGBA{120, 120, 120, 255}}, // Rock
-		ColorStop{Position: 0.30, Color: color.RGBA{34, 139, 34, 255}},  // Forest
+		ColorStop{Position: 0.30, Color: color.RGBA{34, 139, 34, 255}},   // Forest
 		ColorStop{Position: 0.50, Color: color.RGBA{210, 180, 140, 255}}, // Sand
-		ColorStop{Position: 0.55, Color: color.RGBA{64, 164, 223, 255}}, // Water
-		ColorStop{Position: 1.0, Color: color.RGBA{0, 0, 128, 255}},     // Deep Water
+		ColorStop{Position: 0.55, Color: color.RGBA{64, 164, 223, 255}},  // Water
+		ColorStop{Position: 1.0, Color: color.RGBA{0, 0, 128, 255}},      // Deep Water
 	)
 
 	f, err := os.Create(IslandsOutputFilename)

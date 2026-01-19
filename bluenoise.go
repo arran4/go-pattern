@@ -27,9 +27,9 @@ var _ image.Image = (*BlueNoise)(nil)
 // We will implement a simplified generator that tries to maintain separation.
 type BlueNoise struct {
 	Null
-	Seed int64
+	Seed   int64
 	Values []uint8
-	once      sync.Once
+	once   sync.Once
 }
 
 func (p *BlueNoise) SetSeed(v int64) {
@@ -67,21 +67,33 @@ func (p *BlueNoise) generate() {
 						px := x + kx
 						py := y + ky
 						// Wrap
-						if px < 0 { px += w }
-						if px >= w { px -= w }
-						if py < 0 { py += h }
-						if py >= h { py -= h }
+						if px < 0 {
+							px += w
+						}
+						if px >= w {
+							px -= w
+						}
+						if py < 0 {
+							py += h
+						}
+						if py >= h {
+							py -= h
+						}
 
-						sum += int(p.Values[py*w + px])
+						sum += int(p.Values[py*w+px])
 						count++
 					}
 				}
 				avg := sum / count
 				// High Pass = Original - Low Pass + 128 (to center)
-				val := int(p.Values[y*w + x]) - avg + 128
-				if val < 0 { val = 0 }
-				if val > 255 { val = 255 }
-				temp[y*w + x] = val
+				val := int(p.Values[y*w+x]) - avg + 128
+				if val < 0 {
+					val = 0
+				}
+				if val > 255 {
+					val = 255
+				}
+				temp[y*w+x] = val
 			}
 		}
 
@@ -96,10 +108,16 @@ func (p *BlueNoise) At(x, y int) color.Color {
 	w := p.bounds.Dx()
 	h := p.bounds.Dy()
 
-	gx := x % w; if gx < 0 { gx += w }
-	gy := y % h; if gy < 0 { gy += h }
+	gx := x % w
+	if gx < 0 {
+		gx += w
+	}
+	gy := y % h
+	if gy < 0 {
+		gy += h
+	}
 
-	v := p.Values[gy*w + gx]
+	v := p.Values[gy*w+gx]
 	return color.Gray{Y: v}
 }
 

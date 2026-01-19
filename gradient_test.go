@@ -7,7 +7,7 @@ import (
 )
 
 func TestLinearGradient(t *testing.T) {
-	start := color.RGBA{0, 0, 0, 255} // Black
+	start := color.RGBA{0, 0, 0, 255}     // Black
 	end := color.RGBA{255, 255, 255, 255} // White
 
 	g := NewLinearGradient(
@@ -92,7 +92,7 @@ func TestRadialGradient(t *testing.T) {
 }
 
 func TestConicGradient(t *testing.T) {
-	start := color.RGBA{0, 0, 0, 255} // Black (0)
+	start := color.RGBA{0, 0, 0, 255}     // Black (0)
 	end := color.RGBA{255, 255, 255, 255} // White (1)
 
 	g := NewConicGradient(
@@ -125,14 +125,14 @@ func TestConicGradient(t *testing.T) {
 		t.Logf("Left color: %v", cLeft)
 	}
 
-    // Top: (50, 40) -> dx=0, dy=-10 -> angle=-Pi/2
-    // t = (-Pi/2 + Pi) / 2Pi = (Pi/2) / 2Pi = 0.25
+	// Top: (50, 40) -> dx=0, dy=-10 -> angle=-Pi/2
+	// t = (-Pi/2 + Pi) / 2Pi = (Pi/2) / 2Pi = 0.25
 
-    cTop := g.At(50, 40)
-    rTop, _, _, _ := cTop.RGBA()
-    // Expect 25% grey (approx 0x4000)
-    if rTop < 0x3000 || rTop > 0x5000 {
-        t.Errorf("Expected 25%% grey at top, got %v (r=%x)", cTop, rTop)
-    }
+	cTop := g.At(50, 40)
+	rTop, _, _, _ := cTop.RGBA()
+	// Expect 25% grey (approx 0x4000)
+	if rTop < 0x3000 || rTop > 0x5000 {
+		t.Errorf("Expected 25%% grey at top, got %v (r=%x)", cTop, rTop)
+	}
 
 }

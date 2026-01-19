@@ -8,6 +8,7 @@ import (
 
 var XorGridOutputFilename = "xor_pattern.png"
 var XorGridZoomLevels = []int{}
+
 const XorGridOrder = 30
 
 func ExampleNewXorGrid() {

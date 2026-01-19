@@ -34,8 +34,12 @@ func (c *Checker) At(x, y int) color.Color {
 	cy := y / size
 
 	// Handle negative coordinates correctly
-	if x < 0 { cx-- }
-	if y < 0 { cy-- }
+	if x < 0 {
+		cx--
+	}
+	if y < 0 {
+		cy--
+	}
 
 	// Standard check: if sum of cell coords is even/odd
 	if (cx+cy)%2 == 0 {

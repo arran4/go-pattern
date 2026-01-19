@@ -103,7 +103,7 @@ func (g *RadialGradient) At(x, y int) color.Color {
 	// Max distance is from center to corner (or side?)
 	// Usually radial gradient goes to the furthest corner or closest side.
 	// Let's use half of the smallest dimension (circle fits in box) or distance to corner.
-	maxDist := math.Sqrt(float64(b.Dx()*b.Dx() + b.Dy()*b.Dy())) / 2.0
+	maxDist := math.Sqrt(float64(b.Dx()*b.Dx()+b.Dy()*b.Dy())) / 2.0
 
 	t := dist / maxDist
 

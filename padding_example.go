@@ -11,8 +11,8 @@ var (
 )
 
 const (
-	PaddingOrder          = 8
-	PaddingBaseLabel      = "Padding"
+	PaddingOrder     = 8
+	PaddingBaseLabel = "Padding"
 )
 
 func init() {

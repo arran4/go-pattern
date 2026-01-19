@@ -32,7 +32,9 @@ func TestGenerateCircuit_Output(t *testing.T) {
 		for x := 0; x < 100; x++ {
 			c := img.At(x, y)
 			r, g, b, a := c.RGBA()
-			if a == 0 { continue }
+			if a == 0 {
+				continue
+			}
 
 			if r == 0 && g == 0 && b == 0 {
 				// Black

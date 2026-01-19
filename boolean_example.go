@@ -70,6 +70,7 @@ func stitchImagesForDemo(images ...image.Image) image.Image {
 
 var BooleanAndOutputFilename = "boolean_and.png"
 var BooleanAndZoomLevels = []int{}
+
 const BooleanAndOrder = 20
 
 func ExampleNewBooleanAnd() {
@@ -121,11 +122,11 @@ func GenerateBooleanAndReferences() (map[string]func(image.Rectangle) image.Imag
 	}, []string{"Gopher", "Stripes"}
 }
 
-
 // BooleanOr Pattern
 
 var BooleanOrOutputFilename = "boolean_or.png"
 var BooleanOrZoomLevels = []int{}
+
 const BooleanOrOrder = 21
 
 func ExampleNewBooleanOr() {
@@ -175,11 +176,11 @@ func GenerateBooleanOrReferences() (map[string]func(image.Rectangle) image.Image
 	}, []string{"Gopher", "Stripes"}
 }
 
-
 // BooleanXor Pattern
 
 var BooleanXorOutputFilename = "boolean_xor.png"
 var BooleanXorZoomLevels = []int{}
+
 const BooleanXorOrder = 22
 
 func ExampleNewBooleanXor() {
@@ -233,11 +234,11 @@ func GenerateBooleanXorReferences() (map[string]func(image.Rectangle) image.Imag
 	}, []string{"Gopher", "Stripes"}
 }
 
-
 // BooleanNot Pattern
 
 var BooleanNotOutputFilename = "boolean_not.png"
 var BooleanNotZoomLevels = []int{}
+
 const BooleanNotOrder = 23
 
 func ExampleNewBooleanNot() {

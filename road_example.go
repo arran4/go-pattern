@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	RoadOutputFilename = "road.png"
-	Road_markedOutputFilename = "road_marked.png"
+	RoadOutputFilename         = "road.png"
+	Road_markedOutputFilename  = "road_marked.png"
 	Road_terrainOutputFilename = "road_terrain.png"
 )
 
@@ -86,7 +86,7 @@ func ExampleNewRoad_terrain() image.Image {
 	roadPath := NewVerticalLine(
 		SetLineSize(40), // Road width
 		SetSpaceSize(300),
-		SetLineColor(color.White), // Mask: White = Road
+		SetLineColor(color.White),  // Mask: White = Road
 		SetSpaceColor(color.Black), // Mask: Black = Grass
 		SetPhase(105),
 	)

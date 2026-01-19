@@ -9,6 +9,7 @@ import (
 
 var BooleanModesOutputFilename = "boolean_modes.png"
 var BooleanModesZoomLevels = []int{}
+
 const BooleanModesOrder = 38
 
 // ExampleNewBooleanModes is a placeholder for documentation.
@@ -24,7 +25,7 @@ func GenerateBooleanModes(b image.Rectangle) image.Image {
 	stripes := NewHorizontalLine(
 		SetLineSize(20),
 		SetSpaceSize(20),
-		SetLineColor(color.RGBA{255, 0, 0, 128}), // Red semi-transparent
+		SetLineColor(color.RGBA{255, 0, 0, 128}),  // Red semi-transparent
 		SetSpaceColor(color.RGBA{0, 0, 255, 128}), // Blue semi-transparent
 		SetBounds(b),
 	)

@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	MetalOutputFilename = "metal.png"
+	MetalOutputFilename           = "metal.png"
 	Metal_scratchedOutputFilename = "metal_scratched.png"
 )
 

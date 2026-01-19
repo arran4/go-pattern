@@ -78,7 +78,7 @@ func (p *SpeedLines) At(x, y int) color.Color {
 		// For Linear, we just use one coordinate.
 		// Let's assume Linear is horizontal stripes (like speed).
 		// We can rotate it using `Rotate`.
-		dist = dx // Distance along the line
+		dist = dx          // Distance along the line
 		angle = dy / 100.0 // "Angle" maps to the cross dimension.
 	}
 
@@ -119,7 +119,7 @@ func (p *SpeedLines) At(x, y int) color.Color {
 	seed := int64(p.Phase.Phase * 1000) // Phase affects seed/offset
 
 	// High frequency noise for line presence
-	n1 := noise1D(normalizedAngle * p.Density.Density, seed)
+	n1 := noise1D(normalizedAngle*p.Density.Density, seed)
 
 	// If n1 is high enough, we have a line.
 	// Manga lines are usually black on white (or ink on paper).
@@ -137,7 +137,7 @@ func (p *SpeedLines) At(x, y int) color.Color {
 
 		// Determine start distance for this line.
 		// Vary it using a second noise channel (offset seed).
-		n2 := noise1D(normalizedAngle * p.Density.Density, seed + 12345)
+		n2 := noise1D(normalizedAngle*p.Density.Density, seed+12345)
 
 		// n2 is 0..1.
 		// effectiveMinRadius = MinRadius + n2 * (MaxRadius - MinRadius)
@@ -152,7 +152,7 @@ func (p *SpeedLines) At(x, y int) color.Color {
 
 		effectiveStart := p.MinRadius.MinRadius
 		if p.MaxRadius.MaxRadius > p.MinRadius.MinRadius {
-             effectiveStart += n2 * (p.MaxRadius.MaxRadius - p.MinRadius.MinRadius)
+			effectiveStart += n2 * (p.MaxRadius.MaxRadius - p.MinRadius.MinRadius)
 		}
 
 		if dist >= effectiveStart {

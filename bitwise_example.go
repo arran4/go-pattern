@@ -9,6 +9,7 @@ import (
 
 var BitwiseAndOutputFilename = "bitwise_and.png"
 var BitwiseAndZoomLevels = []int{}
+
 const BitwiseAndOrder = 37
 
 func ExampleNewBitwiseAnd() {

@@ -8,9 +8,9 @@ import (
 var _ image.Image = (*Padding)(nil)
 
 type Padding struct {
-	img      image.Image
-	bounds   image.Rectangle
-	bgPattern image.Image
+	img                      image.Image
+	bounds                   image.Rectangle
+	bgPattern                image.Image
 	top, left, bottom, right int
 }
 
@@ -50,8 +50,8 @@ type PaddingOption func(*paddingConfig)
 
 type paddingConfig struct {
 	top, left, bottom, right int
-	bg     image.Image
-	bounds image.Rectangle // explicit bounds to enforce
+	bg                       image.Image
+	bounds                   image.Rectangle // explicit bounds to enforce
 }
 
 func PaddingMargin(m int) PaddingOption {
@@ -63,10 +63,10 @@ func PaddingMargin(m int) PaddingOption {
 	}
 }
 
-func PaddingTop(m int) PaddingOption { return func(c *paddingConfig) { c.top = m } }
-func PaddingLeft(m int) PaddingOption { return func(c *paddingConfig) { c.left = m } }
+func PaddingTop(m int) PaddingOption    { return func(c *paddingConfig) { c.top = m } }
+func PaddingLeft(m int) PaddingOption   { return func(c *paddingConfig) { c.left = m } }
 func PaddingBottom(m int) PaddingOption { return func(c *paddingConfig) { c.bottom = m } }
-func PaddingRight(m int) PaddingOption { return func(c *paddingConfig) { c.right = m } }
+func PaddingRight(m int) PaddingOption  { return func(c *paddingConfig) { c.right = m } }
 
 func PaddingBackground(bg image.Image) PaddingOption {
 	return func(c *paddingConfig) {
@@ -123,8 +123,12 @@ func PaddingCenterIn(bounds image.Rectangle, imgBounds image.Rectangle) PaddingO
 		mx := (w - iw) / 2
 		my := (h - ih) / 2
 
-		if mx < 0 { mx = 0 }
-		if my < 0 { my = 0 }
+		if mx < 0 {
+			mx = 0
+		}
+		if my < 0 {
+			my = 0
+		}
 
 		c.left = mx
 		c.right = w - iw - mx
@@ -158,7 +162,7 @@ func PaddingCenterBox(bounds image.Rectangle) PaddingOption {
 func NewPadding(img image.Image, opts ...PaddingOption) image.Image {
 	cfg := &paddingConfig{
 		top: 0, left: 0, bottom: 0, right: 0,
-		bg:     nil,
+		bg: nil,
 	}
 	// We might need to handle alignment options.
 	// Let's support a generic "Layout" option?
@@ -205,8 +209,12 @@ func NewCenter(img image.Image, width, height int, bg image.Image) image.Image {
 	b := img.Bounds()
 	mx := (width - b.Dx()) / 2
 	my := (height - b.Dy()) / 2
-	if mx < 0 { mx = 0 }
-	if my < 0 { my = 0 }
+	if mx < 0 {
+		mx = 0
+	}
+	if my < 0 {
+		my = 0
+	}
 
 	// We want explicit bounds `width, height`.
 	// Margins: Left=mx, Top=my. Right/Bottom filled to match width/height.
@@ -214,8 +222,12 @@ func NewCenter(img image.Image, width, height int, bg image.Image) image.Image {
 	// Right margin: width - b.Dx() - mx
 	mr := width - b.Dx() - mx
 	mb := height - b.Dy() - my
-	if mr < 0 { mr = 0 }
-	if mb < 0 { mb = 0 }
+	if mr < 0 {
+		mr = 0
+	}
+	if mb < 0 {
+		mb = 0
+	}
 
 	return NewPadding(img,
 		PaddingTop(my), PaddingLeft(mx),

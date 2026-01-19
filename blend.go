@@ -77,19 +77,27 @@ func (b *Blend) At(x, y int) color.Color {
 		// So formula simplifies:
 		// out = src + dst * (1 - srcA)
 
-		or = fr2 + fr1 * (1 - fa2)
-		og = fg2 + fg1 * (1 - fa2)
-		ob = fb2 + fb1 * (1 - fa2)
-		oa = fa2 + fa1 * (1 - fa2)
+		or = fr2 + fr1*(1-fa2)
+		og = fg2 + fg1*(1-fa2)
+		ob = fb2 + fb1*(1-fa2)
+		oa = fa2 + fa1*(1-fa2)
 	default:
 		or, og, ob = fr1, fg1, fb1
 	}
 
 	// Clamp
-	if or > 1 { or = 1 }
-	if og > 1 { og = 1 }
-	if ob > 1 { ob = 1 }
-	if oa > 1 { oa = 1 }
+	if or > 1 {
+		or = 1
+	}
+	if og > 1 {
+		og = 1
+	}
+	if ob > 1 {
+		ob = 1
+	}
+	if oa > 1 {
+		oa = 1
+	}
 
 	return color.RGBA64{
 		R: uint16(or * 65535),

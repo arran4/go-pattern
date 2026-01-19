@@ -186,7 +186,6 @@ func pointSegmentDistance(p, a, b floatPoint) float64 {
 	return math.Hypot(dx, dy)
 }
 
-
 // SetHexPalette creates an option to set the palette used by the HexGrid.
 func SetHexPalette(pal color.Palette) func(any) {
 	return func(i any) {

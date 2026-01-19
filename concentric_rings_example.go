@@ -9,6 +9,7 @@ import (
 
 var ConcentricRingsOutputFilename = "concentric_rings.png"
 var ConcentricRingsZoomLevels = []int{}
+
 const ConcentricRingsOrder = 32
 
 func ExampleNewConcentricRings() {

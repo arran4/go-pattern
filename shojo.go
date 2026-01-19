@@ -82,13 +82,13 @@ func (p *Shojo) At(x, y int) color.Color {
 			}
 
 			// Get more random values by rehashing
-			h2 := StableHash(cx, cy, seed ^ 0x5555555555555555) // Salt 1
-			r2 := float64(h2&0xFFFF) / 65535.0 // Position X
-			r3 := float64((h2>>16)&0xFFFF) / 65535.0 // Position Y
+			h2 := StableHash(cx, cy, seed^0x5555555555555555) // Salt 1
+			r2 := float64(h2&0xFFFF) / 65535.0                // Position X
+			r3 := float64((h2>>16)&0xFFFF) / 65535.0          // Position Y
 
-			h3 := StableHash(cx, cy, seed ^ 0xAAAAAAAAAAAAAAAA) // Salt 2
-			r4 := float64(h3&0xFFFF) / 65535.0 // Size
-			r5 := float64((h3>>16)&0xFFFF) / 65535.0 // Rotation
+			h3 := StableHash(cx, cy, seed^0xAAAAAAAAAAAAAAAA) // Salt 2
+			r4 := float64(h3&0xFFFF) / 65535.0                // Size
+			r5 := float64((h3>>16)&0xFFFF) / 65535.0          // Rotation
 
 			// Position within the cell
 			starX := float64(cx*gridSize) + r2*float64(gridSize)
@@ -139,7 +139,7 @@ func (p *Shojo) At(x, y int) color.Color {
 			accG += sG * intensity * sA
 			accB += sB * intensity * sA
 			// Accumulate alpha based on intensity
-			accA = math.Max(accA, sA * math.Min(1.0, intensity))
+			accA = math.Max(accA, sA*math.Min(1.0, intensity))
 		}
 	}
 
@@ -173,7 +173,7 @@ func NewShojo(ops ...func(any)) image.Image {
 		},
 		Seed: 1,
 	}
-	p.FillColor.FillColor = color.White // Default sparkle color
+	p.FillColor.FillColor = color.White                  // Default sparkle color
 	p.SpaceColor.SpaceColor = color.RGBA{10, 0, 30, 255} // Default dark purple background
 
 	for _, op := range ops {

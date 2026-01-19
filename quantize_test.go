@@ -113,7 +113,9 @@ func checkColor(t *testing.T, c color.Color, expected uint8, msg string) {
 
 	// Allow small diff due to floating point math
 	diff := int(r) - int(exp16)
-	if diff < 0 { diff = -diff }
+	if diff < 0 {
+		diff = -diff
+	}
 
 	if diff > 300 { // Arbitrary tolerance
 		t.Errorf("%s: Expected %d (approx %d), got %d", msg, expected, exp16, r)

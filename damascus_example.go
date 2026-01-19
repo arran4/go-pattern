@@ -34,7 +34,7 @@ func GenerateDamascus(b image.Rectangle) image.Image {
 		NoiseSeed(111),
 		SetNoiseAlgorithm(&PerlinNoise{
 			Frequency: 0.1, // High freq for bands
-			Octaves: 1,
+			Octaves:   1,
 		}),
 	)
 
@@ -44,7 +44,7 @@ func GenerateDamascus(b image.Rectangle) image.Image {
 		NoiseSeed(222),
 		SetNoiseAlgorithm(&PerlinNoise{
 			Frequency: 0.015,
-			Octaves: 2,
+			Octaves:   2,
 		}),
 	)
 

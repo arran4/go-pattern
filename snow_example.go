@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	SnowOutputFilename = "snow.png"
+	SnowOutputFilename        = "snow.png"
 	Snow_tracksOutputFilename = "snow_tracks.png"
 )
 
@@ -57,7 +57,7 @@ func ExampleNewSnow_tracks() image.Image {
 	// 3. Compression Tracks: Blueish/Grey depression.
 	tracks := NewCrossHatch(
 		SetLineColor(color.RGBA{200, 210, 230, 255}), // Icy blue/grey
-		SetSpaceColor(color.White), // Neutral for Multiply
+		SetSpaceColor(color.White),                   // Neutral for Multiply
 		SetLineSize(15),
 		SetSpaceSize(80),
 		SetAngles(25, 35), // Overlapping tracks

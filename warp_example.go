@@ -27,7 +27,7 @@ func ExampleNewWarp() {
 	// Distortion noise
 	noise := NewNoise(NoiseSeed(99), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.03,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	// Apply Warp
@@ -69,7 +69,7 @@ func ExampleNewWarp_wood() image.Image {
 
 	noiseLow := NewNoise(NoiseSeed(123), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.02,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	// Apply Warp
@@ -99,8 +99,8 @@ func ExampleNewWarp_marble() image.Image {
 	stripes := NewModuloStripe(colors)
 
 	noise := NewNoise(NoiseSeed(456), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.04,
-		Octaves: 4,
+		Frequency:   0.04,
+		Octaves:     4,
 		Persistence: 0.6,
 	}))
 
@@ -120,14 +120,14 @@ var (
 
 func ExampleNewWarp_clouds() image.Image {
 	baseNoise := NewNoise(NoiseSeed(777), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.02,
-		Octaves: 4,
+		Frequency:   0.02,
+		Octaves:     4,
 		Persistence: 0.5,
 	}))
 
 	warpNoise := NewNoise(NoiseSeed(888), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.02,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	warped := NewWarp(baseNoise,
@@ -156,10 +156,10 @@ var (
 func ExampleNewWarp_terrain() image.Image {
 	fbm := func(seed int64) image.Image {
 		return NewNoise(NoiseSeed(seed), SetNoiseAlgorithm(&PerlinNoise{
-			Frequency: 0.015,
-			Octaves: 6,
+			Frequency:   0.015,
+			Octaves:     6,
 			Persistence: 0.5,
-			Lacunarity: 2.0,
+			Lacunarity:  2.0,
 		}))
 	}
 
@@ -167,7 +167,7 @@ func ExampleNewWarp_terrain() image.Image {
 
 	warp := NewNoise(NoiseSeed(202), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.01,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	warped := NewWarp(base,
@@ -217,7 +217,7 @@ func GenerateWarp(rect image.Rectangle) image.Image {
 
 	noise := NewNoise(NoiseSeed(99), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.03,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	return NewWarp(checker,

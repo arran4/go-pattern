@@ -43,11 +43,11 @@ func ExampleNewClouds_cumulus() image.Image {
 	// We use a steep ramp around 0.5-0.6 to create distinct cloud shapes
 	// rather than a smooth fog.
 	return NewColorMap(noise,
-		ColorStop{0.0, color.RGBA{100, 180, 255, 255}}, // Blue Sky
-		ColorStop{0.4, color.RGBA{130, 200, 255, 255}}, // Light Sky
+		ColorStop{0.0, color.RGBA{100, 180, 255, 255}},  // Blue Sky
+		ColorStop{0.4, color.RGBA{130, 200, 255, 255}},  // Light Sky
 		ColorStop{0.55, color.RGBA{245, 245, 255, 255}}, // Cloud Edge (White-ish)
-		ColorStop{0.7, color.RGBA{255, 255, 255, 255}}, // Cloud Body
-		ColorStop{1.0, color.RGBA{230, 230, 240, 255}}, // Cloud Shadow/Density
+		ColorStop{0.7, color.RGBA{255, 255, 255, 255}},  // Cloud Body
+		ColorStop{1.0, color.RGBA{230, 230, 240, 255}},  // Cloud Shadow/Density
 	)
 }
 
@@ -93,8 +93,8 @@ var (
 func ExampleNewClouds_storm() image.Image {
 	// Layer 1: Large, brooding shapes
 	base := NewNoise(NoiseSeed(666), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency:   0.01,
-		Octaves:     3,
+		Frequency: 0.01,
+		Octaves:   3,
 	}))
 
 	// Layer 2: Detailed turbulence
@@ -133,25 +133,25 @@ var (
 func ExampleNewClouds_sunset() image.Image {
 	// 1. Sky Gradient (Orange to Purple)
 	sky := NewLinearGradient(
-		SetStartColor(color.RGBA{255, 100, 50, 255}),  // Orange/Red Horizon
-		SetEndColor(color.RGBA{50, 20, 100, 255}),     // Purple/Blue Zenith
+		SetStartColor(color.RGBA{255, 100, 50, 255}), // Orange/Red Horizon
+		SetEndColor(color.RGBA{50, 20, 100, 255}),    // Purple/Blue Zenith
 		GradientVertical(),
 	)
 
 	// 2. Cloud Shapes
 	clouds := NewNoise(NoiseSeed(888), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency:   0.012,
-		Octaves:     4,
+		Frequency: 0.012,
+		Octaves:   4,
 	}))
 
 	// Map cloud noise to alpha/color
 	// We want the clouds to be dark at the bottom (shadow) and pink/gold at the edges
 	cloudColor := NewColorMap(clouds,
-		ColorStop{0.0, color.Black},                        // No clouds
-		ColorStop{0.4, color.Black},                        // No clouds
-		ColorStop{0.5, color.RGBA{80, 40, 60, 255}},        // Dark cloud base
-		ColorStop{0.7, color.RGBA{200, 100, 80, 255}},      // Orange/Pink mid
-		ColorStop{1.0, color.RGBA{255, 200, 100, 255}},     // Gold highlights
+		ColorStop{0.0, color.Black},                    // No clouds
+		ColorStop{0.4, color.Black},                    // No clouds
+		ColorStop{0.5, color.RGBA{80, 40, 60, 255}},    // Dark cloud base
+		ColorStop{0.7, color.RGBA{200, 100, 80, 255}},  // Orange/Pink mid
+		ColorStop{1.0, color.RGBA{255, 200, 100, 255}}, // Gold highlights
 	)
 
 	// 3. Composite Clouds over Sky using Screen blend mode for a glowing effect

@@ -65,9 +65,9 @@ func quantizeColor(c color.Color, levels int) color.Color {
 func quantizeChannel(v uint16, levels int) uint32 {
 	// v is 0..65535
 	f := float64(v) / 65535.0
-	f = f * float64(levels - 1)
+	f = f * float64(levels-1)
 	f = math.Round(f)
-	f = f / float64(levels - 1)
+	f = f / float64(levels-1)
 	return uint32(f * 65535.0)
 }
 

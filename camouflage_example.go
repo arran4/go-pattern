@@ -32,8 +32,8 @@ func GenerateCamouflage(b image.Rectangle) image.Image {
 		SetBounds(b),
 		NoiseSeed(333),
 		SetNoiseAlgorithm(&PerlinNoise{
-			Frequency: 0.02,
-			Octaves: 4,
+			Frequency:   0.02,
+			Octaves:     4,
 			Persistence: 0.7, // Rough edges
 		}),
 	)
@@ -45,7 +45,7 @@ func GenerateCamouflage(b image.Rectangle) image.Image {
 	black := color.RGBA{20, 20, 20, 255}
 	brown := color.RGBA{101, 67, 33, 255}
 	green := color.RGBA{85, 107, 47, 255} // Olive Drab
-	tan   := color.RGBA{210, 180, 140, 255}
+	tan := color.RGBA{210, 180, 140, 255}
 
 	return NewColorMap(noise,
 		ColorStop{0.0, black},
@@ -54,7 +54,7 @@ func GenerateCamouflage(b image.Rectangle) image.Image {
 		ColorStop{0.5, brown},
 		ColorStop{0.51, green},
 		ColorStop{0.7, green},
-        ColorStop{0.71, tan},
+		ColorStop{0.71, tan},
 		ColorStop{1.0, tan},
 	)
 }

@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	NormalMapOutputFilename = "normal_map.png"
+	NormalMapOutputFilename        = "normal_map.png"
 	NormalMap_sphereOutputFilename = "normal_map_sphere.png"
 )
 

@@ -9,6 +9,7 @@ import (
 
 var BayerDitherOutputFilename = "bayer_dither.png"
 var BayerDitherZoomLevels = []int{}
+
 const BayerDitherOrder = 34
 
 func ExampleNewBayerDither() {

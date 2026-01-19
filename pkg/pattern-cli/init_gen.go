@@ -3,10 +3,10 @@ package pattern_cli
 
 import (
 	"fmt"
+	"github.com/arran4/go-pattern"
+	"github.com/arran4/go-pattern/dsl"
 	"image"
 	"strconv"
-	"github.com/arran4/go-pattern/dsl"
-	"github.com/arran4/go-pattern"
 )
 
 func RegisterGeneratedCommands(fm dsl.FuncMap) {

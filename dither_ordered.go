@@ -68,7 +68,7 @@ func (d *OrderedDither) At(x, y int) color.Color {
 		my += d.dim
 	}
 
-	mVal := d.matrix[my*d.dim + mx]
+	mVal := d.matrix[my*d.dim+mx]
 
 	// shift = (mVal - 0.5) * spread
 	shift := (mVal - 0.5) * d.spread
@@ -115,7 +115,7 @@ func GenerateBayerInt(n int) []int {
 
 	for y := 0; y < half; y++ {
 		for x := 0; x < half; x++ {
-			val := prev[y*half + x]
+			val := prev[y*half+x]
 			curr[y*n+x] = 4 * val
 			curr[y*n+(x+half)] = 4*val + 2
 			curr[(y+half)*n+x] = 4*val + 3

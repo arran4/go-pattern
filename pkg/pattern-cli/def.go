@@ -147,13 +147,13 @@ func registerCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("invalid degrees: %v", err)
 		}
 		return pattern.NewRotate(input, deg), nil
-  }
+	}
 	fm["edgedetect"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
 			return nil, fmt.Errorf("edgedetect requires an input image")
 		}
 		return pattern.NewEdgeDetect(input), nil
-  }
+	}
 	fm["quantize"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
 			return nil, fmt.Errorf("quantize requires an input image")

@@ -42,11 +42,15 @@ func (p *BayerDither) At(x, y int) color.Color {
 
 	// Get matrix value
 	mx := x % p.Size
-	if mx < 0 { mx += p.Size }
+	if mx < 0 {
+		mx += p.Size
+	}
 	my := y % p.Size
-	if my < 0 { my += p.Size }
+	if my < 0 {
+		my += p.Size
+	}
 
-	threshold := p.Matrix[my*p.Size + mx]
+	threshold := p.Matrix[my*p.Size+mx]
 
 	// Normalize threshold to 0-255?
 	// Matrix values are 0..(size*size)-1.
@@ -78,9 +82,18 @@ func (p *BayerDither) At(x, y int) color.Color {
 	// c_out = closest_palette_color(c_in + spread * (threshold - 0.5))
 
 	// If we just want 1-bit per channel:
-	dr := 0.0; if fr > normT { dr = 1.0 }
-	dg := 0.0; if fg > normT { dg = 1.0 }
-	db := 0.0; if fb > normT { db = 1.0 }
+	dr := 0.0
+	if fr > normT {
+		dr = 1.0
+	}
+	dg := 0.0
+	if fg > normT {
+		dg = 1.0
+	}
+	db := 0.0
+	if fb > normT {
+		db = 1.0
+	}
 
 	return color.RGBA{
 		R: uint8(dr * 255),
@@ -104,9 +117,9 @@ func NewBayerDither(input image.Image, size int, ops ...func(any)) image.Image {
 		Null: Null{
 			bounds: image.Rect(0, 0, 255, 255),
 		},
-		Input: input,
+		Input:  input,
 		Matrix: mat,
-		Size: size,
+		Size:   size,
 	}
 	for _, op := range ops {
 		op(p)
@@ -221,14 +234,14 @@ var (
 // ErrorDiffusion applies error diffusion dithering to an image.
 type ErrorDiffusion struct {
 	Null
-	img          image.Image
-	kernel       DiffusionKernel
-	palette      color.Palette
-	result       *image.RGBA
-	once         sync.Once
-	serpentine   bool
+	img             image.Image
+	kernel          DiffusionKernel
+	palette         color.Palette
+	result          *image.RGBA
+	once            sync.Once
+	serpentine      bool
 	gammaCorrection float64
-	edgeAwareness float64 // 0..1 factor. 1.0 = full blocking of error diffusion across edges.
+	edgeAwareness   float64 // 0..1 factor. 1.0 = full blocking of error diffusion across edges.
 }
 
 // Serpentine configures the error diffusion to use serpentine scanning.
@@ -309,12 +322,12 @@ func NewErrorDiffusion(img image.Image, kernel DiffusionKernel, p color.Palette,
 		b = img.Bounds()
 	}
 	ed := &ErrorDiffusion{
-		img:        img,
-		kernel:     kernel,
-		palette:    p,
-		serpentine: true, // Default to true as per best practice and request
-		gammaCorrection: 1.0, // Default no gamma
-		edgeAwareness: 0.0,
+		img:             img,
+		kernel:          kernel,
+		palette:         p,
+		serpentine:      true, // Default to true as per best practice and request
+		gammaCorrection: 1.0,  // Default no gamma
+		edgeAwareness:   0.0,
 		Null: Null{
 			bounds: b,
 		},
@@ -421,7 +434,7 @@ func (e *ErrorDiffusion) compute() {
 			// First pass: Calculate total valid weight sum to conserve energy
 			totalWeight := 0.0
 			type neighbor struct {
-				idx int
+				idx    int
 				weight float64
 			}
 			var neighbors []neighbor
@@ -438,7 +451,9 @@ func (e *ErrorDiffusion) compute() {
 						nLum := 0.299*pixels[nidx] + 0.587*pixels[nidx+1] + 0.114*pixels[nidx+2]
 						diff := math.Abs(lum - nLum)
 						edgeStrength := diff * 2.0 // Scale diff (0-1) to be more aggressive
-						if edgeStrength > 1 { edgeStrength = 1 }
+						if edgeStrength > 1 {
+							edgeStrength = 1
+						}
 						weight = weight * (1.0 - (e.edgeAwareness * edgeStrength))
 					}
 					totalWeight += weight

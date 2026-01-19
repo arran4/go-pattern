@@ -12,7 +12,7 @@ var _ image.Image = (*Scales)(nil)
 // Scales generates an overlapping scales pattern.
 type Scales struct {
 	Null
-	Radius  int
+	Radius   int
 	SpacingX int
 	SpacingY int
 }
@@ -21,9 +21,15 @@ func (s *Scales) At(x, y int) color.Color {
 	r := s.Radius
 	sx := s.SpacingX
 	sy := s.SpacingY
-	if r <= 0 { r = 20 }
-	if sx <= 0 { sx = r }
-	if sy <= 0 { sy = r }
+	if r <= 0 {
+		r = 20
+	}
+	if sx <= 0 {
+		sx = r
+	}
+	if sy <= 0 {
+		sy = r
+	}
 
 	// Calculate grid cell indices
 	// Rows are spaced by sy
@@ -45,8 +51,8 @@ func (s *Scales) At(x, y int) color.Color {
 	// Max overlap distance is Radius.
 	// So we check rows where abs(center_y - y) < Radius.
 
-	minRow := int(math.Floor(float64(y - r) / float64(sy)))
-	maxRow := int(math.Ceil(float64(y + r) / float64(sy)))
+	minRow := int(math.Floor(float64(y-r) / float64(sy)))
+	maxRow := int(math.Ceil(float64(y+r) / float64(sy)))
 
 	bestZ := -100000
 	var bestVal float64 = 0 // 0 to 1 (center)
@@ -55,7 +61,7 @@ func (s *Scales) At(x, y int) color.Color {
 	for row := minRow; row <= maxRow; row++ {
 		// Calculate X offset for this row
 		offsetX := 0.0
-		if row % 2 != 0 {
+		if row%2 != 0 {
 			offsetX = float64(sx) / 2.0
 		}
 
@@ -117,7 +123,7 @@ func NewScales(ops ...func(any)) image.Image {
 		Null: Null{
 			bounds: image.Rect(0, 0, 255, 255),
 		},
-		Radius: 30,
+		Radius:   30,
 		SpacingX: 30,
 		SpacingY: 20, // Default overlap in Y
 	}
@@ -129,28 +135,49 @@ func NewScales(ops ...func(any)) image.Image {
 
 // Configuration options
 
-type ScaleRadius struct { Radius int }
+type ScaleRadius struct{ Radius int }
+
 func (s *ScaleRadius) SetScaleRadius(v int) { s.Radius = v }
-type hasScaleRadius interface { SetScaleRadius(int) }
+
+type hasScaleRadius interface{ SetScaleRadius(int) }
+
 func SetScaleRadius(v int) func(any) {
-	return func(i any) { if h, ok := i.(hasScaleRadius); ok { h.SetScaleRadius(v) } }
+	return func(i any) {
+		if h, ok := i.(hasScaleRadius); ok {
+			h.SetScaleRadius(v)
+		}
+	}
 }
 
-type ScaleXSpacing struct { SpacingX int }
+type ScaleXSpacing struct{ SpacingX int }
+
 func (s *ScaleXSpacing) SetScaleXSpacing(v int) { s.SpacingX = v }
-type hasScaleXSpacing interface { SetScaleXSpacing(int) }
+
+type hasScaleXSpacing interface{ SetScaleXSpacing(int) }
+
 func SetScaleXSpacing(v int) func(any) {
-	return func(i any) { if h, ok := i.(hasScaleXSpacing); ok { h.SetScaleXSpacing(v) } }
+	return func(i any) {
+		if h, ok := i.(hasScaleXSpacing); ok {
+			h.SetScaleXSpacing(v)
+		}
+	}
 }
 
-type ScaleYSpacing struct { SpacingY int }
+type ScaleYSpacing struct{ SpacingY int }
+
 func (s *ScaleYSpacing) SetScaleYSpacing(v int) { s.SpacingY = v }
-type hasScaleYSpacing interface { SetScaleYSpacing(int) }
+
+type hasScaleYSpacing interface{ SetScaleYSpacing(int) }
+
 func SetScaleYSpacing(v int) func(any) {
-	return func(i any) { if h, ok := i.(hasScaleYSpacing); ok { h.SetScaleYSpacing(v) } }
+	return func(i any) {
+		if h, ok := i.(hasScaleYSpacing); ok {
+			h.SetScaleYSpacing(v)
+		}
+	}
 }
 
 // Implement interfaces on Scales struct
-func (s *Scales) SetScaleRadius(v int) { s.Radius = v }
+func (s *Scales) SetScaleRadius(v int)   { s.Radius = v }
 func (s *Scales) SetScaleXSpacing(v int) { s.SpacingX = v }
 func (s *Scales) SetScaleYSpacing(v int) { s.SpacingY = v }

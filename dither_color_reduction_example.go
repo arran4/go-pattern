@@ -7,6 +7,7 @@ import (
 
 var DitherColorReductionOutputFilename = "dither_color_reduction.png"
 var DitherColorReductionZoomLevels = []int{}
+
 const DitherColorReductionOrder = 104
 
 // ExampleNewDitherColorReduction demonstrates color reduction capabilities using various palettes.
@@ -50,36 +51,36 @@ func GenerateDitherColorReductionReferences() (map[string]func(image.Rectangle) 
 	}
 
 	return map[string]func(image.Rectangle) image.Image{
-		"CGA_Bayer8x8": func(b image.Rectangle) image.Image {
-			return NewBayer8x8Dither(gopher, cga)
-		},
-		"CGA_Yliluoma1": func(b image.Rectangle) image.Image {
-			return NewYliluoma1Dither(gopher, cga, 8)
-		},
-		"Gameboy_Bayer4x4": func(b image.Rectangle) image.Image {
-			return NewBayer4x4Dither(gopher, gameboy)
-		},
-		"Gameboy_Knoll": func(b image.Rectangle) image.Image {
-			return NewKnollDither(gopher, gameboy, 8)
-		},
-		"BW_Halftone": func(b image.Rectangle) image.Image {
-			return NewHalftoneDither(gopher, 6, bw)
-		},
-		"WebSafe_Bayer8x8": func(b image.Rectangle) image.Image {
-			return NewBayer8x8Dither(gopher, webSafe)
-		},
-		"WebSafe_Yliluoma2": func(b image.Rectangle) image.Image {
-			return NewYliluoma2Dither(gopher, webSafe, 8)
-		},
-	}, []string{
-		"CGA_Bayer8x8",
-		"CGA_Yliluoma1",
-		"Gameboy_Bayer4x4",
-		"Gameboy_Knoll",
-		"BW_Halftone",
-		"WebSafe_Bayer8x8",
-		"WebSafe_Yliluoma2",
-	}
+			"CGA_Bayer8x8": func(b image.Rectangle) image.Image {
+				return NewBayer8x8Dither(gopher, cga)
+			},
+			"CGA_Yliluoma1": func(b image.Rectangle) image.Image {
+				return NewYliluoma1Dither(gopher, cga, 8)
+			},
+			"Gameboy_Bayer4x4": func(b image.Rectangle) image.Image {
+				return NewBayer4x4Dither(gopher, gameboy)
+			},
+			"Gameboy_Knoll": func(b image.Rectangle) image.Image {
+				return NewKnollDither(gopher, gameboy, 8)
+			},
+			"BW_Halftone": func(b image.Rectangle) image.Image {
+				return NewHalftoneDither(gopher, 6, bw)
+			},
+			"WebSafe_Bayer8x8": func(b image.Rectangle) image.Image {
+				return NewBayer8x8Dither(gopher, webSafe)
+			},
+			"WebSafe_Yliluoma2": func(b image.Rectangle) image.Image {
+				return NewYliluoma2Dither(gopher, webSafe, 8)
+			},
+		}, []string{
+			"CGA_Bayer8x8",
+			"CGA_Yliluoma1",
+			"Gameboy_Bayer4x4",
+			"Gameboy_Knoll",
+			"BW_Halftone",
+			"WebSafe_Bayer8x8",
+			"WebSafe_Yliluoma2",
+		}
 }
 
 // PaletteCGA is the CGA Palette 1 High Intensity

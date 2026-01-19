@@ -7,20 +7,20 @@ import (
 )
 
 var (
-	DungeonOutputFilename = "dungeon.png"
-	IceOutputFilename = "ice.png"
-	CircuitOutputFilename = "circuit.png"
-	FenceOutputFilename = "fence.png"
-	StripeOutputFilename = "stripe.png"
-	AbstractArtOutputFilename = "abstract_art.png" // Renamed from Crystal
-	PixelCamoOutputFilename = "pixel_camo.png"
+	DungeonOutputFilename       = "dungeon.png"
+	IceOutputFilename           = "ice.png"
+	CircuitOutputFilename       = "circuit.png"
+	FenceOutputFilename         = "fence.png"
+	StripeOutputFilename        = "stripe.png"
+	AbstractArtOutputFilename   = "abstract_art.png" // Renamed from Crystal
+	PixelCamoOutputFilename     = "pixel_camo.png"
 	CheckerBorderOutputFilename = "checker_border.png"
-	WaveBorderOutputFilename = "wave_border.png"
-	CarpetOutputFilename = "carpet.png"
-	PersianRugOutputFilename = "persian_rug.png"
-	LavaFlowOutputFilename = "lava_flow.png"
-	MetalPlateOutputFilename = "metal_plate.png"
-	FantasyFrameOutputFilename = "fantasy_frame.png"
+	WaveBorderOutputFilename    = "wave_border.png"
+	CarpetOutputFilename        = "carpet.png"
+	PersianRugOutputFilename    = "persian_rug.png"
+	LavaFlowOutputFilename      = "lava_flow.png"
+	MetalPlateOutputFilename    = "metal_plate.png"
+	FantasyFrameOutputFilename  = "fantasy_frame.png"
 )
 
 // Dungeon: Stone brick + moss speckles + edge cracks
@@ -149,11 +149,17 @@ func GenerateCircuitImpl(rect image.Rectangle) image.Image {
 		drawLine := func(x1, y1, x2, y2 float64) bool {
 			// Distance from point to line segment
 			l2 := (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)
-			if l2 == 0 { return math.Sqrt((ux-x1)*(ux-x1) + (uy-y1)*(uy-y1)) < thickness }
+			if l2 == 0 {
+				return math.Sqrt((ux-x1)*(ux-x1)+(uy-y1)*(uy-y1)) < thickness
+			}
 			tVal := ((ux-x1)*(x2-x1) + (uy-y1)*(y2-y1)) / l2
-			if tVal < 0 { tVal = 0 }
-			if tVal > 1 { tVal = 1 }
-			px, py := x1 + tVal*(x2-x1), y1 + tVal*(y2-y1)
+			if tVal < 0 {
+				tVal = 0
+			}
+			if tVal > 1 {
+				tVal = 1
+			}
+			px, py := x1+tVal*(x2-x1), y1+tVal*(y2-y1)
 			dist := math.Sqrt((ux-px)*(ux-px) + (uy-py)*(uy-py))
 			return dist < thickness
 		}
@@ -166,7 +172,7 @@ func GenerateCircuitImpl(rect image.Rectangle) image.Image {
 		isTrace := false
 		isPad := false
 
-		half := float64(cellSize)/2.0
+		half := float64(cellSize) / 2.0
 
 		switch typeCode {
 		case 1: // Horiz
@@ -202,7 +208,9 @@ func GenerateCircuitImpl(rect image.Rectangle) image.Image {
 	chipGen := func(u, v float64, hash uint64) (color.Color, float64) {
 		if (hash & 255) < 30 {
 			w, h := 0.6, 0.4
-			if (hash & 1) == 1 { w, h = 0.4, 0.6 }
+			if (hash & 1) == 1 {
+				w, h = 0.4, 0.6
+			}
 			if math.Abs(u) < w/2 && math.Abs(v) < h/2 {
 				return color.RGBA{20, 20, 20, 255}, 1.0
 			}
@@ -215,7 +223,11 @@ func GenerateCircuitImpl(rect image.Rectangle) image.Image {
 		SetScatterDensity(1.0),
 		SetScatterGenerator(chipGen),
 		SetSpaceColor(color.Transparent), // Important: Transparent background!
-		func(i any) { if p, ok := i.(*Scatter); ok { p.Seed = 200 } },
+		func(i any) {
+			if p, ok := i.(*Scatter); ok {
+				p.Seed = 200
+			}
+		},
 	)
 
 	l1 := NewBlend(bg, traces, BlendNormal)
@@ -320,7 +332,7 @@ func ExampleNewWaveBorder() image.Image {
 		return color.Transparent
 	})
 	sine := NewGeneric(func(x, y int) color.Color {
-		v := math.Sin(float64(x) * 0.1) * 10.0
+		v := math.Sin(float64(x)*0.1) * 10.0
 		val := 128.0 + v
 		return color.Gray{Y: uint8(val)}
 	})
@@ -358,7 +370,7 @@ func ExampleNewCarpet() image.Image {
 
 	// Border Elements?
 	// Striped background for texture
-	stripes := NewCrossHatch(SetLineSize(1), SetSpaceSize(3), SetAngle(0), SetLineColor(color.RGBA{0,0,0,30}))
+	stripes := NewCrossHatch(SetLineSize(1), SetSpaceSize(3), SetAngle(0), SetLineColor(color.RGBA{0, 0, 0, 30}))
 
 	l1 := NewBlend(bg, stripes, BlendNormal)
 	l2 := NewBlend(l1, d1, BlendNormal)
@@ -380,9 +392,9 @@ func GeneratePersianRugImpl(rect image.Rectangle) image.Image {
 		SetFrequency(0.8),
 	)
 	medColor := NewColorMap(medBase,
-		ColorStop{0.0, color.RGBA{20, 20, 80, 255}}, // Center Blue
+		ColorStop{0.0, color.RGBA{20, 20, 80, 255}},   // Center Blue
 		ColorStop{0.3, color.RGBA{150, 120, 50, 255}}, // Gold
-		ColorStop{0.35, color.RGBA{20, 20, 80, 255}}, // Blue
+		ColorStop{0.35, color.RGBA{20, 20, 80, 255}},  // Blue
 		ColorStop{0.6, color.Transparent},
 	)
 
@@ -420,14 +432,24 @@ func GeneratePersianRugImpl(rect image.Rectangle) image.Image {
 	borderGen := NewGeneric(func(x, y int) color.Color {
 		w, h := rect.Dx(), rect.Dy()
 		d := x
-		if w-1-x < d { d = w-1-x }
-		if y < d { d = y }
-		if h-1-y < d { d = h-1-y }
+		if w-1-x < d {
+			d = w - 1 - x
+		}
+		if y < d {
+			d = y
+		}
+		if h-1-y < d {
+			d = h - 1 - y
+		}
 
 		// Outer Band (Blue)
-		if d < 10 { return color.RGBA{20, 20, 60, 255} }
+		if d < 10 {
+			return color.RGBA{20, 20, 60, 255}
+		}
 		// Gold Line
-		if d < 12 { return color.RGBA{180, 160, 100, 255} }
+		if d < 12 {
+			return color.RGBA{180, 160, 100, 255}
+		}
 		// Main Border Band (Red with pattern)
 		if d < 25 {
 			// Detailed border pattern
@@ -439,7 +461,9 @@ func GeneratePersianRugImpl(rect image.Rectangle) image.Image {
 			return color.RGBA{120, 40, 40, 255}
 		}
 		// Gold Line
-		if d < 27 { return color.RGBA{180, 160, 100, 255} }
+		if d < 27 {
+			return color.RGBA{180, 160, 100, 255}
+		}
 
 		return color.Transparent
 	})
@@ -557,7 +581,7 @@ func GenerateFantasyFrame(rect image.Rectangle) image.Image {
 		// Use rect bounds
 		w, h := rect.Dx(), rect.Dy()
 		// Relative coords
-		rx, ry := x - rect.Min.X, y - rect.Min.Y
+		rx, ry := x-rect.Min.X, y-rect.Min.Y
 
 		distTL := math.Sqrt(float64(rx*rx + ry*ry))
 		distTR := math.Sqrt(float64((rx-w)*(rx-w) + ry*ry))
@@ -581,25 +605,24 @@ func ExampleNewFantasyFrame() image.Image {
 	return GenerateFantasyFrame(image.Rect(0, 0, 150, 150))
 }
 
-
 // --- Generic Helper ---
 
 type Generic struct {
 	Func func(x, y int) color.Color
 }
-func (p *Generic) At(x, y int) color.Color { return p.Func(x, y) }
-func (p *Generic) Bounds() image.Rectangle { return image.Rect(0, 0, 255, 255) }
-func (p *Generic) ColorModel() color.Model { return color.RGBAModel }
-func NewGeneric(f func(x,y int) color.Color) image.Image { return &Generic{Func: f} }
 
+func (p *Generic) At(x, y int) color.Color                { return p.Func(x, y) }
+func (p *Generic) Bounds() image.Rectangle                { return image.Rect(0, 0, 255, 255) }
+func (p *Generic) ColorModel() color.Model                { return color.RGBAModel }
+func NewGeneric(f func(x, y int) color.Color) image.Image { return &Generic{Func: f} }
 
 func makePoints(n, w, h int) []image.Point {
 	pts := make([]image.Point, n)
 	seed := 50
 	for i := 0; i < n; i++ {
-		seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF
+		seed = (seed*1103515245 + 12345) & 0x7FFFFFFF
 		x := seed % w
-		seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF
+		seed = (seed*1103515245 + 12345) & 0x7FFFFFFF
 		y := seed % h
 		pts[i] = image.Point{x, y}
 	}
@@ -645,6 +668,7 @@ func GenerateLavaFlow(rect image.Rectangle) image.Image {
 func GenerateMetalPlate(rect image.Rectangle) image.Image {
 	return ExampleNewMetalPlate()
 }
+
 // GenerateFantasyFrame is defined above
 
 func init() {

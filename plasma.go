@@ -14,13 +14,13 @@ var _ image.Image = (*Plasma)(nil)
 // It supports RGB (independent channels) or Grayscale.
 type Plasma struct {
 	Null
-	Seed       int64
-	Roughness  float64
-	Color      bool // If true, generates RGB plasma. If false, grayscale.
-	gridR      [][]float64
-	gridG      [][]float64
-	gridB      [][]float64
-	once       sync.Once
+	Seed      int64
+	Roughness float64
+	Color     bool // If true, generates RGB plasma. If false, grayscale.
+	gridR     [][]float64
+	gridG     [][]float64
+	gridB     [][]float64
+	once      sync.Once
 }
 
 func (p *Plasma) SetSeed(v int64) {
@@ -88,15 +88,15 @@ func (p *Plasma) divide(grid [][]float64, x, y, size int, stdDev float64, rnd *r
 
 	// Square
 	avg := (grid[x][y] + grid[x+size][y] + grid[x][y+size] + grid[x+size][y+size]) / 4.0
-	grid[x+half][y+half] = avg + (rnd.Float64()*2 - 1) * scale
+	grid[x+half][y+half] = avg + (rnd.Float64()*2-1)*scale
 
 	c := grid[x+half][y+half]
 
 	// Diamond
-	grid[x+half][y] = (grid[x][y] + grid[x+size][y] + c) / 3.0 + (rnd.Float64()*2 - 1) * scale
-	grid[x+half][y+size] = (grid[x][y+size] + grid[x+size][y+size] + c) / 3.0 + (rnd.Float64()*2 - 1) * scale
-	grid[x][y+half] = (grid[x][y] + grid[x][y+size] + c) / 3.0 + (rnd.Float64()*2 - 1) * scale
-	grid[x+size][y+half] = (grid[x+size][y] + grid[x+size][y+size] + c) / 3.0 + (rnd.Float64()*2 - 1) * scale
+	grid[x+half][y] = (grid[x][y]+grid[x+size][y]+c)/3.0 + (rnd.Float64()*2-1)*scale
+	grid[x+half][y+size] = (grid[x][y+size]+grid[x+size][y+size]+c)/3.0 + (rnd.Float64()*2-1)*scale
+	grid[x][y+half] = (grid[x][y]+grid[x][y+size]+c)/3.0 + (rnd.Float64()*2-1)*scale
+	grid[x+size][y+half] = (grid[x+size][y]+grid[x+size][y+size]+c)/3.0 + (rnd.Float64()*2-1)*scale
 
 	newRoughness := stdDev / 2.0
 	p.divide(grid, x, y, half, newRoughness, rnd)
@@ -105,7 +105,6 @@ func (p *Plasma) divide(grid [][]float64, x, y, size int, stdDev float64, rnd *r
 	p.divide(grid, x+half, y+half, half, newRoughness, rnd)
 }
 
-
 func (p *Plasma) At(x, y int) color.Color {
 	p.generate()
 
@@ -113,9 +112,13 @@ func (p *Plasma) At(x, y int) color.Color {
 	gh := len(p.gridR[0]) - 1
 
 	gx := x % gw
-	if gx < 0 { gx += gw }
+	if gx < 0 {
+		gx += gw
+	}
 	gy := y % gh
-	if gy < 0 { gy += gh }
+	if gy < 0 {
+		gy += gh
+	}
 
 	r := clampFloat(p.gridR[gx][gy])
 
@@ -139,16 +142,15 @@ func clampFloat(v float64) float64 {
 	return v
 }
 
-
 // NewPlasma creates a new Plasma pattern.
 func NewPlasma(ops ...func(any)) image.Image {
 	p := &Plasma{
 		Null: Null{
 			bounds: image.Rect(0, 0, 256, 256),
 		},
-		Seed: 1,
+		Seed:      1,
 		Roughness: 1.0,
-		Color: true, // Default to Color as per user request "full 0-255 per channel"
+		Color:     true, // Default to Color as per user request "full 0-255 per channel"
 	}
 	for _, op := range ops {
 		op(p)

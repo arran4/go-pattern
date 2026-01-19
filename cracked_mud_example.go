@@ -27,10 +27,10 @@ func ExampleNewCrackedMud() {
 	// High value means center of cell.
 
 	mud := NewColorMap(noise,
-		ColorStop{Position: 0.0, Color: color.RGBA{30, 20, 10, 255}},    // Crack (Dark brown/black)
-		ColorStop{Position: 0.1, Color: color.RGBA{60, 40, 20, 255}},    // Crack edge
-		ColorStop{Position: 0.2, Color: color.RGBA{130, 100, 70, 255}},  // Mud surface
-		ColorStop{Position: 1.0, Color: color.RGBA{160, 120, 80, 255}},  // Center of mud chunk
+		ColorStop{Position: 0.0, Color: color.RGBA{30, 20, 10, 255}},   // Crack (Dark brown/black)
+		ColorStop{Position: 0.1, Color: color.RGBA{60, 40, 20, 255}},   // Crack edge
+		ColorStop{Position: 0.2, Color: color.RGBA{130, 100, 70, 255}}, // Mud surface
+		ColorStop{Position: 1.0, Color: color.RGBA{160, 120, 80, 255}}, // Center of mud chunk
 	)
 
 	f, err := os.Create(CrackedMudOutputFilename)

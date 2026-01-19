@@ -9,6 +9,7 @@ import (
 
 var MathsMandelbrotOutputFilename = "maths_mandelbrot.png"
 var MathsMandelbrotZoomLevels = []int{}
+
 const MathsMandelbrotOrder = 20
 
 // Mandelbrot Set
@@ -49,6 +50,7 @@ func GenerateMathsMandelbrot(b image.Rectangle) image.Image {
 
 var MathsJuliaOutputFilename = "maths_julia.png"
 var MathsJuliaZoomLevels = []int{}
+
 const MathsJuliaOrder = 21
 
 // Julia Set
@@ -82,6 +84,7 @@ func GenerateMathsJulia(b image.Rectangle) image.Image {
 
 var MathsSineOutputFilename = "maths_sine.png"
 var MathsSineZoomLevels = []int{}
+
 const MathsSineOrder = 22
 
 // Sine Waves
@@ -101,7 +104,7 @@ func GenerateMathsSine(b image.Rectangle) image.Image {
 		// Center line at h/2
 		// Amplitude h/4
 
-		targetY := float64(b.Dy())/2 + val * float64(b.Dy())/4
+		targetY := float64(b.Dy())/2 + val*float64(b.Dy())/4
 
 		dist := math.Abs(float64(y) - targetY)
 
@@ -115,6 +118,7 @@ func GenerateMathsSine(b image.Rectangle) image.Image {
 
 var MathsWavesOutputFilename = "maths_waves.png"
 var MathsWavesZoomLevels = []int{}
+
 const MathsWavesOrder = 23
 
 // Interference Waves
@@ -141,7 +145,6 @@ func GenerateMathsWaves(b image.Rectangle) image.Image {
 	}
 	return NewMaths(f, SetBounds(b))
 }
-
 
 func init() {
 	RegisterGenerator("MathsMandelbrot", GenerateMathsMandelbrot)

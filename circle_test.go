@@ -41,9 +41,9 @@ func TestCircle_BorderAndFill(t *testing.T) {
 	c := NewCircle(
 		SetBounds(image.Rect(0, 0, 20, 20)),
 		SetLineSize(2),
-		SetLineColor(color.Black), // Border
+		SetLineColor(color.Black),                // Border
 		SetFillColor(color.RGBA{255, 0, 0, 255}), // Red Fill
-		SetSpaceColor(color.White), // Background
+		SetSpaceColor(color.White),               // Background
 	)
 
 	// Center pixel (10,10) should be Fill (Red).
