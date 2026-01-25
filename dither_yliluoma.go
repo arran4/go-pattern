@@ -12,12 +12,17 @@ import (
 // It mixes two colors from the palette to approximate the input color.
 type Yliluoma1Dither struct {
 	Null
-	Input   image.Image
-	Palette []color.Color
-	Matrix  []float64 // 0..1 values
-	Size    int       // e.g. 8 for 8x8
-	cache   map[int]mixingPlan
-	mu      sync.RWMutex
+	Input       image.Image
+	Palette     []color.Color
+	Matrix      []float64 // 0..1 values
+	Size        int       // e.g. 8 for 8x8
+	cache       map[int]mixingPlan
+	paletteRGBA []cachedRGBA
+	mu          sync.RWMutex
+}
+
+type cachedRGBA struct {
+	r, g, b int
 }
 
 // NewYliluoma1Dither creates a new Yliluoma1Dither pattern.
@@ -47,11 +52,16 @@ func NewYliluoma1Dither(input image.Image, palette color.Palette, size int, ops 
 		Null: Null{
 			bounds: image.Rect(0, 0, 100, 100),
 		},
-		Input:   input,
-		Palette: palette,
-		Matrix:  mat,
-		Size:    size,
-		cache:   make(map[int]mixingPlan),
+		Input:       input,
+		Palette:     palette,
+		Matrix:      mat,
+		Size:        size,
+		cache:       make(map[int]mixingPlan),
+		paletteRGBA: make([]cachedRGBA, len(palette)),
+	}
+	for i, c := range palette {
+		r, g, b, _ := c.RGBA()
+		p.paletteRGBA[i] = cachedRGBA{int(r >> 8), int(g >> 8), int(b >> 8)}
 	}
 	if input != nil {
 		p.bounds = input.Bounds()
@@ -109,6 +119,14 @@ type mixingPlan struct {
 }
 
 func (p *Yliluoma1Dither) deviseBestMixingPlan(r, g, b int) mixingPlan {
+	if p.paletteRGBA == nil || len(p.paletteRGBA) != len(p.Palette) {
+		p.paletteRGBA = make([]cachedRGBA, len(p.Palette))
+		for i, c := range p.Palette {
+			r, g, b, _ := c.RGBA()
+			p.paletteRGBA[i] = cachedRGBA{int(r >> 8), int(g >> 8), int(b >> 8)}
+		}
+	}
+
 	bestPlan := mixingPlan{0, 0, 0.5}
 	leastPenalty := 1e99
 
@@ -117,14 +135,10 @@ func (p *Yliluoma1Dither) deviseBestMixingPlan(r, g, b int) mixingPlan {
 	// Iterate all unique pairs
 	for i := 0; i < len(p.Palette); i++ {
 		for j := i; j < len(p.Palette); j++ {
-			c1 := p.Palette[i]
-			c2 := p.Palette[j]
-			r1, g1, b1, _ := c1.RGBA()
-			r2, g2, b2, _ := c2.RGBA()
-
-			// 0-255
-			ir1, ig1, ib1 := int(r1>>8), int(g1>>8), int(b1>>8)
-			ir2, ig2, ib2 := int(r2>>8), int(g2>>8), int(b2>>8)
+			c1 := p.paletteRGBA[i]
+			c2 := p.paletteRGBA[j]
+			ir1, ig1, ib1 := c1.r, c1.g, c1.b
+			ir2, ig2, ib2 := c2.r, c2.g, c2.b
 
 			// Analytic ratio calculation
 			// solve(r1 + ratio*(r2-r1) = r) => ratio = (r - r1) / (r2 - r1)
