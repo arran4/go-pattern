@@ -1,6 +1,7 @@
 package pattern
 
 import (
+	"image/color"
 	"testing"
 )
 
@@ -75,5 +76,18 @@ func TestPerlinNoiseSeed(t *testing.T) {
 		}
 	} else {
 		t.Errorf("Expected algo to remain PerlinNoise, got %T", n.algo)
+	}
+}
+
+func TestCryptoNoise_At(t *testing.T) {
+	cn := &CryptoNoise{}
+	// Check that we get some variation
+	seen := make(map[color.Color]bool)
+	for i := 0; i < 100; i++ {
+		c := cn.At(i, 0)
+		seen[c] = true
+	}
+	if len(seen) < 2 {
+		t.Errorf("CryptoNoise seems to produce constant output: %v", seen)
 	}
 }

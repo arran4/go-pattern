@@ -102,14 +102,30 @@ func NoiseSeed(seed int64) func(any) {
 // --- Algorithms ---
 
 // CryptoNoise uses crypto/rand.
-type CryptoNoise struct{}
+type CryptoNoise struct {
+	mu  sync.Mutex
+	buf []byte
+	idx int
+}
 
 func (c *CryptoNoise) At(x, y int) color.Color {
-	b := make([]byte, 1)
-	if _, err := rand.Read(b); err != nil {
-		return color.Black
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.idx >= len(c.buf) {
+		if c.buf == nil {
+			c.buf = make([]byte, 4096)
+		}
+		if _, err := rand.Read(c.buf); err != nil {
+			c.idx = len(c.buf)
+			return color.Black
+		}
+		c.idx = 0
 	}
-	return color.Gray{Y: b[0]}
+
+	val := c.buf[c.idx]
+	c.idx++
+	return color.Gray{Y: val}
 }
 
 // HashNoise uses a high-quality, stateless pseudo-random number generator based on coordinates.
