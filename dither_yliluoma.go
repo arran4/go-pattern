@@ -112,6 +112,8 @@ func (p *Yliluoma1Dither) deviseBestMixingPlan(r, g, b int) mixingPlan {
 	bestPlan := mixingPlan{0, 0, 0.5}
 	leastPenalty := 1e99
 
+	targetLuma := calculateLuma(r, g, b)
+
 	// Iterate all unique pairs
 	for i := 0; i < len(p.Palette); i++ {
 		for j := i; j < len(p.Palette); j++ {
@@ -130,7 +132,7 @@ func (p *Yliluoma1Dither) deviseBestMixingPlan(r, g, b int) mixingPlan {
 
 			// If colors are same, ratio doesn't matter, pick 0.5
 			if i == j {
-				penalty := evaluateMixingError(r, g, b, ir1, ig1, ib1, ir1, ig1, ib1, ir2, ig2, ib2, 0)
+				penalty := evaluateMixingError(targetLuma, r, g, b, ir1, ig1, ib1, ir1, ig1, ib1, ir2, ig2, ib2, 0)
 				if penalty < leastPenalty {
 					leastPenalty = penalty
 					bestPlan = mixingPlan{i, j, 0} // ratio irrelevant
@@ -165,7 +167,7 @@ func (p *Yliluoma1Dither) deviseBestMixingPlan(r, g, b int) mixingPlan {
 			mg := float64(ig1) + ratio*dg
 			mb := float64(ib1) + ratio*db
 
-			penalty := evaluateMixingError(r, g, b, int(mr), int(mg), int(mb), ir1, ig1, ib1, ir2, ig2, ib2, ratio)
+			penalty := evaluateMixingError(targetLuma, r, g, b, int(mr), int(mg), int(mb), ir1, ig1, ib1, ir2, ig2, ib2, ratio)
 			if penalty < leastPenalty {
 				leastPenalty = penalty
 				bestPlan = mixingPlan{i, j, ratio}
@@ -175,15 +177,27 @@ func (p *Yliluoma1Dither) deviseBestMixingPlan(r, g, b int) mixingPlan {
 	return bestPlan
 }
 
-func evaluateMixingError(r, g, b, r0, g0, b0, r1, g1, b1, r2, g2, b2 int, ratio float64) float64 {
+func evaluateMixingError(targetLuma float64, r, g, b, r0, g0, b0, r1, g1, b1, r2, g2, b2 int, ratio float64) float64 {
 	// Using the improved comparison from article
 	// ColorCompare(r,g,b, r0,g0,b0) + ColorCompare(r1,g1,b1, r2,g2,b2) * 0.1 * (fabs(ratio-0.5)+0.5);
 
-	baseErr := colorCompareLuma(r, g, b, r0, g0, b0)
+	luma2 := (float64(r0)*299 + float64(g0)*587 + float64(b0)*114) / (255.0 * 1000)
+	lumadiff := targetLuma - luma2
+
+	diffR := float64(r - r0) / 255.0
+	diffG := float64(g - g0) / 255.0
+	diffB := float64(b - b0) / 255.0
+
+	baseErr := (diffR*diffR*0.299+diffG*diffG*0.587+diffB*diffB*0.114)*0.75 + lumadiff*lumadiff
+
 	mixErr := colorCompareLuma(r1, g1, b1, r2, g2, b2)
 
 	factor := math.Abs(ratio - 0.5) + 0.5
-	return baseErr + mixErr * 0.1 * factor
+	return baseErr + mixErr*0.1*factor
+}
+
+func calculateLuma(r, g, b int) float64 {
+	return (float64(r)*299 + float64(g)*587 + float64(b)*114) / (255.0 * 1000)
 }
 
 func colorCompareLuma(r1, g1, b1, r2, g2, b2 int) float64 {
