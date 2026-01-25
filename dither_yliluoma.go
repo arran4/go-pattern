@@ -351,9 +351,20 @@ func (p *Yliluoma2Dither) deviseMixingPlan(r, g, b int) []int {
 	}
 
 	// Sort by luma
-	sort.Slice(candidates, func(i, j int) bool {
-		return p.getLuma(candidates[i]) < p.getLuma(candidates[j])
+	type candidate struct {
+		id   int
+		luma float64
+	}
+	sorted := make([]candidate, len(candidates))
+	for i, id := range candidates {
+		sorted[i] = candidate{id, p.getLuma(id)}
+	}
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].luma < sorted[j].luma
 	})
+	for i, s := range sorted {
+		candidates[i] = s.id
+	}
 
 	return candidates
 }
@@ -497,9 +508,20 @@ func (p *KnollDither) devisePlan(r, g, b int) []int {
 	}
 
 	// Sort by luma
-	sort.Slice(candidates, func(i, j int) bool {
-		return p.getLuma(candidates[i]) < p.getLuma(candidates[j])
+	type candidate struct {
+		id   int
+		luma float64
+	}
+	sorted := make([]candidate, len(candidates))
+	for i, id := range candidates {
+		sorted[i] = candidate{id, p.getLuma(id)}
+	}
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].luma < sorted[j].luma
 	})
+	for i, s := range sorted {
+		candidates[i] = s.id
+	}
 
 	return candidates
 }
