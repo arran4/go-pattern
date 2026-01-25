@@ -48,7 +48,7 @@ func (c *RootCmd) NewrunCmd() *runCmd {
 		SubCommands: make(map[string]Cmd),
 	}
 
-	set.StringVar(&v.pipeline, "pipeline", "", "TODO: Add usage text")
+	set.StringVar(&v.pipeline, "pipeline", "", "The pipeline to execute")
 
 	set.Usage = v.Usage
 
