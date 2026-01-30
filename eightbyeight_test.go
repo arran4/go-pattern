@@ -61,3 +61,58 @@ func TestEightByEight_NegativeCoordinates(t *testing.T) {
 		t.Errorf("Expected White at -7,0")
 	}
 }
+
+func TestEightByEight_Palette(t *testing.T) {
+	red := color.RGBA{255, 0, 0, 255}
+	blue := color.RGBA{0, 0, 255, 255}
+
+	// Test 2-color palette (replaces default Black/White)
+	p := NewEightByEight(1, SetPalette(blue, red)) // Space=Blue(0), Line=Red(1)
+
+	// Same logic as TestLogic, but Red/Blue.
+	// x=0, y=0. Expect Line (Red).
+	if p.At(0, 0) != red {
+		t.Errorf("Expected Red at 0,0 for Palette Mode 1")
+	}
+	// x=2, y=0. Expect Space (Blue).
+	if p.At(2, 0) != blue {
+		t.Errorf("Expected Blue at 2,0 for Palette Mode 1")
+	}
+}
+
+func TestEightByEight_MultiColor(t *testing.T) {
+	c0 := color.RGBA{0, 0, 0, 255}
+	c1 := color.RGBA{100, 100, 100, 255}
+	c2 := color.RGBA{200, 200, 200, 255}
+
+	// Mode = 5.
+	// Palette len = 3.
+	// bgIdx = 5 % 3 = 2. -> c2
+	// fgIdx = (5 / 3) % 3 = 1 % 3 = 1. -> c1
+
+	p := NewEightByEight(5, SetPalette(c0, c1, c2))
+
+	// Mode 5 in binary: 00 00 01 01. (idx 0=1, idx 1=1, idx 2=0, idx 3=0).
+	// south values:
+	// idx 0 (x%4=0): val=1 -> sv=2^(4-1)=8.
+	// idx 1 (x%4=1): val=1 -> sv=8.
+	// idx 2 (x%4=2): val=0 -> sv=16.
+	// idx 3 (x%4=3): val=0 -> sv=16.
+
+	// Check x=0, y=0.
+	// xpRaw=0.
+	// useMultiColor=true. Mode cutoff ignored.
+	// idx=0 -> sv=8.
+	// dp = (0-0)%8 = 0. 0%8 == 0. Matches.
+	// Should return fgIdx (c1).
+	if p.At(0, 0) != c1 {
+		t.Errorf("Expected c1 (fg) at 0,0")
+	}
+
+	// Check a pixel that fails the pattern check (sv check).
+	// x=0, y=1. dp=(1-0)%8=1. 1%8 != 0.
+	// Should return bgIdx (c2).
+	if p.At(0, 1) != c2 {
+		t.Errorf("Expected c2 (bg) at 0,1")
+	}
+}

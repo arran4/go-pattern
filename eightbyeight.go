@@ -15,6 +15,7 @@ type EightByEight struct {
 	Mode int
 	LineColor
 	SpaceColor
+	Palette []color.Color
 }
 
 func (p *EightByEight) ColorModel() color.Model {
@@ -25,21 +26,29 @@ func (p *EightByEight) Bounds() image.Rectangle {
 	return p.bounds
 }
 
+func (p *EightByEight) SetPalette(colors []color.Color) {
+	p.Palette = colors
+}
+
 func (p *EightByEight) At(x, y int) color.Color {
 	xpRaw := x % 8
+
+	useMultiColor := len(p.Palette) > 2
+	var fgIdx, bgIdx int
+	if useMultiColor {
+		bgIdx = p.Mode % len(p.Palette)
+		fgIdx = (p.Mode / len(p.Palette)) % len(p.Palette)
+	}
+
 	// The original logic checks if mode >= xpRaw.
-	// Since xpRaw is in [-7, 7], and mode is typically >= 0.
-	// If mode is 0, and xpRaw is 1, check fails -> returns SpaceColor.
-	if p.Mode >= xpRaw {
+	// In multi-color mode, this check is bypassed (implied || useMultiColor).
+	if useMultiColor || p.Mode >= xpRaw {
 		xpAbs := xpRaw
 		if xpAbs < 0 {
 			xpAbs = -xpAbs
 		}
 
 		// Calculate south value for this column (xpAbs).
-		// Original logic initializes south to {1, 0, 0, 0}.
-		// Then fills it with base-4 digits of mode.
-		// If mode=0, loop doesn't run, south remains {1, 0, 0, 0}.
 		idx := xpAbs % 4
 		svVal := (p.Mode >> (2 * idx)) & 3
 		if idx == 0 && p.Mode == 0 {
@@ -57,17 +66,29 @@ func (p *EightByEight) At(x, y int) color.Color {
 		}
 
 		if sv > 0 && dp%sv == 0 {
+			if useMultiColor {
+				return p.Palette[fgIdx]
+			}
 			if p.LineColor.LineColor != nil {
 				return p.LineColor.LineColor
 			}
-			return color.Black // Default should be handled in New, but safe fallback
+			if len(p.Palette) > 1 {
+				return p.Palette[1]
+			}
+			return color.Black
 		}
 	}
 
+	if useMultiColor {
+		return p.Palette[bgIdx]
+	}
 	if p.SpaceColor.SpaceColor != nil {
 		return p.SpaceColor.SpaceColor
 	}
-	return color.White // Default fallback
+	if len(p.Palette) > 0 {
+		return p.Palette[0]
+	}
+	return color.White
 }
 
 // NewEightByEight creates a new EightByEight pattern.
@@ -78,9 +99,8 @@ func NewEightByEight(mode int, ops ...func(any)) image.Image {
 		},
 		Mode: mode,
 	}
-	// Defaults
-	p.LineColor.LineColor = color.Black
-	p.SpaceColor.SpaceColor = color.White
+	// Note: We do NOT set default LineColor/SpaceColor here to allow Palette fallbacks to work.
+	// They will be nil by default, triggering the fallback logic in At().
 
 	for _, op := range ops {
 		op(p)
