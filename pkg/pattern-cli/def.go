@@ -8,6 +8,7 @@ import (
 	"image/color"
 	"image/png"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -198,20 +199,27 @@ func registerCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("save requires a filename argument")
 		}
 		filename := args[0]
-		f, err := os.Create(filename)
+		if filepath.IsAbs(filename) {
+			return nil, fmt.Errorf("absolute paths are not allowed")
+		}
+		cleanPath := filepath.Clean(filename)
+		if cleanPath == ".." || strings.HasPrefix(cleanPath, ".."+string(os.PathSeparator)) {
+			return nil, fmt.Errorf("path traversal is not allowed")
+		}
+		f, err := os.Create(cleanPath)
 		if err != nil {
 			return nil, err
 		}
 		defer f.Close()
 
-		if strings.HasSuffix(filename, ".png") {
+		if strings.HasSuffix(cleanPath, ".png") {
 			if err := png.Encode(f, input); err != nil {
 				return nil, err
 			}
 		} else {
 			return nil, fmt.Errorf("unsupported file format: %s", filename)
 		}
-		fmt.Printf("Saved to %s\n", filename)
+		fmt.Printf("Saved to %s\n", cleanPath)
 		return input, nil
 	}
 }
