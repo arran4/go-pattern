@@ -29,6 +29,9 @@ func (s *SimpleZoom) At(x, y int) color.Color {
 
 // NewSimpleZoom creates a new SimpleZoom with the given image and zoom factor.
 func NewSimpleZoom(img image.Image, factor int, ops ...func(any)) image.Image {
+	if factor <= 0 {
+		factor = 1
+	}
 	b := img.Bounds()
 	p := &SimpleZoom{
 		img:    img,
