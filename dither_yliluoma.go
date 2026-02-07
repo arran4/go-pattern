@@ -226,6 +226,27 @@ func colorCompareLuma(r1, g1, b1, r2, g2, b2 int) float64 {
 	return (diffR*diffR*0.299 + diffG*diffG*0.587 + diffB*diffB*0.114)*0.75 + lumadiff*lumadiff
 }
 
+func sortCandidatesByLuma(candidates []int, palette []color.Color) {
+	// Sort by luma
+	type candidate struct {
+		id   int
+		luma float64
+	}
+	sorted := make([]candidate, len(candidates))
+	for i, id := range candidates {
+		c := palette[id]
+		r, g, b, _ := c.RGBA()
+		luma := float64(r)*0.299 + float64(g)*0.587 + float64(b)*0.114
+		sorted[i] = candidate{id, luma}
+	}
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].luma < sorted[j].luma
+	})
+	for i, s := range sorted {
+		candidates[i] = s.id
+	}
+}
+
 // Yliluoma2Dither implements Yliluoma's ordered dithering algorithm 2.
 // It builds a candidate list of colors that average to the input color.
 type Yliluoma2Dither struct {
@@ -378,30 +399,11 @@ func (p *Yliluoma2Dither) deviseMixingPlan(r, g, b int) []int {
 		}
 	}
 
-	// Sort by luma
-	type candidate struct {
-		id   int
-		luma float64
-	}
-	sorted := make([]candidate, len(candidates))
-	for i, id := range candidates {
-		sorted[i] = candidate{id, p.getLuma(id)}
-	}
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].luma < sorted[j].luma
-	})
-	for i, s := range sorted {
-		candidates[i] = s.id
-	}
+	sortCandidatesByLuma(candidates, p.Palette)
 
 	return candidates
 }
 
-func (p *Yliluoma2Dither) getLuma(idx int) float64 {
-	c := p.Palette[idx]
-	r, g, b, _ := c.RGBA()
-	return float64(r)*0.299 + float64(g)*0.587 + float64(b)*0.114
-}
 
 // KnollDither implements Thomas Knoll's pattern dithering (Photoshop).
 type KnollDither struct {
@@ -535,27 +537,8 @@ func (p *KnollDither) devisePlan(r, g, b int) []int {
 		eb += b - pbi
 	}
 
-	// Sort by luma
-	type candidate struct {
-		id   int
-		luma float64
-	}
-	sorted := make([]candidate, len(candidates))
-	for i, id := range candidates {
-		sorted[i] = candidate{id, p.getLuma(id)}
-	}
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].luma < sorted[j].luma
-	})
-	for i, s := range sorted {
-		candidates[i] = s.id
-	}
+	sortCandidatesByLuma(candidates, p.Palette)
 
 	return candidates
 }
 
-func (p *KnollDither) getLuma(idx int) float64 {
-	c := p.Palette[idx]
-	r, g, b, _ := c.RGBA()
-	return float64(r)*0.299 + float64(g)*0.587 + float64(b)*0.114
-}
