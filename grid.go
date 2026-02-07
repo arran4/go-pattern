@@ -1,6 +1,7 @@
 package pattern
 
 import (
+	"sort"
 	"image"
 	"image/color"
 )
@@ -32,6 +33,8 @@ type Grid struct {
 	rowsCount   int
 	cellWidths  []int
 	rowHeights  []int
+	colOffsets  []int
+	rowOffsets  []int
 	fixedWidth  int
 	fixedHeight int
 }
@@ -51,64 +54,40 @@ func (g *Grid) SetBounds(b image.Rectangle) {
 }
 
 func (g *Grid) At(x, y int) color.Color {
-	// Simple lookup logic (to be refined)
-	// We need to map x, y to a specific cell
-
-	// If layout is not calculated, we might need to do it.
-	// But let's assume bounds and cell sizes are calculated at creation or SetBounds.
-
 	// Find which column x belongs to
-	colIdx := -1
-	currentX := g.bounds.Min.X
-	for i, w := range g.cellWidths {
-		if x >= currentX && x < currentX+w {
-			colIdx = i
-			break
-		}
-		currentX += w
+	// We need offsets populated. If they are not (e.g. layout not called), fallback or return empty.
+	if len(g.colOffsets) == 0 {
+		return color.RGBA{}
 	}
-	if colIdx == -1 {
+
+	relX := x - g.bounds.Min.X
+	colIdx := sort.Search(len(g.colOffsets)-1, func(i int) bool {
+		return g.colOffsets[i+1] > relX
+	})
+
+	if colIdx >= len(g.colOffsets)-1 || relX < g.colOffsets[colIdx] {
 		return color.RGBA{}
 	}
 
 	// Find which row y belongs to
-	rowIdx := -1
-	currentY := g.bounds.Min.Y
-	for i, h := range g.rowHeights {
-		if y >= currentY && y < currentY+h {
-			rowIdx = i
-			break
-		}
-		currentY += h
+	if len(g.rowOffsets) == 0 {
+		return color.RGBA{}
 	}
-	if rowIdx == -1 {
+
+	relY := y - g.bounds.Min.Y
+	rowIdx := sort.Search(len(g.rowOffsets)-1, func(i int) bool {
+		return g.rowOffsets[i+1] > relY
+	})
+
+	if rowIdx >= len(g.rowOffsets)-1 || relY < g.rowOffsets[rowIdx] {
 		return color.RGBA{}
 	}
 
 	if row, ok := g.rows[rowIdx]; ok {
 		if img, ok := row[colIdx]; ok {
 			// Calculate local coordinates for the image
-			// We need to know where the cell starts.
-			cellX := g.bounds.Min.X
-			for i := 0; i < colIdx; i++ {
-				cellX += g.cellWidths[i]
-			}
-			cellY := g.bounds.Min.Y
-			for i := 0; i < rowIdx; i++ {
-				cellY += g.rowHeights[i]
-			}
-
-			// Map (x, y) to image's coordinate space.
-			// The image inside the cell is drawn at (cellX, cellY) in the grid's space.
-			// But the image itself might have its own bounds (e.g. Min.X != 0).
-			// If we assume the image is placed at (cellX, cellY), we usually translate.
-			// Or do we assume the image fills the cell?
-			// The user said "figures out if contents is bound, and intelligently tries to balance".
-
-			// Let's assume we translate grid (x,y) to image local (lx, ly).
-			// If we align top-left of image to top-left of cell:
-			// lx = img.Bounds().Min.X + (x - cellX)
-			// ly = img.Bounds().Min.Y + (y - cellY)
+			cellX := g.bounds.Min.X + g.colOffsets[colIdx]
+			cellY := g.bounds.Min.Y + g.rowOffsets[rowIdx]
 
 			lx := img.Bounds().Min.X + (x - cellX)
 			ly := img.Bounds().Min.Y + (y - cellY)
@@ -384,4 +363,21 @@ func (g *Grid) layout() {
 
 	g.cellWidths = colWidths
 	g.rowHeights = rowHeights
+
+	// Compute cumulative offsets for binary search
+	g.colOffsets = make([]int, len(colWidths)+1)
+	current := 0
+	for i, w := range colWidths {
+		g.colOffsets[i] = current
+		current += w
+	}
+	g.colOffsets[len(colWidths)] = current
+
+	g.rowOffsets = make([]int, len(rowHeights)+1)
+	current = 0
+	for i, h := range rowHeights {
+		g.rowOffsets[i] = current
+		current += h
+	}
+	g.rowOffsets[len(rowHeights)] = current
 }
