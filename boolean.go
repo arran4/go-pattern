@@ -536,6 +536,14 @@ func PredicateFuzzyRed() ColorPredicate {
 	}
 }
 
+// FuzzyGray returns the average of R, G, B channels as a float 0-1
+func PredicateFuzzyGray() ColorPredicate {
+	return func(c color.Color) float64 {
+		r, g, b, _ := c.RGBA()
+		return float64(r+g+b) / (3.0 * 65535.0)
+	}
+}
+
 // Default predicate
 func DefaultPredicate(c color.Color) float64 {
 	return PredicateFuzzyAlpha()(c)

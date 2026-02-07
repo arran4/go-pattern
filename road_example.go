@@ -102,23 +102,8 @@ func ExampleNewRoad_terrain() image.Image {
 
 	// 4. Composite
 	// We have Grass (Bg), RoadTex (Fg), Mask (windingRoadMask).
-	// We don't have a MaskedBlend.
-	// Workaround:
-	// GrassPart = Grass * (NOT Mask)
-	// RoadPart = RoadTex * Mask
-	// Result = GrassPart + RoadPart
-
-	// Invert mask
-	invMask := NewBitwiseNot(windingRoadMask)
-
-	// Masking requires BitwiseAnd?
-	// But BitwiseAnd operates on colors bits.
-	// If Mask is pure Black/White, it works like a stencil for RGB.
-
-	grassPart := NewBitwiseAnd([]image.Image{grassColor, invMask})
-	roadPart := NewBitwiseAnd([]image.Image{roadTex, windingRoadMask})
-
-	return NewBitwiseOr([]image.Image{grassPart, roadPart})
+	// Use MaskedBlend.
+	return NewMaskedBlend(grassColor, roadTex, windingRoadMask)
 }
 
 func GenerateRoad(rect image.Rectangle) image.Image {
