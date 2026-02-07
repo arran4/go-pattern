@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"math"
 	"math/rand"
+	"sync"
 )
 
 // OrderedDither applies ordered dithering using a threshold matrix.
@@ -281,8 +282,24 @@ func (d *RandomDither) At(x, y int) color.Color {
 
 // --- Blue Noise ---
 
+var (
+	blueNoise16     []float64
+	blueNoise16Once sync.Once
+)
+
 // generateBlueNoise generates a small (16x16) blue noise matrix using a simplified best-candidate algorithm.
 func generateBlueNoise(size int) []float64 {
+	if size == 16 {
+		blueNoise16Once.Do(func() {
+			blueNoise16 = computeBlueNoise(16)
+		})
+		return blueNoise16
+	}
+	return computeBlueNoise(size)
+}
+
+// computeBlueNoise generates a blue noise matrix using a simplified best-candidate algorithm.
+func computeBlueNoise(size int) []float64 {
 	if size > 32 {
 		size = 32
 	}
