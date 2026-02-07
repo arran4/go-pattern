@@ -65,32 +65,8 @@ func ExampleNewDirt_mud() image.Image {
 
 	puddleColor := NewRect(SetFillColor(color.RGBA{20, 15, 10, 255}))
 
-	// Blend puddle color based on mask?
-	// We don't have a "BlendMask" pattern yet that takes a mask image.
-	// But we can use boolean ops or just Blend?
-	// Or we can use the mask as alpha for the puddle layer and overlay it.
-	// But our patterns usually return opaque images unless alpha is handled.
-
-	// Let's assume we want to composite Puddle over Dirt using Mask.
-	// This usually requires a MaskedComposite pattern.
-	// I don't see one.
-
-	// Workaround:
-	// 1. Create Puddle Layer (Dark)
-	// 2. Create Dirt Layer
-	// 3. Blend them? No, we want distinct areas.
-	// If I use `NewBlend` with a mode? No standard mode does masking.
-
-	// I can use `NewBoolean` (BitwiseAnd) if mask is binary?
-	// Dirt AND (NOT Mask) + Puddle AND Mask.
-
-	// Invert mask for dirt
-	invMask := NewBitwiseNot(mask)
-
-	dirtPart := NewBitwiseAnd([]image.Image{dirt, invMask})
-	puddlePart := NewBitwiseAnd([]image.Image{puddleColor, mask})
-
-	return NewBitwiseOr([]image.Image{dirtPart, puddlePart})
+	// Composite Puddle over Dirt using Mask.
+	return NewMaskedBlend(dirt, puddleColor, mask)
 }
 
 func GenerateDirt(rect image.Rectangle) image.Image {

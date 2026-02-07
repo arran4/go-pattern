@@ -76,3 +76,27 @@ func clampChannel(v float64) uint8 {
 	}
 	return uint8(v + 0.5)
 }
+
+func InterpolateColor(c0, c1 color.Color, t float64) color.Color {
+	if t <= 0 {
+		return c0
+	}
+	if t >= 1 {
+		return c1
+	}
+
+	r0, g0, b0, a0 := c0.RGBA()
+	r1, g1, b1, a1 := c1.RGBA()
+
+	r := float64(r0) + t*(float64(r1)-float64(r0))
+	g := float64(g0) + t*(float64(g1)-float64(g0))
+	b := float64(b0) + t*(float64(b1)-float64(b0))
+	a := float64(a0) + t*(float64(a1)-float64(a0))
+
+	return color.RGBA64{
+		R: uint16(r),
+		G: uint16(g),
+		B: uint16(b),
+		A: uint16(a),
+	}
+}
