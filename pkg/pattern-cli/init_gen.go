@@ -445,6 +445,12 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		}
 		return pattern.NewLinearGradient(), nil
 	}
+	fm["masked_blend"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) < 2 {
+			return nil, fmt.Errorf("masked_blend requires 2 arguments")
+		}
+		return nil, fmt.Errorf("command masked_blend has unsupported argument types")
+	}
 	fm["maths"] = func(args []string, input image.Image) (image.Image, error) {
 		if len(args) < 1 {
 			return nil, fmt.Errorf("maths requires 1 arguments")
