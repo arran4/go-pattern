@@ -24,7 +24,11 @@ func TestSaveSecurity(t *testing.T) {
 	if err := os.Chdir(tempDir); err != nil {
 		t.Fatal(err)
 	}
-	defer os.Chdir(cwd) // Restore CWD
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			t.Errorf("failed to restore CWD: %v", err)
+		}
+	}()
 
 	// Create subdirectory for legitimate use
 	if err := os.Mkdir("subdir", 0755); err != nil {
