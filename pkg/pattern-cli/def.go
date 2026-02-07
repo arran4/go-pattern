@@ -84,6 +84,9 @@ func registerCommands(fm dsl.FuncMap) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid zoom factor: %v", err)
 		}
+		if factor <= 0 {
+			return nil, fmt.Errorf("zoom factor must be greater than 0")
+		}
 		return pattern.NewSimpleZoom(input, factor), nil
 	}
 
