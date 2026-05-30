@@ -318,7 +318,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-          cache: true
       - name: Test
         run: go test ./... -v
 
@@ -332,7 +331,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-          cache: true
       - run: go vet ./...
 
   go-fmt-pr:
