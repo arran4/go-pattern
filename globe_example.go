@@ -9,9 +9,9 @@ import (
 
 var (
 	GlobeOutputFilename           = "globe.png"
-	Globe_SimpleOutputFilename    = "globe_simple.png"
-	Globe_ProjectedOutputFilename = "globe_projected.png"
-	Globe_GridOutputFilename      = "globe_grid.png"
+	GlobeSimpleOutputFilename    = "globe_simple.png"
+	GlobeProjectedOutputFilename = "globe_projected.png"
+	GlobeGridOutputFilename      = "globe_grid.png"
 )
 
 const GlobeBaseLabel = "Globe"
@@ -65,29 +65,29 @@ func GenerateEarthTexture(b image.Rectangle) image.Image {
 	)
 }
 
-// ExampleNewGlobe_Simple demonstrates the "Circle and Texture" technique requested.
+// ExampleNewGlobeSimple demonstrates the "Circle and Texture" technique requested.
 // It uses a flat circular mask over a terrain texture.
-func ExampleNewGlobe_Simple() {
-	g := GenerateGlobe_Simple(image.Rect(0, 0, 300, 300))
-	saveImage(Globe_SimpleOutputFilename, g)
+func ExampleNewGlobeSimple() {
+	g := GenerateGlobeSimple(image.Rect(0, 0, 300, 300))
+	saveImage(GlobeSimpleOutputFilename, g)
 }
 
-// ExampleNewGlobe_Projected demonstrates the true "Globe" pattern with spherical projection.
+// ExampleNewGlobeProjected demonstrates the true "Globe" pattern with spherical projection.
 // It maps the same texture onto a sphere.
-func ExampleNewGlobe_Projected() {
-	g := GenerateGlobe_Projected(image.Rect(0, 0, 300, 300))
-	saveImage(Globe_ProjectedOutputFilename, g)
+func ExampleNewGlobeProjected() {
+	g := GenerateGlobeProjected(image.Rect(0, 0, 300, 300))
+	saveImage(GlobeProjectedOutputFilename, g)
 }
 
-// ExampleNewGlobe_Grid demonstrates the wireframe/grid mode of the Globe pattern.
-func ExampleNewGlobe_Grid() {
-	g := GenerateGlobe_Grid(image.Rect(0, 0, 300, 300))
-	saveImage(Globe_GridOutputFilename, g)
+// ExampleNewGlobeGrid demonstrates the wireframe/grid mode of the Globe pattern.
+func ExampleNewGlobeGrid() {
+	g := GenerateGlobeGrid(image.Rect(0, 0, 300, 300))
+	saveImage(GlobeGridOutputFilename, g)
 }
 
 // ExampleNewGlobe is the default example for the documentation.
 func ExampleNewGlobe() {
-	ExampleNewGlobe_Projected()
+	ExampleNewGlobeProjected()
 }
 
 func saveImage(filename string, img image.Image) {
@@ -103,16 +103,16 @@ func saveImage(filename string, img image.Image) {
 
 func init() {
 	RegisterGenerator(GlobeBaseLabel, GenerateGlobe)
-	RegisterGenerator("Globe_Simple", GenerateGlobe_Simple)
-	RegisterGenerator("Globe_Projected", GenerateGlobe_Projected)
-	RegisterGenerator("Globe_Grid", GenerateGlobe_Grid)
+	RegisterGenerator("Globe_Simple", GenerateGlobeSimple)
+	RegisterGenerator("Globe_Projected", GenerateGlobeProjected)
+	RegisterGenerator("Globe_Grid", GenerateGlobeGrid)
 }
 
 func GenerateGlobe(b image.Rectangle) image.Image {
-	return GenerateGlobe_Projected(b)
+	return GenerateGlobeProjected(b)
 }
 
-func GenerateGlobe_Simple(b image.Rectangle) image.Image {
+func GenerateGlobeSimple(b image.Rectangle) image.Image {
 	texture := GenerateEarthTexture(b)
 
 	// Use Circle to mask it
@@ -123,7 +123,7 @@ func GenerateGlobe_Simple(b image.Rectangle) image.Image {
 	)
 }
 
-func GenerateGlobe_Projected(b image.Rectangle) image.Image {
+func GenerateGlobeProjected(b image.Rectangle) image.Image {
 	// Texture needs to be equirectangular (2:1 aspect ratio ideally) for correct mapping,
 	// but we'll use a square one and it will stretch at poles, which is fine for demo.
 	// We generate a larger texture for better resolution
@@ -138,7 +138,7 @@ func GenerateGlobe_Projected(b image.Rectangle) image.Image {
 	)
 }
 
-func GenerateGlobe_Grid(b image.Rectangle) image.Image {
+func GenerateGlobeGrid(b image.Rectangle) image.Image {
 	return NewGlobe(
 		SetBounds(b),
 		SetLatitudeLines(12),

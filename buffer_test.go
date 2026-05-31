@@ -17,7 +17,7 @@ func (m *MockSource) IsDirty() bool {
 	return m.dirty
 }
 
-func (m *MockSource) At(x, y int) color.Color {
+func (m *MockSource) At(_, _ int) color.Color {
 	return m.color
 }
 

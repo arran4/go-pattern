@@ -16,7 +16,7 @@ func TestRun_Execute(t *testing.T) {
 	cmd := parent.NewRun()
 
 	called := false
-	cmd.CommandAction = func(c *Run) error {
+	cmd.CommandAction = func(_ *Run) error {
 		called = true
 		return nil
 	}

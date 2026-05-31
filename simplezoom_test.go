@@ -44,4 +44,4 @@ type MyImage struct {
 
 func (m *MyImage) ColorModel() color.Model { return color.RGBAModel }
 func (m *MyImage) Bounds() image.Rectangle { return m.bounds }
-func (m *MyImage) At(x, y int) color.Color { return color.Black }
+func (m *MyImage) At(_, _ int) color.Color { return color.Black }

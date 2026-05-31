@@ -1,4 +1,4 @@
-package pattern_cli
+package patterncli
 
 import (
 	"os"

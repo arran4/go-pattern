@@ -7,7 +7,7 @@ import (
 
 var (
 	MetalOutputFilename = "metal.png"
-	Metal_scratchedOutputFilename = "metal_scratched.png"
+	MetalScratchedOutputFilename = "metal_scratched.png"
 )
 
 func ExampleNewMetal() image.Image {
@@ -40,7 +40,7 @@ func ExampleNewMetal() image.Image {
 	return brushed
 }
 
-func ExampleNewMetal_scratched() image.Image {
+func ExampleNewMetalScratched() image.Image {
 	// Base brushed metal
 	base := ExampleNewMetal()
 
@@ -65,7 +65,7 @@ func GenerateMetal(rect image.Rectangle) image.Image {
 }
 
 func GenerateMetal_scratched(rect image.Rectangle) image.Image {
-	return ExampleNewMetal_scratched()
+	return ExampleNewMetalScratched()
 }
 
 func init() {

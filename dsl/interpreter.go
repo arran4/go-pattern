@@ -9,7 +9,7 @@ type CommandFunc func(args []string, input image.Image) (image.Image, error)
 type FuncMap map[string]CommandFunc
 
 func (p Pipeline) Execute(fm FuncMap, initial image.Image) (image.Image, error) {
-	var img image.Image = initial
+	var img = initial
 	var err error
 	for _, cmd := range p {
 		fn, ok := fm[cmd.Name]

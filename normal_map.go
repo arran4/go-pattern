@@ -63,10 +63,10 @@ func (nm *NormalMap) At(x, y int) color.Color {
 	dz := 1.0
 
 	// Normalize
-	len := math.Sqrt(dx*dx + dy*dy + dz*dz)
-	nx := dx / len
-	ny := dy / len
-	nz := dz / len
+	length := math.Sqrt(dx*dx + dy*dy + dz*dz)
+	nx := dx / length
+	ny := dy / length
+	nz := dz / length
 
 	// Map [-1, 1] to [0, 255]
 	r := uint8((nx+1.0)*0.5*255.0 + 0.5)

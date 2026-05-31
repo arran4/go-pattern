@@ -39,7 +39,7 @@ func ExampleNewSlate() image.Image {
 	return NewBlend(laminar, bump, BlendOverlay)
 }
 
-func GenerateSlate(rect image.Rectangle) image.Image {
+func GenerateSlate(_ image.Rectangle) image.Image {
 	return ExampleNewSlate()
 }
 

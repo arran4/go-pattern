@@ -31,18 +31,18 @@ func (r *Rect) At(x, y int) color.Color {
 
 	ls := r.LineSize.LineSize
 	if ls > 0 {
-		min := r.bounds.Min
-		max := r.bounds.Max
+		minBound := r.bounds.Min
+		maxBound := r.bounds.Max
 		// Top or Bottom border
-		// Top: y in [min.Y, min.Y + ls)
-		// Bottom: y in [max.Y - ls, max.Y)
-		if y < min.Y+ls || y >= max.Y-ls {
+		// Top: y in [minBound.Y, minBound.Y + ls)
+		// Bottom: y in [maxBound.Y - ls, maxBound.Y)
+		if y < minBound.Y+ls || y >= maxBound.Y-ls {
 			return r.getLineColor(x, y)
 		}
 		// Left or Right border
-		// Left: x in [min.X, min.X + ls)
-		// Right: x in [max.X - ls, max.X)
-		if x < min.X+ls || x >= max.X-ls {
+		// Left: x in [minBound.X, minBound.X + ls)
+		// Right: x in [maxBound.X - ls, maxBound.X)
+		if x < minBound.X+ls || x >= maxBound.X-ls {
 			return r.getLineColor(x, y)
 		}
 	}

@@ -16,7 +16,7 @@ func TestRepl_Execute(t *testing.T) {
 	cmd := parent.NewRepl()
 
 	called := false
-	cmd.CommandAction = func(c *Repl) error {
+	cmd.CommandAction = func(_ *Repl) error {
 		called = true
 		return nil
 	}

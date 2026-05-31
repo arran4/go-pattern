@@ -7,7 +7,7 @@ import (
 
 var (
 	StoneOutputFilename = "stone.png"
-	Stone_cobbleOutputFilename = "stone_cobble.png"
+	StoneCobbleOutputFilename = "stone_cobble.png"
 )
 
 func ExampleNewStone() image.Image {
@@ -54,7 +54,7 @@ func ExampleNewStone() image.Image {
 	return textured
 }
 
-func ExampleNewStone_cobble() image.Image {
+func ExampleNewStoneCobble() image.Image {
 	// Cellular noise (Worley) for cobblestones heightmap
 	worley := NewWorleyNoise(
 		SetWorleyMetric(MetricEuclidean),
@@ -88,7 +88,7 @@ func GenerateStone(rect image.Rectangle) image.Image {
 }
 
 func GenerateStone_cobble(rect image.Rectangle) image.Image {
-	return ExampleNewStone_cobble()
+	return ExampleNewStoneCobble()
 }
 
 func init() {

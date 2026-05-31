@@ -21,7 +21,7 @@ type ScatterItem struct {
 // u, v: Local coordinates relative to the item's center (approx -0.5 to 0.5 range depending on cell).
 // hash: Random hash for this specific item instance.
 // returns: The color of the pixel. If Alpha is 0, it's transparent.
-type ScatterGenerator func(u, v float64, hash uint64) (color.Color, float64)
+type ScatterGenerator func(_, v float64, hash uint64) (color.Color, float64)
 
 // Scatter places generated items in a grid with random offsets.
 // It supports overlapping items by sorting them by a Z-index derived from the hash.
@@ -172,7 +172,7 @@ func NewScatter(ops ...func(any)) image.Image {
 		Frequency: 0.05,
 		Density:   1.0,
 		MaxOverlap: 1,
-		Generator: func(u, v float64, hash uint64) (color.Color, float64) {
+		Generator: func(_, v float64, hash uint64) (color.Color, float64) {
 			return color.Transparent, 0
 		},
 	}

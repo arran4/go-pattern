@@ -1,4 +1,4 @@
-package pattern_cli
+package patterncli
 
 import (
 	"bufio"
@@ -59,7 +59,7 @@ func process(input string, fm dsl.FuncMap) error {
 
 func registerCommands(fm dsl.FuncMap) {
 	RegisterGeneratedCommands(fm)
-	fm["checkers"] = func(args []string, input image.Image) (image.Image, error) {
+	fm["checkers"] = func(args []string, _ image.Image) (image.Image, error) {
 		if len(args) < 2 {
 			return nil, fmt.Errorf("checkers requires 2 color arguments")
 		}
@@ -74,7 +74,7 @@ func registerCommands(fm dsl.FuncMap) {
 		return pattern.NewChecker(c1, c2), nil
 	}
 
-	fm["zoom"] = func(args []string, input image.Image) (image.Image, error) {
+	fm["zoom"] = func(args []string, _ image.Image) (image.Image, error) {
 		if input == nil {
 			return nil, fmt.Errorf("zoom requires an input image")
 		}
@@ -91,7 +91,7 @@ func registerCommands(fm dsl.FuncMap) {
 		return pattern.NewSimpleZoom(input, factor), nil
 	}
 
-	fm["transposed"] = func(args []string, input image.Image) (image.Image, error) {
+	fm["transposed"] = func(args []string, _ image.Image) (image.Image, error) {
 		if input == nil {
 			return nil, fmt.Errorf("transposed requires an input image")
 		}
@@ -112,7 +112,7 @@ func registerCommands(fm dsl.FuncMap) {
 		return pattern.NewTransposed(input, x, y), nil
 	}
 
-	fm["mirror"] = func(args []string, input image.Image) (image.Image, error) {
+	fm["mirror"] = func(args []string, _ image.Image) (image.Image, error) {
 		if input == nil {
 			return nil, fmt.Errorf("mirror requires an input image")
 		}
@@ -139,7 +139,7 @@ func registerCommands(fm dsl.FuncMap) {
 		return pattern.NewMirror(input, horizontal, vertical), nil
 	}
 
-	fm["rotate"] = func(args []string, input image.Image) (image.Image, error) {
+	fm["rotate"] = func(args []string, _ image.Image) (image.Image, error) {
 		if input == nil {
 			return nil, fmt.Errorf("rotate requires an input image")
 		}
@@ -152,13 +152,13 @@ func registerCommands(fm dsl.FuncMap) {
 		}
 		return pattern.NewRotate(input, deg), nil
   }
-	fm["edgedetect"] = func(args []string, input image.Image) (image.Image, error) {
+	fm["edgedetect"] = func(args []string, _ image.Image) (image.Image, error) {
 		if input == nil {
 			return nil, fmt.Errorf("edgedetect requires an input image")
 		}
 		return pattern.NewEdgeDetect(input), nil
   }
-	fm["quantize"] = func(args []string, input image.Image) (image.Image, error) {
+	fm["quantize"] = func(args []string, _ image.Image) (image.Image, error) {
 		if input == nil {
 			return nil, fmt.Errorf("quantize requires an input image")
 		}
@@ -172,11 +172,11 @@ func registerCommands(fm dsl.FuncMap) {
 		return pattern.NewQuantize(input, levels), nil
 	}
 
-	fm["null"] = func(args []string, input image.Image) (image.Image, error) {
+	fm["null"] = func(args []string, _ image.Image) (image.Image, error) {
 		return pattern.NewNull(), nil
 	}
 
-	fm["circle"] = func(args []string, input image.Image) (image.Image, error) {
+	fm["circle"] = func(args []string, _ image.Image) (image.Image, error) {
 		if len(args) < 2 {
 			return nil, fmt.Errorf("circle requires 2 color arguments (line, space)")
 		}
@@ -191,7 +191,7 @@ func registerCommands(fm dsl.FuncMap) {
 		return pattern.NewCircle(pattern.SetLineColor(c1), pattern.SetSpaceColor(c2)), nil
 	}
 
-	fm["save"] = func(args []string, input image.Image) (image.Image, error) {
+	fm["save"] = func(args []string, _ image.Image) (image.Image, error) {
 		if input == nil {
 			return nil, fmt.Errorf("save requires an input image")
 		}

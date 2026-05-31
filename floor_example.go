@@ -7,7 +7,7 @@ import (
 
 var (
 	FloorOutputFilename = "floor.png"
-	Floor_woodOutputFilename = "floor_wood.png"
+	FloorWoodOutputFilename = "floor_wood.png"
 )
 
 func ExampleNewFloor() image.Image {
@@ -41,7 +41,7 @@ func ExampleNewFloor() image.Image {
 	)
 }
 
-func GenerateFloor(rect image.Rectangle) image.Image {
+func GenerateFloor(_ image.Rectangle) image.Image {
 	return ExampleNewFloor()
 }
 

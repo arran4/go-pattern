@@ -7,7 +7,7 @@ import (
 
 var (
 	DirtOutputFilename = "dirt.png"
-	Dirt_mudOutputFilename = "dirt_mud.png"
+	DirtMudOutputFilename = "dirt_mud.png"
 )
 
 func ExampleNewDirt() image.Image {
@@ -36,7 +36,7 @@ func ExampleNewDirt() image.Image {
 	return detailed
 }
 
-func ExampleNewDirt_mud() image.Image {
+func ExampleNewDirtMud() image.Image {
 	// Base dirt
 	dirt := ExampleNewDirt()
 
@@ -80,7 +80,7 @@ func GenerateDirt(rect image.Rectangle) image.Image {
 }
 
 func GenerateDirt_mud(rect image.Rectangle) image.Image {
-	return ExampleNewDirt_mud()
+	return ExampleNewDirtMud()
 }
 
 func init() {

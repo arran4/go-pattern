@@ -25,15 +25,15 @@ var (
 )
 
 func init() {
-	RegisterGenerator("Brick", func(bounds image.Rectangle) image.Image {
+	RegisterGenerator("Brick", func(_ image.Rectangle) image.Image {
 		return NewBrick(SetBounds(bounds))
 	})
 	RegisterReferences("Brick", GenerateBrickReferences)
 
-	RegisterGenerator("Brick_textures", func(bounds image.Rectangle) image.Image {
+	RegisterGenerator("Brick_textures", func(_ image.Rectangle) image.Image {
 		return ExampleNewBrick_textures()
 	})
-	RegisterGenerator("Brick_stone", func(bounds image.Rectangle) image.Image {
+	RegisterGenerator("Brick_stone", func(_ image.Rectangle) image.Image {
 		return ExampleNewBrick_stone()
 	})
 }
@@ -44,18 +44,18 @@ func GenerateBrickReferences() (map[string]func(image.Rectangle) image.Image, []
 
 	names = append(names, "Basic", "Textures", "Stone")
 
-	refs["Basic"] = func(r image.Rectangle) image.Image {
+	refs["Basic"] = func(_ image.Rectangle) image.Image {
 		return NewBrick(
 			SetBrickSize(40, 20),
 			SetMortarSize(4),
 		)
 	}
 
-	refs["Textures"] = func(r image.Rectangle) image.Image {
+	refs["Textures"] = func(_ image.Rectangle) image.Image {
 		return ExampleNewBrick_textures()
 	}
 
-	refs["Stone"] = func(r image.Rectangle) image.Image {
+	refs["Stone"] = func(_ image.Rectangle) image.Image {
 		return ExampleNewBrick_stone()
 	}
 
