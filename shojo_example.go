@@ -54,7 +54,7 @@ func ExampleNewShojo() {
 }
 
 var (
-	ShojoPinkOutputFilename = "shojo_pink.png"
+	Shojo_pinkOutputFilename = "shojo_pink.png"
 	Shojo_pinkZoomLevels     = []int{}
 	Shojo_pinkOrder          = 26
 )
@@ -75,7 +75,7 @@ func ExampleNewShojo_pink() {
 		SetSpaceColor(color.RGBA{20, 0, 10, 255}),    // Dark red/brown bg
 		SetFillColor(color.RGBA{255, 200, 220, 255}), // Pink sparkles
 	)
-	f, err := os.Create(ShojoPinkOutputFilename)
+	f, err := os.Create(Shojo_pinkOutputFilename)
 	if err != nil {
 		panic(err)
 	}

@@ -14,16 +14,16 @@ type MockImage struct {
 
 func (m *MockImage) ColorModel() color.Model { return color.RGBAModel }
 func (m *MockImage) Bounds() image.Rectangle { return image.Rect(0, 0, 1, 1) }
-func (m *MockImage) At(_, y int) color.Color { return color.RGBA{0, 0, 0, 255} }
+func (m *MockImage) At(x, y int) color.Color { return color.RGBA{0, 0, 0, 255} }
 
 func TestExecute(t *testing.T) {
 	// Success case
 	t.Run("Success", func(t *testing.T) {
 		fm := FuncMap{
-			"cmd1": func(_ []string, input image.Image) (image.Image, error) {
+			"cmd1": func(args []string, input image.Image) (image.Image, error) {
 				return &MockImage{Name: "img1"}, nil
 			},
-			"cmd2": func(_ []string, input image.Image) (image.Image, error) {
+			"cmd2": func(args []string, input image.Image) (image.Image, error) {
 				in := input.(*MockImage)
 				return &MockImage{Name: in.Name + "->img2"}, nil
 			},
@@ -68,7 +68,7 @@ func TestExecute(t *testing.T) {
 	// Command failure case
 	t.Run("CommandFailure", func(t *testing.T) {
 		fm := FuncMap{
-			"fail": func(_ []string, input image.Image) (image.Image, error) {
+			"fail": func(args []string, input image.Image) (image.Image, error) {
 				return nil, fmt.Errorf("intentional failure")
 			},
 		}

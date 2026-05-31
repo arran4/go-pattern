@@ -24,12 +24,12 @@ func clamp255(v float64) float64 {
 	return v
 }
 
-func clampFloatRange(v, minVal, maxVal float64) float64 {
-	if v < minVal {
-		return minVal
+func clampFloatRange(v, min, max float64) float64 {
+	if v < min {
+		return min
 	}
-	if v > maxVal {
-		return maxVal
+	if v > max {
+		return max
 	}
 	return v
 }

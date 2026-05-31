@@ -435,7 +435,19 @@ func bitwiseNotColor(c color.Color) color.Color {
 	})
 }
 
+func min(a, b uint32) uint32 {
+	if a < b {
+		return a
+	}
+	return b
+}
 
+func max(a, b uint32) uint32 {
+	if a > b {
+		return a
+	}
+	return b
+}
 
 func absDiff(a, b uint32) uint32 {
 	if a > b {

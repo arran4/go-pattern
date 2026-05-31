@@ -60,7 +60,7 @@ func (u *mockUnboundedPattern) PatternBounds() Bounds {
 
 func (u *mockUnboundedPattern) ColorModel() color.Model { return color.RGBAModel }
 func (u *mockUnboundedPattern) Bounds() image.Rectangle { return image.Rect(0,0,1,1) }
-func (u *mockUnboundedPattern) At(_, _ int) color.Color { return color.RGBA{} }
+func (u *mockUnboundedPattern) At(x, y int) color.Color { return color.RGBA{} }
 
 func TestGrid_FlexibleLayout_Rows(t *testing.T) {
 	// Test flexible row expansion

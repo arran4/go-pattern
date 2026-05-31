@@ -87,7 +87,7 @@ func (p *GrassClose) At(x, y int) color.Color {
 	gy := int(math.Floor(float64(y) / float64(gridSize)))
 
 	// Blade rendering accumulators
-	bestBladeDist := -1.0
+	var bestBladeDist float64 = -1.0
 	var bestBladeColor color.Color
 	var hit bool
 
@@ -240,8 +240,8 @@ func (p *GrassClose) At(x, y int) color.Color {
 
 // blendColors blends foreground over background.
 func blendColors(bg, fg color.Color) color.Color {
-	br, bgG, bb, ba := bg.RGBA()
-	fr, fgG, fb, fa := fg.RGBA()
+	br, bg_g, bb, ba := bg.RGBA()
+	fr, fg_g, fb, fa := fg.RGBA()
 
 	// Convert to 0-1
 	a := float64(fa) / 65535.0
@@ -252,7 +252,7 @@ func blendColors(bg, fg color.Color) color.Color {
 	// result = fg + bg * (1 - fg_alpha)
 
 	outR := float64(fr) + float64(br)*(1.0-a)
-	outG := float64(fgG) + float64(bgG)*(1.0-a)
+	outG := float64(fg_g) + float64(bg_g)*(1.0-a)
 	outB := float64(fb) + float64(bb)*(1.0-a)
 	outA := float64(fa) + float64(ba)*(1.0-a)
 

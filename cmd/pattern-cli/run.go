@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	patterncli "github.com/arran4/go-pattern/pkg/pattern-cli"
+	"github.com/arran4/go-pattern/pkg/pattern-cli"
 )
 
 var _ Cmd = (*Run)(nil)
@@ -107,7 +107,7 @@ func (c *RootCmd) NewRun() *Run {
 
 	v.CommandAction = func(c *Run) error {
 
-		patterncli.Run(c.pipeline)
+		pattern_cli.Run(c.pipeline)
 		return nil
 	}
 

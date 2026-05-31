@@ -11,7 +11,7 @@ var (
 	CurvatureOutputFilename        = "curvature.png"
 )
 
-func ExampleMaterialBasic() {
+func ExampleMaterial_basic() {
 	// Base height map: A simple noise or shape
 	// Let's use a Radial Gradient to simulate a sphere bump
 	base := NewRadialGradient(

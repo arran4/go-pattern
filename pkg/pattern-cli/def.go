@@ -1,4 +1,4 @@
-package patterncli
+package pattern_cli
 
 import (
 	"bufio"

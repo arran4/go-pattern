@@ -7,7 +7,7 @@ import (
 
 var (
 	WaterOutputFilename = "water.png"
-	WaterSurfaceOutputFilename = "water_surface.png"
+	Water_surfaceOutputFilename = "water_surface.png"
 )
 
 func ExampleNewWater() image.Image {
@@ -64,7 +64,7 @@ func ExampleNewWater() image.Image {
 	return blended
 }
 
-func ExampleNewWaterSurface() image.Image {
+func ExampleNewWater_surface() image.Image {
 	// A variation showing just the normal map which is often what is used in game engines.
 	baseNoise := NewNoise(
 		NoiseSeed(42),
@@ -93,7 +93,7 @@ func GenerateWater(rect image.Rectangle) image.Image {
 }
 
 func GenerateWater_surface(rect image.Rectangle) image.Image {
-	return ExampleNewWaterSurface()
+	return ExampleNewWater_surface()
 }
 
 func init() {

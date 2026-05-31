@@ -269,7 +269,7 @@ func findStringConst(f *ast.File, name string) string {
 	return val
 }
 
-func findIntSliceVar(f *ast.File, _ []byte, fset *token.FileSet, name string) []int {
+func findIntSliceVar(f *ast.File, content []byte, fset *token.FileSet, name string) []int {
 	var nums []int
 	ast.Inspect(f, func(n ast.Node) bool {
 		if gen, ok := n.(*ast.GenDecl); ok && gen.Tok == token.VAR {
@@ -298,7 +298,7 @@ func findIntSliceVar(f *ast.File, _ []byte, fset *token.FileSet, name string) []
 	return nums
 }
 
-func DrawDemoPattern(pattern *PatternDemo, _ image.Rectangle) {
+func DrawDemoPattern(pattern *PatternDemo, size image.Rectangle) {
 	i := addBorder(pattern.Generate())
 	f, err := os.Create(pattern.OutputFilename)
 	if err != nil {
@@ -460,7 +460,7 @@ func (p *PatternDemo) Generate() image.Image {
 	return dst
 }
 
-func generateCLIInit(_ []PatternDemo, outfile string) error {
+func generateCLIInit(demos []PatternDemo, outfile string) error {
 	fset := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fset, ".", nil, 0)
 	if err != nil {

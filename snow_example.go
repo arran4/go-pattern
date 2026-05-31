@@ -7,7 +7,7 @@ import (
 
 var (
 	SnowOutputFilename = "snow.png"
-	SnowTracksOutputFilename = "snow_tracks.png"
+	Snow_tracksOutputFilename = "snow_tracks.png"
 )
 
 func ExampleNewSnow() image.Image {
@@ -51,7 +51,7 @@ func ExampleNewSnow() image.Image {
 	return NewBlend(snowColor, sparkles, BlendNormal)
 }
 
-func ExampleNewSnowTracks() image.Image {
+func ExampleNewSnow_tracks() image.Image {
 	snow := ExampleNewSnow()
 
 	// 3. Compression Tracks: Blueish/Grey depression.
@@ -78,7 +78,7 @@ func GenerateSnow(rect image.Rectangle) image.Image {
 }
 
 func GenerateSnow_tracks(rect image.Rectangle) image.Image {
-	return ExampleNewSnowTracks()
+	return ExampleNewSnow_tracks()
 }
 
 func init() {

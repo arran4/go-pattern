@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	patterncli "github.com/arran4/go-pattern/pkg/pattern-cli"
+	"github.com/arran4/go-pattern/pkg/pattern-cli"
 )
 
 var _ Cmd = (*Repl)(nil)
@@ -17,7 +17,7 @@ type Repl struct {
 	*RootCmd
 	Flags         *flag.FlagSet
 	SubCommands   map[string]Cmd
-	CommandAction func(_ *Repl) error
+	CommandAction func(c *Repl) error
 }
 
 type UsageDataRepl struct {
@@ -83,9 +83,9 @@ func (c *RootCmd) NewRepl() *Repl {
 	}
 	set.Usage = v.Usage
 
-	v.CommandAction = func(_ *Repl) error {
+	v.CommandAction = func(c *Repl) error {
 
-		patterncli.Repl()
+		pattern_cli.Repl()
 		return nil
 	}
 

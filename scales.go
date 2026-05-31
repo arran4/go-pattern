@@ -49,7 +49,7 @@ func (s *Scales) At(x, y int) color.Color {
 	maxRow := int(math.Ceil(float64(y + r) / float64(sy)))
 
 	bestZ := -100000
-	var bestVal float64 // 0 to 1 (center)
+	var bestVal float64 = 0 // 0 to 1 (center)
 	found := false
 
 	for row := minRow; row <= maxRow; row++ {

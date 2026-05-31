@@ -86,7 +86,7 @@ func init() {
 	GlobalReferences[WoodBaseLabel] = GenerateWoodReferences
 }
 
-func GenerateWood(_ image.Rectangle) image.Image {
+func GenerateWood(rect image.Rectangle) image.Image {
 	return ExampleNewWood()
 }
 

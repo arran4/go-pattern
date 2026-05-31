@@ -7,7 +7,7 @@ import (
 
 var (
 	NormalMapOutputFilename = "normal_map.png"
-	NormalMapSphereOutputFilename = "normal_map_sphere.png"
+	NormalMap_sphereOutputFilename = "normal_map_sphere.png"
 )
 
 func ExampleNewNormalMap() image.Image {
@@ -27,7 +27,7 @@ func ExampleNewNormalMap() image.Image {
 	return NewNormalMap(noise, NormalMapStrength(5.0))
 }
 
-func ExampleNewNormalMapSphere() image.Image {
+func ExampleNewNormalMap_sphere() image.Image {
 	// A simple sphere gradient to show curvature normals
 	grad := NewRadialGradient(
 		GradientCenter(0.5, 0.5),
@@ -45,7 +45,7 @@ func GenerateNormalMap(rect image.Rectangle) image.Image {
 }
 
 func GenerateNormalMap_sphere(rect image.Rectangle) image.Image {
-	return ExampleNewNormalMapSphere()
+	return ExampleNewNormalMap_sphere()
 }
 
 func init() {

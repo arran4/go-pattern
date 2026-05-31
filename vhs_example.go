@@ -15,7 +15,7 @@ func ExampleNewVHS() {
 	// See GenerateVHS for implementation details
 }
 
-func GenerateVHS(_ image.Rectangle) image.Image {
+func GenerateVHS(b image.Rectangle) image.Image {
 	// Use the embedded Gopher image as the source
 	src := NewGopher()
 	// Or maybe a more colorful image to show off the channel shift?

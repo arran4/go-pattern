@@ -35,8 +35,8 @@ func ExampleNewSpeedLines() {
 	}
 }
 
-// ExampleSpeedLinesGopherBurst shows speed lines coming out of the Gopher's mouth.
-func ExampleSpeedLinesGopherBurst() {
+// ExampleSpeedLines_GopherBurst shows speed lines coming out of the Gopher's mouth.
+func ExampleSpeedLines_GopherBurst() {
 	gopher := NewGopher()
 
 	// Gopher mouth is approx at (50, 75).

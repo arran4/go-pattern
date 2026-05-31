@@ -13,7 +13,7 @@ func TestMaskedBlend(t *testing.T) {
 	fg := image.NewUniform(color.RGBA{0, 0, 255, 255})
 	// Mask: Linear Gradient (Black to White) horizontal
 	// 0..100 -> 0..255
-	mask := NewGeneric(func(x, _ int) color.Color {
+	mask := NewGeneric(func(x, y int) color.Color {
 		val := x * 255 / 100
 		if val < 0 { val = 0 }
 		if val > 255 { val = 255 }

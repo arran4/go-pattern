@@ -14,7 +14,7 @@ func ExampleNewDitherColorReduction() image.Image {
 	return NewBayer8x8Dither(NewGopher(), PaletteCGA)
 }
 
-func GenerateDitherColorReduction(_ image.Rectangle) image.Image {
+func GenerateDitherColorReduction(b image.Rectangle) image.Image {
 	return NewBayer8x8Dither(NewGopher(), PaletteCGA)
 }
 
@@ -50,25 +50,25 @@ func GenerateDitherColorReductionReferences() (map[string]func(image.Rectangle) 
 	}
 
 	return map[string]func(image.Rectangle) image.Image{
-		"CGA_Bayer8x8": func(_ image.Rectangle) image.Image {
+		"CGA_Bayer8x8": func(b image.Rectangle) image.Image {
 			return NewBayer8x8Dither(gopher, cga)
 		},
-		"CGA_Yliluoma1": func(_ image.Rectangle) image.Image {
+		"CGA_Yliluoma1": func(b image.Rectangle) image.Image {
 			return NewYliluoma1Dither(gopher, cga, 8)
 		},
-		"Gameboy_Bayer4x4": func(_ image.Rectangle) image.Image {
+		"Gameboy_Bayer4x4": func(b image.Rectangle) image.Image {
 			return NewBayer4x4Dither(gopher, gameboy)
 		},
-		"Gameboy_Knoll": func(_ image.Rectangle) image.Image {
+		"Gameboy_Knoll": func(b image.Rectangle) image.Image {
 			return NewKnollDither(gopher, gameboy, 8)
 		},
-		"BW_Halftone": func(_ image.Rectangle) image.Image {
+		"BW_Halftone": func(b image.Rectangle) image.Image {
 			return NewHalftoneDither(gopher, 6, bw)
 		},
-		"WebSafe_Bayer8x8": func(_ image.Rectangle) image.Image {
+		"WebSafe_Bayer8x8": func(b image.Rectangle) image.Image {
 			return NewBayer8x8Dither(gopher, webSafe)
 		},
-		"WebSafe_Yliluoma2": func(_ image.Rectangle) image.Image {
+		"WebSafe_Yliluoma2": func(b image.Rectangle) image.Image {
 			return NewYliluoma2Dither(gopher, webSafe, 8)
 		},
 	}, []string{

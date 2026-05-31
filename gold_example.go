@@ -37,7 +37,7 @@ func ExampleNewGold() image.Image {
 	return goldTex
 }
 
-func GenerateGold(_ image.Rectangle) image.Image {
+func GenerateGold(rect image.Rectangle) image.Image {
 	return ExampleNewGold()
 }
 

@@ -30,7 +30,7 @@ func ExampleNewSand() image.Image {
 	return sandColor
 }
 
-func ExampleNewSandZoomed() image.Image {
+func ExampleNewSand_zoomed() image.Image {
 	// Zoomed in sand to show grains
 	// Use Scatter or just low freq noise mapped to dots?
 	// Let's use noise with thresholding to make "grains".
@@ -51,7 +51,7 @@ func ExampleNewSandZoomed() image.Image {
 	return grains
 }
 
-func ExampleNewSandDunes() image.Image {
+func ExampleNewSand_dunes() image.Image {
 	// Base sand
 	sand := ExampleNewSand()
 
@@ -84,11 +84,11 @@ func GenerateSand(rect image.Rectangle) image.Image {
 }
 
 func GenerateSand_dunes(rect image.Rectangle) image.Image {
-	return ExampleNewSandDunes()
+	return ExampleNewSand_dunes()
 }
 
 func GenerateSand_zoomed(rect image.Rectangle) image.Image {
-	return ExampleNewSandZoomed()
+	return ExampleNewSand_zoomed()
 }
 
 func init() {
