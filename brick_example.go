@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	RegisterGenerator("Brick", func(_ image.Rectangle) image.Image {
+	RegisterGenerator("Brick", func(bounds image.Rectangle) image.Image {
 		return NewBrick(SetBounds(bounds))
 	})
 	RegisterReferences("Brick", GenerateBrickReferences)

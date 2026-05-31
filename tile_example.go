@@ -12,7 +12,7 @@ var (
 )
 
 func init() {
-	RegisterGenerator("Tile", func(_ image.Rectangle) image.Image {
+	RegisterGenerator("Tile", func(bounds image.Rectangle) image.Image {
 		return ExampleNewTile(SetBounds(bounds))
 	})
 	RegisterReferences("Tile", BootstrapTileReferences)
