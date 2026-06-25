@@ -693,26 +693,8 @@ These patterns are designed to be:
 	// Or we can use the mask as alpha for the puddle layer and overlay it.
 	// But our patterns usually return opaque images unless alpha is handled.
 
-	// Let's assume we want to composite Puddle over Dirt using Mask.
-	// This usually requires a MaskedComposite pattern.
-	// I don't see one.
-
-	// Workaround:
-	// 1. Create Puddle Layer (Dark)
-	// 2. Create Dirt Layer
-	// 3. Blend them? No, we want distinct areas.
-	// If I use `NewBlend` with a mode? No standard mode does masking.
-
-	// I can use `NewBoolean` (BitwiseAnd) if mask is binary?
-	// Dirt AND (NOT Mask) + Puddle AND Mask.
-
-	// Invert mask for dirt
-	invMask := NewBitwiseNot(mask)
-
-	dirtPart := NewBitwiseAnd([]image.Image{dirt, invMask})
-	puddlePart := NewBitwiseAnd([]image.Image{puddleColor, mask})
-
-	return NewBitwiseOr([]image.Image{dirtPart, puddlePart})
+	// Composite Puddle over Dirt using Mask.
+	return NewMaskedBlend(dirt, puddleColor, mask)
 ```
 
 
@@ -755,6 +737,29 @@ These patterns are designed to be:
 	withCracks := NewBlend(tiles, crackMask, BlendNormal)
 	withMoss := NewBlend(withCracks, mossCol, BlendNormal)
 	return withMoss
+```
+
+
+### EightByEight Pattern
+
+
+
+![EightByEight Pattern](eightbyeight.png)
+
+```go
+	i := NewEightByEight(1)
+	f, err := os.Create(EightByEightOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+	if err := png.Encode(f, i); err != nil {
+		panic(err)
+	}
 ```
 
 
@@ -929,6 +934,41 @@ These patterns are designed to be:
 	if err = png.Encode(f, i); err != nil {
 		panic(err)
 	}
+```
+
+
+### Gold Pattern
+
+
+
+![Gold Pattern](gold.png)
+
+```go
+	// 1. High frequency noise for grain
+	noise := NewNoise(
+		NoiseSeed(777),
+		SetNoiseAlgorithm(&PerlinNoise{
+			Seed:        777,
+			Frequency:   0.1,
+			Octaves:     3,
+			Persistence: 0.5,
+		}),
+	)
+
+	// 2. Anisotropic scaling for brushed look (horizontal grain)
+	brushed := NewScale(noise, ScaleX(10.0), ScaleY(1.0))
+
+	// 3. Map to gold gradient
+	// Dark: Brown/Bronze
+	// Mid: Gold
+	// Light: Pale Gold
+	goldTex := NewColorMap(brushed,
+		ColorStop{Position: 0.0, Color: color.RGBA{100, 70, 20, 255}},
+		ColorStop{Position: 0.5, Color: color.RGBA{210, 170, 50, 255}},
+		ColorStop{Position: 1.0, Color: color.RGBA{255, 230, 150, 255}},
+	)
+
+	return goldTex
 ```
 
 
@@ -1786,23 +1826,8 @@ These patterns are designed to be:
 
 	// 4. Composite
 	// We have Grass (Bg), RoadTex (Fg), Mask (windingRoadMask).
-	// We don't have a MaskedBlend.
-	// Workaround:
-	// GrassPart = Grass * (NOT Mask)
-	// RoadPart = RoadTex * Mask
-	// Result = GrassPart + RoadPart
-
-	// Invert mask
-	invMask := NewBitwiseNot(windingRoadMask)
-
-	// Masking requires BitwiseAnd?
-	// But BitwiseAnd operates on colors bits.
-	// If Mask is pure Black/White, it works like a stencil for RGB.
-
-	grassPart := NewBitwiseAnd([]image.Image{grassColor, invMask})
-	roadPart := NewBitwiseAnd([]image.Image{roadTex, windingRoadMask})
-
-	return NewBitwiseOr([]image.Image{grassPart, roadPart})
+	// Use MaskedBlend.
+	return NewMaskedBlend(grassColor, roadTex, windingRoadMask)
 ```
 
 
@@ -3741,6 +3766,35 @@ These patterns are designed to be:
 	}
 	defer f.Close()
 	if err := png.Encode(f, p); err != nil {
+		panic(err)
+	}
+```
+
+
+### XTrans Pattern
+
+
+
+![XTrans Pattern](xtrans.png)
+
+```go
+	// Create a linear gradient input
+	grad := NewLinearGradient()
+
+	// Apply X-Trans pattern
+	p := NewXTrans(grad)
+
+	f, err := os.Create(XTransOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if e := f.Close(); e != nil {
+			panic(e)
+		}
+	}()
+
+	if err = png.Encode(f, p); err != nil {
 		panic(err)
 	}
 ```
