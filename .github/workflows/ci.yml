@@ -32,6 +32,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: write
   pull-requests: write
@@ -111,71 +114,9 @@ jobs:
           echo "is_monthly=$is_monthly" >> "$GITHUB_OUTPUT"
           echo "is_nightly=$is_nightly" >> "$GITHUB_OUTPUT"
 
-  discover:
-    name: Discover capabilities and cost profile
-    needs: route
-    runs-on: ubuntu-latest
-    outputs:
-      profile: ${{ steps.profile.outputs.profile }}
-      has_go: ${{ steps.detect.outputs.has_go }}
-      has_node: ${{ steps.detect.outputs.has_node }}
-      has_dart: ${{ steps.detect.outputs.has_dart }}
-      has_flutter: ${{ steps.detect.outputs.has_flutter }}
-      has_qt_cpp: ${{ steps.detect.outputs.has_qt_cpp }}
-      has_make_c: ${{ steps.detect.outputs.has_make_c }}
-      has_docker: ${{ steps.detect.outputs.has_docker }}
-      has_goreleaser: ${{ steps.detect.outputs.has_goreleaser }}
-      has_dart_or_flutter_tests: ${{ steps.detect.outputs.has_dart_or_flutter_tests }}
-      has_packaging: ${{ steps.detect.outputs.has_packaging }}
-    steps:
-      - uses: actions/checkout@v4
-
-      # Template-time toggles (set these once for the repo; avoid broad auto-detection)
-      # EXPECT_GO=true
-      # EXPECT_GORELEASER=true
-      # EXPECT_NODE=false
-      # EXPECT_DART=false
-      # EXPECT_FLUTTER=false
-      # EXPECT_QT_CPP=false
-      # EXPECT_MAKE_C=false
-      # EXPECT_DOCKER=false
-      # EXPECT_GORELEASER=true
-
-      - id: detect
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Keep this minimal: most language choices should be decided at workflow install/customization time.
-          # Runtime checks stay for optional tests and packaging folders.
-
-          EXPECT_GO=true
-          EXPECT_GORELEASER=true
-          echo "has_go=${EXPECT_GO:-false}" >> "$GITHUB_OUTPUT"
-          echo "has_node=${EXPECT_NODE:-false}" >> "$GITHUB_OUTPUT"
-          echo "has_dart=${EXPECT_DART:-false}" >> "$GITHUB_OUTPUT"
-          echo "has_flutter=${EXPECT_FLUTTER:-false}" >> "$GITHUB_OUTPUT"
-          echo "has_qt_cpp=${EXPECT_QT_CPP:-false}" >> "$GITHUB_OUTPUT"
-          echo "has_make_c=${EXPECT_MAKE_C:-false}" >> "$GITHUB_OUTPUT"
-          echo "has_docker=${EXPECT_DOCKER:-false}" >> "$GITHUB_OUTPUT"
-          echo "has_goreleaser=${EXPECT_GORELEASER:-false}" >> "$GITHUB_OUTPUT"
-
-          ([[ -d test ]] || [[ -d tests ]] || [[ -f pubspec.yaml ]]) && echo "has_dart_or_flutter_tests=true" >> "$GITHUB_OUTPUT" || echo "has_dart_or_flutter_tests=false" >> "$GITHUB_OUTPUT"
-          ([[ -d packaging ]] || [[ -d pkg ]] || [[ -f debian/control ]]) && echo "has_packaging=true" >> "$GITHUB_OUTPUT" || echo "has_packaging=false" >> "$GITHUB_OUTPUT"
-
-      - id: profile
-        shell: bash
-        run: |
-          set -euo pipefail
-          # repo visibility is authoritative
-          if [[ "${{ github.event.repository.private }}" == "true" ]]; then
-            echo "profile=private" >> "$GITHUB_OUTPUT"
-          else
-            echo "profile=public" >> "$GITHUB_OUTPUT"
-          fi
-
   gitleaks:
     name: Secret scan
-    needs: [route, discover]
+    needs: [route]
     if: ${{ needs.route.outputs.run_cleanup != 'true' && (needs.route.outputs.is_nightly == 'true' || needs.route.outputs.is_monthly == 'true') }}
     runs-on: ubuntu-latest
     steps:
@@ -188,16 +129,16 @@ jobs:
 
   dependency-review:
     name: Dependency review (public/full)
-    needs: [route, discover]
-    if: ${{ needs.discover.outputs.profile == 'public' && github.event_name == 'pull_request' && github.event.action != 'closed' }}
+    needs: [route]
+    if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/dependency-review-action@v4
 
   golangci:
     name: lint
-    needs: [route, discover]
-    if: ${{ needs.discover.outputs.has_go == 'true' && needs.route.outputs.run_code_checks == 'true' }}
+    needs: [route]
+    if: ${{ needs.route.outputs.run_code_checks == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -211,8 +152,8 @@ jobs:
 
   go-test:
     name: Go lint/test (${{ matrix.os }})
-    needs: [route, discover, golangci]
-    if: ${{ needs.discover.outputs.has_go == 'true' && needs.route.outputs.run_code_checks == 'true' }}
+    needs: [route, golangci]
+    if: ${{ needs.route.outputs.run_code_checks == 'true' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -228,8 +169,8 @@ jobs:
 
   go-vet:
     name: Go vet
-    needs: [route, discover]
-    if: ${{ needs.discover.outputs.has_go == 'true' && needs.route.outputs.run_code_checks == 'true' && needs.discover.outputs.profile == 'public' }}
+    needs: [route]
+    if: ${{ needs.route.outputs.run_code_checks == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -240,10 +181,13 @@ jobs:
 
   update-readme:
     name: Update README
-    needs: [route, discover]
-    if: ${{ needs.discover.outputs.has_go == 'true' && needs.route.outputs.run_code_checks == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: [route]
+    if: ${{ needs.route.outputs.run_code_checks == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
-    permissions:
+    env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
       contents: write
       pull-requests: write
     steps:
@@ -288,8 +232,8 @@ jobs:
 
   goreleaser:
     name: GoReleaser
-    needs: [route, discover, go-test]
-    if: ${{ needs.discover.outputs.has_go == 'true' && needs.discover.outputs.has_goreleaser == 'true' && (((github.event_name == 'push') && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && startsWith(inputs.mode, 'release-'))) }}
+    needs: [route, go-test]
+    if: ${{ (((github.event_name == 'push') && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && startsWith(inputs.mode, 'release-'))) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
