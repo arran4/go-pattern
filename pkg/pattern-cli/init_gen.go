@@ -349,6 +349,16 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		}
 		return pattern.NewEdgeDetect(input), nil
 	}
+	fm["eight_by_eight"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) < 1 {
+			return nil, fmt.Errorf("eight_by_eight requires 1 arguments")
+		}
+		arg0, err := strconv.Atoi(args[0])
+		if err != nil {
+			return nil, fmt.Errorf("argument 0 must be int: %v", err)
+		}
+		return pattern.NewEightByEight(arg0), nil
+	}
 	fm["error_diffusion"] = func(args []string, input image.Image) (image.Image, error) {
 		if len(args) < 2 {
 			return nil, fmt.Errorf("error_diffusion requires 2 arguments")
@@ -444,6 +454,15 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("linear_gradient requires 0 arguments")
 		}
 		return pattern.NewLinearGradient(), nil
+	}
+	fm["masked_blend"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) < 0 {
+			return nil, fmt.Errorf("masked_blend requires 0 arguments")
+		}
+		if input == nil {
+			return nil, fmt.Errorf("masked_blend requires an input image")
+		}
+		return pattern.NewMaskedBlend(input), nil
 	}
 	fm["maths"] = func(args []string, input image.Image) (image.Image, error) {
 		if len(args) < 1 {
@@ -751,6 +770,15 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("worley_tiles requires 0 arguments")
 		}
 		return pattern.NewWorleyTiles(), nil
+	}
+	fm["x_trans"] = func(args []string, input image.Image) (image.Image, error) {
+		if len(args) < 0 {
+			return nil, fmt.Errorf("x_trans requires 0 arguments")
+		}
+		if input == nil {
+			return nil, fmt.Errorf("x_trans requires an input image")
+		}
+		return pattern.NewXTrans(input), nil
 	}
 	fm["xor"] = func(args []string, input image.Image) (image.Image, error) {
 		if len(args) < 1 {
