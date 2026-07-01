@@ -447,10 +447,10 @@ func (e *ErrorDiffusion) compute() {
 			}
 
 			// Second pass: Distribute error normalized
-			if totalWeight > 0 {
+			if e.kernel.Divisor > 0 {
 				for _, n := range neighbors {
 					// Normalized weight
-					w := n.weight / totalWeight
+					w := n.weight / e.kernel.Divisor
 					pixels[n.idx] += errR * w
 					pixels[n.idx+1] += errG * w
 					pixels[n.idx+2] += errB * w
