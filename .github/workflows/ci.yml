@@ -185,9 +185,9 @@ jobs:
     if: ${{ needs.route.outputs.run_code_checks == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-permissions:
+    permissions:
       contents: write
       pull-requests: write
     steps:
