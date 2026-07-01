@@ -418,8 +418,7 @@ func (e *ErrorDiffusion) compute() {
 			// Luminance of current pixel for edge detection
 			lum := 0.299*oldR + 0.587*oldG + 0.114*oldB
 
-			// First pass: Calculate total valid weight sum to conserve energy
-			totalWeight := 0.0
+			// First pass: Collect valid neighbors and their edge-aware weights
 			type neighbor struct {
 				idx int
 				weight float64
@@ -441,16 +440,15 @@ func (e *ErrorDiffusion) compute() {
 						if edgeStrength > 1 { edgeStrength = 1 }
 						weight = weight * (1.0 - (e.edgeAwareness * edgeStrength))
 					}
-					totalWeight += weight
 					neighbors = append(neighbors, neighbor{nidx, weight})
 				}
 			}
 
 			// Second pass: Distribute error normalized
-			if totalWeight > 0 {
+			if e.kernel.Divisor > 0 {
 				for _, n := range neighbors {
 					// Normalized weight
-					w := n.weight / totalWeight
+					w := n.weight / e.kernel.Divisor
 					pixels[n.idx] += errR * w
 					pixels[n.idx+1] += errG * w
 					pixels[n.idx+2] += errB * w
