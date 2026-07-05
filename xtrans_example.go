@@ -8,6 +8,7 @@ import (
 
 var XTransOutputFilename = "xtrans.png"
 var XTransZoomLevels = []int{}
+
 const XTransOrder = 34
 const XTransBaseLabel = "XTrans"
 

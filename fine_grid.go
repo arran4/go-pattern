@@ -136,7 +136,6 @@ func hueToRGB(h, s, v float64) color.RGBA {
 	}
 }
 
-
 // Option helpers
 
 type hasFineGridCellSize interface {

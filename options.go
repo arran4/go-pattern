@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-
 // SpaceSize configures the size of spaces in a pattern.
 type SpaceSize struct {
 	SpaceSize int
@@ -646,6 +645,7 @@ func SetLongitudeLines(v int) func(any) {
 		}
 	}
 }
+
 // BlockSize configures the size of pixel blocks in a pattern.
 type BlockSize struct {
 	BlockSize int

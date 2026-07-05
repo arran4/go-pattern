@@ -1,9 +1,9 @@
 package pattern
 
 import (
-	"sort"
 	"image"
 	"image/color"
+	"sort"
 )
 
 // Range defines a range with optional low and high bounds.

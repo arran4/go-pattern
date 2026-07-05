@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	FloorOutputFilename = "floor.png"
+	FloorOutputFilename      = "floor.png"
 	Floor_woodOutputFilename = "floor_wood.png"
 )
 

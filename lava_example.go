@@ -31,8 +31,8 @@ func GenerateLava(b image.Rectangle) image.Image {
 		SetBounds(b),
 		NoiseSeed(1234),
 		SetNoiseAlgorithm(&PerlinNoise{
-			Frequency: 0.03,
-			Octaves:   4,
+			Frequency:   0.03,
+			Octaves:     4,
 			Persistence: 0.6,
 		}),
 	)

@@ -15,8 +15,12 @@ func TestMaskedBlend(t *testing.T) {
 	// 0..100 -> 0..255
 	mask := NewGeneric(func(x, y int) color.Color {
 		val := x * 255 / 100
-		if val < 0 { val = 0 }
-		if val > 255 { val = 255 }
+		if val < 0 {
+			val = 0
+		}
+		if val > 255 {
+			val = 255
+		}
 		v := uint8(val)
 		return color.RGBA{v, v, v, 255}
 	})

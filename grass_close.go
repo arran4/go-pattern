@@ -14,7 +14,7 @@ type GrassClose struct {
 	Null
 	BladeWidth  float64
 	BladeHeight float64
-	FillColor   // Blade color
+	FillColor               // Blade color
 	Source      image.Image // Background
 	Wind        image.Image // Controls bend
 	Density     image.Image // Controls density
@@ -59,7 +59,7 @@ func SetDensitySource(src image.Image) func(any) {
 
 // grassHash returns a pseudo-random float64 in [0, 1) based on coordinates and seed.
 func grassHash(x, y int, seed int64) float64 {
-	var h = uint64(seed) ^ (uint64(x)*73856093) ^ (uint64(y)*19349663)
+	var h = uint64(seed) ^ (uint64(x) * 73856093) ^ (uint64(y) * 19349663)
 	h ^= h >> 15
 	h *= 0x735a2d97a6428a11
 	h ^= h >> 15
@@ -278,8 +278,8 @@ func NewGrassClose(ops ...func(any)) image.Image {
 		Null: Null{
 			bounds: image.Rect(0, 0, 255, 255),
 		},
-		Seed: 1,
-		BladeWidth: 6.0,
+		Seed:        1,
+		BladeWidth:  6.0,
 		BladeHeight: 30.0,
 	}
 	p.FillColor.FillColor = color.RGBA{10, 150, 10, 255} // Default green

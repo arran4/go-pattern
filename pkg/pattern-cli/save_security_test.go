@@ -48,7 +48,7 @@ func TestSaveSecurity(t *testing.T) {
 	testCases := []struct {
 		name        string
 		filename    string
-		expectError bool // We expect error for security violations
+		expectError bool   // We expect error for security violations
 		pathCreated string // Path expected to be created if successful (relative or absolute)
 	}{
 		{

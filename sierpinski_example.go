@@ -7,6 +7,7 @@ import (
 
 var SierpinskiTriangleOutputFilename = "sierpinski_triangle.png"
 var SierpinskiTriangleZoomLevels = []int{}
+
 const SierpinskiTriangleOrder = 40
 
 // Sierpinski Triangle
@@ -21,6 +22,7 @@ func GenerateSierpinskiTriangle(b image.Rectangle) image.Image {
 
 var SierpinskiCarpetOutputFilename = "sierpinski_carpet.png"
 var SierpinskiCarpetZoomLevels = []int{}
+
 const SierpinskiCarpetOrder = 41
 
 // Sierpinski Carpet

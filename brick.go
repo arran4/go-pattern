@@ -148,32 +148,51 @@ func NewBrick(ops ...func(any)) image.Image {
 // Options
 
 type BrickSize struct{ Width, Height int }
+
 func (p *BrickSize) SetBrickSize(w, h int) { p.Width, p.Height = w, h }
 
 type MortarSize struct{ Size int }
+
 func (p *MortarSize) SetMortarSize(s int) { p.Size = s }
 
 type BrickOffset struct{ Offset float64 }
+
 func (p *BrickOffset) SetBrickOffset(o float64) { p.Offset = o }
 
 // Interface adapters for options
 
 type hasBrickSize interface{ SetBrickSize(w, h int) }
+
 func SetBrickSize(w, h int) func(any) {
-	return func(i any) { if x, ok := i.(hasBrickSize); ok { x.SetBrickSize(w, h) } }
+	return func(i any) {
+		if x, ok := i.(hasBrickSize); ok {
+			x.SetBrickSize(w, h)
+		}
+	}
 }
 
 type hasMortarSize interface{ SetMortarSize(int) }
+
 func SetMortarSize(s int) func(any) {
-	return func(i any) { if h, ok := i.(hasMortarSize); ok { h.SetMortarSize(s) } }
+	return func(i any) {
+		if h, ok := i.(hasMortarSize); ok {
+			h.SetMortarSize(s)
+		}
+	}
 }
 
 type hasBrickOffset interface{ SetBrickOffset(float64) }
+
 func SetBrickOffset(o float64) func(any) {
-	return func(i any) { if h, ok := i.(hasBrickOffset); ok { h.SetBrickOffset(o) } }
+	return func(i any) {
+		if h, ok := i.(hasBrickOffset); ok {
+			h.SetBrickOffset(o)
+		}
+	}
 }
 
 type hasBrickImages interface{ SetBrickImages([]image.Image) }
+
 func SetBrickImages(imgs ...image.Image) func(any) {
 	return func(i any) {
 		if h, ok := i.(hasBrickImages); ok {
@@ -183,6 +202,7 @@ func SetBrickImages(imgs ...image.Image) func(any) {
 }
 
 type hasMortarImage interface{ SetMortarImage(image.Image) }
+
 func SetMortarImage(img image.Image) func(any) {
 	return func(i any) {
 		if h, ok := i.(hasMortarImage); ok {
@@ -193,8 +213,8 @@ func SetMortarImage(img image.Image) func(any) {
 
 // Implement setters on Brick
 
-func (b *Brick) SetBrickSize(w, h int) { b.Width, b.Height = w, h }
-func (b *Brick) SetMortarSize(s int)   { b.MortarSize = s }
-func (b *Brick) SetBrickOffset(o float64) { b.Offset = o }
+func (b *Brick) SetBrickSize(w, h int)             { b.Width, b.Height = w, h }
+func (b *Brick) SetMortarSize(s int)               { b.MortarSize = s }
+func (b *Brick) SetBrickOffset(o float64)          { b.Offset = o }
 func (b *Brick) SetBrickImages(imgs []image.Image) { b.BrickImages = imgs }
-func (b *Brick) SetMortarImage(img image.Image) { b.MortarImage = img }
+func (b *Brick) SetMortarImage(img image.Image)    { b.MortarImage = img }

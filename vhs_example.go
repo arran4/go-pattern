@@ -7,6 +7,7 @@ import (
 
 var VHSOutputFilename = "vhs.png"
 var VHSZoomLevels = []int{}
+
 const VHSOrder = 40 // Adjust order as needed
 
 // Retro VHS Effect

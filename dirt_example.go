@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	DirtOutputFilename = "dirt.png"
+	DirtOutputFilename     = "dirt.png"
 	Dirt_mudOutputFilename = "dirt_mud.png"
 )
 
@@ -23,9 +23,9 @@ func ExampleNewDirt() image.Image {
 	)
 
 	dirtColor := NewColorMap(base,
-		ColorStop{Position: 0.0, Color: color.RGBA{40, 30, 20, 255}}, // Dark Brown
-		ColorStop{Position: 0.5, Color: color.RGBA{80, 60, 40, 255}}, // Brown
-		ColorStop{Position: 0.8, Color: color.RGBA{100, 80, 60, 255}}, // Light Brown
+		ColorStop{Position: 0.0, Color: color.RGBA{40, 30, 20, 255}},   // Dark Brown
+		ColorStop{Position: 0.5, Color: color.RGBA{80, 60, 40, 255}},   // Brown
+		ColorStop{Position: 0.8, Color: color.RGBA{100, 80, 60, 255}},  // Light Brown
 		ColorStop{Position: 1.0, Color: color.RGBA{120, 100, 80, 255}}, // Pebbles
 	)
 

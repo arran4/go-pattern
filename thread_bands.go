@@ -232,7 +232,6 @@ func applyColorVariance(c color.RGBA, variance float64, x, y int, seed int64) co
 	}
 }
 
-
 func clampUint8(v float64) uint8 {
 	if v < 0 {
 		return 0

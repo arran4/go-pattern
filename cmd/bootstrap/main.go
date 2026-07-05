@@ -450,7 +450,7 @@ func (p *PatternDemo) Generate() image.Image {
 		d.Dot = fixed.P(currentX+(iw-labelW)/2, padding+20)
 		d.DrawString(it.label)
 
-		imgX := currentX + (iw - sz)/2
+		imgX := currentX + (iw-sz)/2
 		r := image.Rect(imgX, padding+labelHeight, imgX+sz, padding+labelHeight+sz)
 		draw.Draw(dst, r, it.img, b.Min, draw.Src)
 
@@ -468,9 +468,9 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 	}
 
 	type Command struct {
-		Name      string
-		FuncName  string
-		Args      []string
+		Name       string
+		FuncName   string
+		Args       []string
 		TakesInput bool
 	}
 	var commands []Command
@@ -537,9 +537,9 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 				}
 
 				commands = append(commands, Command{
-					Name:      cmdName,
-					FuncName:  fn.Name.Name,
-					Args:      args,
+					Name:       cmdName,
+					FuncName:   fn.Name.Name,
+					Args:       args,
 					TakesInput: takesInput,
 				})
 				return true
