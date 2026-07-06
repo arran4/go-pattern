@@ -20,7 +20,7 @@ func ExampleNewBitwiseAnd() {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if e := f.Close(); e != nil { panic(e) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}

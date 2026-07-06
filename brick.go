@@ -69,13 +69,7 @@ func (b *Brick) At(x, y int) color.Color {
 	// If mortar is odd, the extra pixel goes to the end (right/bottom)
 	// range: [mortarHalf, mortarHalf + width) is brick
 
-	inMortar := false
-	if localX < mortarHalf || localX >= mortarHalf+width {
-		inMortar = true
-	}
-	if localY < mortarHalf || localY >= mortarHalf+height {
-		inMortar = true
-	}
+	inMortar := localX < mortarHalf || localX >= mortarHalf+width
 
 	if inMortar {
 		if b.MortarImage != nil {

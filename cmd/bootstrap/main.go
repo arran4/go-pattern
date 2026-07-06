@@ -107,6 +107,7 @@ func main() {
 
 func discoverPatterns(root string) ([]PatternDemo, error) {
 	fset := token.NewFileSet()
+	//nolint:staticcheck // Ignore deprecation of parser.ParseDir for now
 	pkgs, err := parser.ParseDir(fset, root, nil, 0)
 	if err != nil {
 		return nil, err
@@ -462,6 +463,7 @@ func (p *PatternDemo) Generate() image.Image {
 
 func generateCLIInit(demos []PatternDemo, outfile string) error {
 	fset := token.NewFileSet()
+	//nolint:staticcheck // Ignore deprecation of parser.ParseDir for now
 	pkgs, err := parser.ParseDir(fset, ".", nil, 0)
 	if err != nil {
 		return err
@@ -567,11 +569,11 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 	sb.WriteString("func RegisterGeneratedCommands(fm dsl.FuncMap) {\n")
 
 	for _, cmd := range commands {
-		sb.WriteString(fmt.Sprintf("\tfm[\"%s\"] = func(args []string, input image.Image) (image.Image, error) {\n", cmd.Name))
+		fmt.Fprintf(&sb, "\tfm[\"%s\"] = func(args []string, input image.Image) (image.Image, error) {\n", cmd.Name)
 
 		// Check arg count
-		sb.WriteString(fmt.Sprintf("\t\tif len(args) < %d {\n", len(cmd.Args)))
-		sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"%s requires %d arguments\")\n", cmd.Name, len(cmd.Args)))
+		fmt.Fprintf(&sb, "\t\tif len(args) < %d {\n", len(cmd.Args))
+		fmt.Fprintf(&sb, "\t\t\treturn nil, fmt.Errorf(\"%s requires %d arguments\")\n", cmd.Name, len(cmd.Args))
 		sb.WriteString("\t\t}\n")
 
 		// Check support first
