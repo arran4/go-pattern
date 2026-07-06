@@ -1,14 +1,13 @@
 package pattern
 
 import (
-	"image"
 	"image/color"
 	"testing"
 )
 
 func TestFibonacci_At(t *testing.T) {
 	// 1. Basic interface check
-	var _ image.Image = NewFibonacci()
+	_ = NewFibonacci()
 
 	// 2. Check center pixel behavior
 	// At center, r approx 0. Distance should be small, so it should be line color.

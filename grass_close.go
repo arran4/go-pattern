@@ -87,7 +87,7 @@ func (p *GrassClose) At(x, y int) color.Color {
 	gy := int(math.Floor(float64(y) / float64(gridSize)))
 
 	// Blade rendering accumulators
-	var bestBladeDist float64 = -1.0
+	bestBladeDist := -1.0
 	var bestBladeColor color.Color
 	var hit bool
 

@@ -63,8 +63,8 @@ func (f *Fog) SetNoiseAlgorithm(algo NoiseAlgorithm) {
 
 // SetFloatCenter selects the normalized center for the falloff.
 func (f *Fog) SetFloatCenter(x, y float64) {
-	f.FloatCenter.CenterX = x
-	f.FloatCenter.CenterY = y
+	f.CenterX = x
+	f.CenterY = y
 	f.useFloatCenter = true
 }
 
@@ -77,8 +77,8 @@ func (f *Fog) radialWeight(x, y int) float64 {
 	cx := float64(b.Min.X + b.Dx()/2) // Default to center
 	cy := float64(b.Min.Y + b.Dy()/2) // Default to center
 	if f.useFloatCenter {
-		cx = float64(b.Min.X) + f.FloatCenter.CenterX*float64(b.Dx())
-		cy = float64(b.Min.Y) + f.FloatCenter.CenterY*float64(b.Dy())
+		cx = float64(b.Min.X) + f.CenterX*float64(b.Dx())
+		cy = float64(b.Min.Y) + f.CenterY*float64(b.Dy())
 	}
 
 	dx := float64(x) - cx

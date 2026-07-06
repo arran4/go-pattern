@@ -1,7 +1,6 @@
 package pattern
 
 import (
-	"image"
 	"image/color"
 	"testing"
 )
@@ -14,7 +13,7 @@ func TestShojo(t *testing.T) {
 	)
 
 	// Check if it implements image.Image
-	var _ image.Image = p
+	_ = p
 
 	// Sample a few pixels to ensure it doesn't crash and returns valid colors
 	// Center of a cell likely has a star if we are lucky, but we are testing for crashes/errors mainly.
