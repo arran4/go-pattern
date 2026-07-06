@@ -9,6 +9,7 @@ import (
 
 var ModuloStripeOutputFilename = "modulo_stripe.png"
 var ModuloStripeZoomLevels = []int{}
+
 const ModuloStripeOrder = 31
 
 func ExampleNewModuloStripe() {

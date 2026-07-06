@@ -25,11 +25,11 @@ func (p *PCBTraces) ColorModel() color.Model {
 }
 
 func (p *PCBTraces) Bounds() image.Rectangle {
-	return p.Null.bounds
+	return p.bounds
 }
 
 func (p *PCBTraces) SetBounds(b image.Rectangle) {
-	p.Null.bounds = b
+	p.bounds = b
 }
 
 // SetPadDensity adjusts how frequently vias appear (0..1 range recommended).

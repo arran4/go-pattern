@@ -17,12 +17,12 @@ const CandyBaseLabel = "Candy"
 func ExampleNewCandy() {
 	// 1. Define colors for our candy.
 	colors := []color.RGBA{
-		{255, 0, 0, 255},     // Red
-		{0, 255, 0, 255},     // Green
-		{0, 0, 255, 255},     // Blue
-		{255, 255, 0, 255},   // Yellow
-		{255, 165, 0, 255},   // Orange
-		{139, 69, 19, 255},   // Brown
+		{255, 0, 0, 255},   // Red
+		{0, 255, 0, 255},   // Green
+		{0, 0, 255, 255},   // Blue
+		{255, 255, 0, 255}, // Yellow
+		{255, 165, 0, 255}, // Orange
+		{139, 69, 19, 255}, // Brown
 	}
 
 	// 2. Create the Scatter pattern.
@@ -50,7 +50,7 @@ func ExampleNewCandy() {
 			// z = sqrt(1 - x^2 - y^2)
 			nx := u / radius
 			ny := v / radius
-			nz := math.Sqrt(math.Max(0, 1.0 - nx*nx - ny*ny))
+			nz := math.Sqrt(math.Max(0, 1.0-nx*nx-ny*ny))
 
 			// Light source direction (top-left)
 			lx, ly, lz := -0.5, -0.5, 0.7
@@ -73,9 +73,9 @@ func ExampleNewCandy() {
 			specular := math.Pow(math.Max(0, specDot), 20) // Shininess
 
 			// Apply lighting
-			r := float64(baseCol.R) * (0.2 + 0.8*diffuse) + 255*specular*0.6
-			g := float64(baseCol.G) * (0.2 + 0.8*diffuse) + 255*specular*0.6
-			b := float64(baseCol.B) * (0.2 + 0.8*diffuse) + 255*specular*0.6
+			r := float64(baseCol.R)*(0.2+0.8*diffuse) + 255*specular*0.6
+			g := float64(baseCol.G)*(0.2+0.8*diffuse) + 255*specular*0.6
+			b := float64(baseCol.B)*(0.2+0.8*diffuse) + 255*specular*0.6
 
 			// Clamp
 			r = math.Min(255, math.Max(0, r))
@@ -84,7 +84,7 @@ func ExampleNewCandy() {
 
 			// Anti-aliasing at edge
 			alpha := 1.0
-			if dist > radius - 1.0 {
+			if dist > radius-1.0 {
 				alpha = radius - dist
 			}
 
@@ -140,7 +140,7 @@ func GenerateCandy(b image.Rectangle) image.Image {
 
 			nx := u / radius
 			ny := v / radius
-			nz := math.Sqrt(math.Max(0, 1.0 - nx*nx - ny*ny))
+			nz := math.Sqrt(math.Max(0, 1.0-nx*nx-ny*ny))
 			lx, ly, lz := -0.5, -0.5, 0.7
 			lLen := math.Sqrt(lx*lx + ly*ly + lz*lz)
 			lx, ly, lz = lx/lLen, ly/lLen, lz/lLen
@@ -151,11 +151,11 @@ func GenerateCandy(b image.Rectangle) image.Image {
 			rz := 2*dot*nz - lz
 			specDot := rx*0 + ry*0 + rz*1
 			specular := math.Pow(math.Max(0, specDot), 20)
-			r := float64(baseCol.R) * (0.2 + 0.8*diffuse) + 255*specular*0.6
-			g := float64(baseCol.G) * (0.2 + 0.8*diffuse) + 255*specular*0.6
-			b := float64(baseCol.B) * (0.2 + 0.8*diffuse) + 255*specular*0.6
+			r := float64(baseCol.R)*(0.2+0.8*diffuse) + 255*specular*0.6
+			g := float64(baseCol.G)*(0.2+0.8*diffuse) + 255*specular*0.6
+			b := float64(baseCol.B)*(0.2+0.8*diffuse) + 255*specular*0.6
 			alpha := 1.0
-			if dist > radius - 1.0 {
+			if dist > radius-1.0 {
 				alpha = radius - dist
 			}
 

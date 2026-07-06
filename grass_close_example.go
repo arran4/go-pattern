@@ -157,9 +157,9 @@ func GenerateGrassCloseReferences() (map[string]func(image.Rectangle) image.Imag
 			// High contrast to make distinct patches
 			density := NewColorMap(
 				NewWorleyNoise(SetBounds(b), SetFrequency(0.05), SetSeed(31), SetWorleyOutput(OutputF1)),
-				ColorStop{0.0, color.White},                   // Center of cell -> Dense grass
+				ColorStop{0.0, color.White},                    // Center of cell -> Dense grass
 				ColorStop{0.3, color.RGBA{128, 128, 128, 255}}, // Edge of clump -> Sparse
-				ColorStop{0.4, color.Black},                   // Outside -> No grass
+				ColorStop{0.4, color.Black},                    // Outside -> No grass
 			)
 
 			return NewGrassClose(

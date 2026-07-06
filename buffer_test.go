@@ -65,7 +65,7 @@ func TestBuffer_At_Caching(t *testing.T) {
 	// Source is red
 	src := &MockSource{
 		color: color.RGBA{255, 0, 0, 255},
-		Null: Null{bounds: image.Rect(0, 0, 10, 10)},
+		Null:  Null{bounds: image.Rect(0, 0, 10, 10)},
 	}
 
 	b := NewBuffer(src)

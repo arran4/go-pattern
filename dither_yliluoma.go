@@ -198,15 +198,15 @@ func evaluateMixingError(targetLuma float64, r, g, b, r0, g0, b0, r1, g1, b1, r2
 	luma2 := (float64(r0)*299 + float64(g0)*587 + float64(b0)*114) / (255.0 * 1000)
 	lumadiff := targetLuma - luma2
 
-	diffR := float64(r - r0) / 255.0
-	diffG := float64(g - g0) / 255.0
-	diffB := float64(b - b0) / 255.0
+	diffR := float64(r-r0) / 255.0
+	diffG := float64(g-g0) / 255.0
+	diffB := float64(b-b0) / 255.0
 
 	baseErr := (diffR*diffR*0.299+diffG*diffG*0.587+diffB*diffB*0.114)*0.75 + lumadiff*lumadiff
 
 	mixErr := colorCompareLuma(r1, g1, b1, r2, g2, b2)
 
-	factor := math.Abs(ratio - 0.5) + 0.5
+	factor := math.Abs(ratio-0.5) + 0.5
 	return baseErr + mixErr*0.1*factor
 }
 
@@ -219,11 +219,11 @@ func colorCompareLuma(r1, g1, b1, r2, g2, b2 int) float64 {
 	luma2 := (float64(r2)*299 + float64(g2)*587 + float64(b2)*114) / (255.0 * 1000)
 	lumadiff := luma1 - luma2
 
-	diffR := float64(r1 - r2) / 255.0
-	diffG := float64(g1 - g2) / 255.0
-	diffB := float64(b1 - b2) / 255.0
+	diffR := float64(r1-r2) / 255.0
+	diffG := float64(g1-g2) / 255.0
+	diffB := float64(b1-b2) / 255.0
 
-	return (diffR*diffR*0.299 + diffG*diffG*0.587 + diffB*diffB*0.114)*0.75 + lumadiff*lumadiff
+	return (diffR*diffR*0.299+diffG*diffG*0.587+diffB*diffB*0.114)*0.75 + lumadiff*lumadiff
 }
 
 func sortCandidatesByLuma(candidates []int, palette []color.Color) {
@@ -308,9 +308,13 @@ func (p *Yliluoma2Dither) At(x, y int) color.Color {
 	ri, gi, bi := int(r>>8), int(g>>8), int(b>>8)
 
 	mx := x % p.Size
-	if mx < 0 { mx += p.Size }
+	if mx < 0 {
+		mx += p.Size
+	}
 	my := y % p.Size
-	if my < 0 { my += p.Size }
+	if my < 0 {
+		my += p.Size
+	}
 
 	// Map value 0..1
 	mapVal := p.Matrix[my*p.Size+mx]
@@ -333,8 +337,12 @@ func (p *Yliluoma2Dither) At(x, y int) color.Color {
 	// index = mapVal * size
 	n := len(candidates)
 	idx := int(mapVal * float64(n))
-	if idx >= n { idx = n - 1 }
-	if idx < 0 { idx = 0 }
+	if idx >= n {
+		idx = n - 1
+	}
+	if idx < 0 {
+		idx = 0
+	}
 
 	return p.Palette[candidates[idx]]
 }
@@ -393,9 +401,9 @@ func (p *Yliluoma2Dither) deviseMixingPlan(r, g, b int) []int {
 		for k := 0; k < bestCount && len(candidates) < targetCount; k++ {
 			candidates = append(candidates, bestIdx)
 			pr, pg, pb, _ := p.Palette[bestIdx].RGBA()
-			sumR += int(pr>>8)
-			sumG += int(pg>>8)
-			sumB += int(pb>>8)
+			sumR += int(pr >> 8)
+			sumG += int(pg >> 8)
+			sumB += int(pb >> 8)
 		}
 	}
 
@@ -403,7 +411,6 @@ func (p *Yliluoma2Dither) deviseMixingPlan(r, g, b int) []int {
 
 	return candidates
 }
-
 
 // KnollDither implements Thomas Knoll's pattern dithering (Photoshop).
 type KnollDither struct {
@@ -456,9 +463,13 @@ func (p *KnollDither) At(x, y int) color.Color {
 	ri, gi, bi := int(r>>8), int(g>>8), int(b>>8)
 
 	mx := x % p.Size
-	if mx < 0 { mx += p.Size }
+	if mx < 0 {
+		mx += p.Size
+	}
 	my := y % p.Size
-	if my < 0 { my += p.Size }
+	if my < 0 {
+		my += p.Size
+	}
 
 	key := (ri << 16) | (gi << 8) | bi
 
@@ -473,7 +484,7 @@ func (p *KnollDither) At(x, y int) color.Color {
 		p.mu.Unlock()
 	}
 
-	idx := p.Matrix[my*p.Size + mx]
+	idx := p.Matrix[my*p.Size+mx]
 
 	// Protection against out of bounds if matrix has values >= len(candidates)
 	if idx >= len(candidates) {
@@ -500,14 +511,29 @@ func (p *KnollDither) devisePlan(r, g, b int) []int {
 
 	for i := 0; i < n; i++ {
 		// Attempt
-		ar := r + int(float64(er) * threshold)
-		ag := g + int(float64(eg) * threshold)
-		ab := b + int(float64(eb) * threshold)
+		ar := r + int(float64(er)*threshold)
+		ag := g + int(float64(eg)*threshold)
+		ab := b + int(float64(eb)*threshold)
 
 		// Clamp
-		if ar < 0 { ar = 0 }; if ar > 255 { ar = 255 }
-		if ag < 0 { ag = 0 }; if ag > 255 { ag = 255 }
-		if ab < 0 { ab = 0 }; if ab > 255 { ab = 255 }
+		if ar < 0 {
+			ar = 0
+		}
+		if ar > 255 {
+			ar = 255
+		}
+		if ag < 0 {
+			ag = 0
+		}
+		if ag > 255 {
+			ag = 255
+		}
+		if ab < 0 {
+			ab = 0
+		}
+		if ab > 255 {
+			ab = 255
+		}
 
 		// Find closest
 		bestIdx := 0
@@ -541,4 +567,3 @@ func (p *KnollDither) devisePlan(r, g, b int) []int {
 
 	return candidates
 }
-

@@ -8,6 +8,7 @@ import (
 
 var PlasmaOutputFilename = "plasma.png"
 var PlasmaZoomLevels = []int{}
+
 const PlasmaOrder = 33
 
 func ExampleNewPlasma() {

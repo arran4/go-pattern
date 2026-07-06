@@ -10,6 +10,7 @@ import (
 
 var CircleOutputFilename = "circle.png"
 var CircleZoomLevels = []int{}
+
 const CircleOrder = 24
 
 const CircleBaseLabel = "Circle"
@@ -44,7 +45,7 @@ func GenerateCircle(b image.Rectangle) image.Image {
 	// Circle with Border and Fill
 	v2 := NewCircle(
 		SetLineSize(5),
-		SetLineColor(color.RGBA{0, 0, 255, 255}), // Blue Border
+		SetLineColor(color.RGBA{0, 0, 255, 255}),   // Blue Border
 		SetFillColor(color.RGBA{255, 255, 0, 255}), // Yellow Fill
 		SetSpaceColor(color.White),
 		SetBounds(b),

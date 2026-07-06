@@ -78,9 +78,15 @@ func (p *VHS) At(x, y int) color.Color {
 	}
 
 	// Clamp
-	if rf > 255 { rf = 255 }
-	if gf > 255 { gf = 255 }
-	if bf > 255 { bf = 255 }
+	if rf > 255 {
+		rf = 255
+	}
+	if gf > 255 {
+		gf = 255
+	}
+	if bf > 255 {
+		bf = 255
+	}
 
 	// Re-apply alpha?
 	// If we are modifying RGB of a transparent pixel, we must be careful.

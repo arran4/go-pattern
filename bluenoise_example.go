@@ -8,6 +8,7 @@ import (
 
 var BlueNoiseOutputFilename = "bluenoise.png"
 var BlueNoiseZoomLevels = []int{}
+
 const BlueNoiseOrder = 35
 
 func ExampleNewBlueNoise() {

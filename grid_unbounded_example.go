@@ -11,8 +11,8 @@ var (
 )
 
 const (
-	GridUnboundedOrder          = 7
-	GridUnboundedBaseLabel      = "Unbounded"
+	GridUnboundedOrder     = 7
+	GridUnboundedBaseLabel = "Unbounded"
 )
 
 func init() {
@@ -85,7 +85,6 @@ func ExampleNewGridUnbounded(ops ...func(any)) image.Image {
 
 	return NewGrid(args...)
 }
-
 
 func NewDemoGridFlexible(ops ...func(any)) image.Image {
 	// Demonstrate Row flexibility

@@ -207,7 +207,6 @@ func darken(c color.RGBA, factor float64) color.RGBA {
 	}
 }
 
-
 func init() {
 	RegisterGenerator(MudTracksBaseLabel, GenerateMudTracks)
 }
