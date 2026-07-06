@@ -9,6 +9,7 @@ import (
 
 var GradientQuantizationOutputFilename = "gradient_quantize.png"
 var GradientQuantizationZoomLevels = []int{}
+
 const GradientQuantizationOrder = 36
 
 func ExampleNewGradientQuantization() {

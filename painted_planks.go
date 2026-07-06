@@ -121,7 +121,6 @@ func (p *PaintedPlanks) sampleNoise(n *PerlinNoise, x, y int) float64 {
 	return float64(r) / 65535.0
 }
 
-
 // NewPaintedPlanks creates a plank wall pattern with configurable wood grain and paint wear.
 func NewPaintedPlanks(ops ...func(any)) image.Image {
 	p := &PaintedPlanks{
@@ -235,4 +234,3 @@ func (p *PaintedPlanks) SetPlankWidthVariance(v float64) { p.WidthVariance = v }
 func (p *PaintedPlanks) SetGrainIntensity(v float64)     { p.GrainIntensity = v }
 func (p *PaintedPlanks) SetPaintWear(v float64)          { p.PaintWear = v }
 func (p *PaintedPlanks) SetPaintColor(c color.RGBA)      { p.PaintColor = c }
-

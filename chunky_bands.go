@@ -53,7 +53,6 @@ func quantize(v, step int) int {
 	return int(f * float64(step))
 }
 
-
 // NewChunkyBands creates a new ChunkyBands pattern.
 func NewChunkyBands(ops ...func(any)) image.Image {
 	p := &ChunkyBands{

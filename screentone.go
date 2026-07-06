@@ -12,9 +12,9 @@ var _ image.Image = (*ScreenTone)(nil)
 // ScreenTone is a pattern that displays a grid of dots (halftone) at a specified angle.
 type ScreenTone struct {
 	Null
-	Radius      // Size of the dots
-	Spacing     // Distance between dots (frequency)
-	Angle       // Angle of the grid in degrees
+	Radius  // Size of the dots
+	Spacing // Distance between dots (frequency)
+	Angle   // Angle of the grid in degrees
 	FillColor
 	SpaceColor
 }

@@ -10,6 +10,7 @@ import (
 
 var FibonacciOutputFilename = "fibonacci.png"
 var FibonacciZoomLevels = []int{}
+
 const FibonacciOrder = 25 // Adjust as needed to fit in the list
 
 const FibonacciBaseLabel = "Fibonacci"

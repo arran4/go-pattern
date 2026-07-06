@@ -8,6 +8,7 @@ import (
 
 var HeatmapOutputFilename = "heatmap.png"
 var HeatmapZoomLevels = []int{}
+
 const HeatmapOrder = 24
 
 // Heatmap

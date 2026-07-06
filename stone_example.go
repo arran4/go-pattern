@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	StoneOutputFilename = "stone.png"
+	StoneOutputFilename        = "stone.png"
 	Stone_cobbleOutputFilename = "stone_cobble.png"
 )
 

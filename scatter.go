@@ -169,8 +169,8 @@ func NewScatter(ops ...func(any)) image.Image {
 		Null: Null{
 			bounds: image.Rect(0, 0, 255, 255),
 		},
-		Frequency: 0.05,
-		Density:   1.0,
+		Frequency:  0.05,
+		Density:    1.0,
 		MaxOverlap: 1,
 		Generator: func(u, v float64, hash uint64) (color.Color, float64) {
 			return color.Transparent, 0

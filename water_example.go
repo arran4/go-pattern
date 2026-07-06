@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	WaterOutputFilename = "water.png"
+	WaterOutputFilename         = "water.png"
 	Water_surfaceOutputFilename = "water_surface.png"
 )
 

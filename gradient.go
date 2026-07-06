@@ -91,8 +91,8 @@ func (g *RadialGradient) At(x, y int) color.Color {
 	cy := float64(b.Min.Y + b.Dy()/2)
 
 	if g.UseFloatCenter {
-		cx = float64(b.Min.X) + g.FloatCenter.CenterX*float64(b.Dx())
-		cy = float64(b.Min.Y) + g.FloatCenter.CenterY*float64(b.Dy())
+		cx = float64(b.Min.X) + g.CenterX*float64(b.Dx())
+		cy = float64(b.Min.Y) + g.CenterY*float64(b.Dy())
 	}
 
 	dx := float64(x) - cx
@@ -103,7 +103,7 @@ func (g *RadialGradient) At(x, y int) color.Color {
 	// Max distance is from center to corner (or side?)
 	// Usually radial gradient goes to the furthest corner or closest side.
 	// Let's use half of the smallest dimension (circle fits in box) or distance to corner.
-	maxDist := math.Sqrt(float64(b.Dx()*b.Dx() + b.Dy()*b.Dy())) / 2.0
+	maxDist := math.Sqrt(float64(b.Dx()*b.Dx()+b.Dy()*b.Dy())) / 2.0
 
 	t := dist / maxDist
 
@@ -137,13 +137,13 @@ func NewRadialGradient(ops ...func(any)) image.Image {
 func GradientCenter(x, y float64) func(any) {
 	return func(i any) {
 		if c, ok := i.(*RadialGradient); ok {
-			c.FloatCenter.CenterX = x
-			c.FloatCenter.CenterY = y
+			c.CenterX = x
+			c.CenterY = y
 			c.UseFloatCenter = true
 		}
 		if c, ok := i.(*ConicGradient); ok {
-			c.FloatCenter.CenterX = x
-			c.FloatCenter.CenterY = y
+			c.CenterX = x
+			c.CenterY = y
 			c.UseFloatCenter = true
 		}
 	}
@@ -169,8 +169,8 @@ func (g *ConicGradient) At(x, y int) color.Color {
 	cy := float64(b.Min.Y + b.Dy()/2)
 
 	if g.UseFloatCenter {
-		cx = float64(b.Min.X) + g.FloatCenter.CenterX*float64(b.Dx())
-		cy = float64(b.Min.Y) + g.FloatCenter.CenterY*float64(b.Dy())
+		cx = float64(b.Min.X) + g.CenterX*float64(b.Dx())
+		cy = float64(b.Min.Y) + g.CenterY*float64(b.Dy())
 	}
 
 	dx := float64(x) - cx

@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	SandOutputFilename = "sand.png"
-	Sand_dunesOutputFilename = "sand_dunes.png"
+	SandOutputFilename        = "sand.png"
+	Sand_dunesOutputFilename  = "sand_dunes.png"
 	Sand_zoomedOutputFilename = "sand_zoomed.png"
 )
 
@@ -16,9 +16,9 @@ func ExampleNewSand() image.Image {
 	grain := NewNoise(
 		NoiseSeed(303),
 		SetNoiseAlgorithm(&PerlinNoise{
-			Seed:        303,
-			Frequency:   0.5,
-			Octaves:     2,
+			Seed:      303,
+			Frequency: 0.5,
+			Octaves:   2,
 		}),
 	)
 
@@ -69,8 +69,8 @@ func ExampleNewSand_dunes() image.Image {
 	// Darken troughs using Multiply
 	shadows := NewColorMap(ripplesStretched,
 		ColorStop{Position: 0.0, Color: color.RGBA{180, 180, 180, 255}}, // Darker (Grey for Multiply)
-		ColorStop{Position: 0.5, Color: color.White}, // No change
-		ColorStop{Position: 1.0, Color: color.White}, // No change
+		ColorStop{Position: 0.5, Color: color.White},                    // No change
+		ColorStop{Position: 1.0, Color: color.White},                    // No change
 	)
 
 	// Rotate ripples

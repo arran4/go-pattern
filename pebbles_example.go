@@ -22,7 +22,7 @@ func ExampleNewPebbles() {
 		SetScatterMaxOverlap(1),
 		SetScatterGenerator(func(u, v float64, hash uint64) (color.Color, float64) {
 			// Randomize size slightly
-			rSize := float64(hash&0xFF)/255.0
+			rSize := float64(hash&0xFF) / 255.0
 			radius := 12.0 + rSize*6.0 // 12 to 18 pixels radius
 
 			// Perturb the shape using simple noise (simulated by sin/cos of hash+angle)
@@ -31,8 +31,8 @@ func ExampleNewPebbles() {
 			dist := math.Sqrt(u*u + v*v)
 
 			// Simple radial noise
-			noise := math.Sin(angle*5 + float64(hash%10)) * 0.1
-			noise += math.Cos(angle*13 + float64(hash%7)) * 0.05
+			noise := math.Sin(angle*5+float64(hash%10)) * 0.1
+			noise += math.Cos(angle*13+float64(hash%7)) * 0.05
 
 			effectiveRadius := radius * (1.0 + noise)
 
@@ -48,14 +48,14 @@ func ExampleNewPebbles() {
 			// Normal estimation for a flattened spheroid
 			nx := u / effectiveRadius
 			ny := v / effectiveRadius
-			nz := math.Sqrt(math.Max(0, 1.0 - nx*nx - ny*ny))
+			nz := math.Sqrt(math.Max(0, 1.0-nx*nx-ny*ny))
 
 			// Light dir
 			lx, ly, lz := -0.5, -0.5, 0.7
 			lLen := math.Sqrt(lx*lx + ly*ly + lz*lz)
 			lx, ly, lz = lx/lLen, ly/lLen, lz/lLen
 
-			diffuse := math.Max(0, nx*lx + ny*ly + nz*lz)
+			diffuse := math.Max(0, nx*lx+ny*ly+nz*lz)
 
 			// Apply shading
 			r := float64(col.R) * (0.1 + 0.9*diffuse)
@@ -102,12 +102,12 @@ func GeneratePebbles(b image.Rectangle) image.Image {
 		SetScatterDensity(1.0),
 		SetScatterMaxOverlap(1),
 		SetScatterGenerator(func(u, v float64, hash uint64) (color.Color, float64) {
-			rSize := float64(hash&0xFF)/255.0
+			rSize := float64(hash&0xFF) / 255.0
 			radius := 12.0 + rSize*6.0
 			angle := math.Atan2(v, u)
 			dist := math.Sqrt(u*u + v*v)
-			noise := math.Sin(angle*5 + float64(hash%10)) * 0.1
-			noise += math.Cos(angle*13 + float64(hash%7)) * 0.05
+			noise := math.Sin(angle*5+float64(hash%10)) * 0.1
+			noise += math.Cos(angle*13+float64(hash%7)) * 0.05
 			effectiveRadius := radius * (1.0 + noise)
 			if dist > effectiveRadius {
 				return color.Transparent, 0
@@ -116,11 +116,11 @@ func GeneratePebbles(b image.Rectangle) image.Image {
 			col := color.RGBA{uint8(grey), uint8(grey - 5), uint8(grey - 10), 255}
 			nx := u / effectiveRadius
 			ny := v / effectiveRadius
-			nz := math.Sqrt(math.Max(0, 1.0 - nx*nx - ny*ny))
+			nz := math.Sqrt(math.Max(0, 1.0-nx*nx-ny*ny))
 			lx, ly, lz := -0.5, -0.5, 0.7
 			lLen := math.Sqrt(lx*lx + ly*ly + lz*lz)
 			lx, ly, lz = lx/lLen, ly/lLen, lz/lLen
-			diffuse := math.Max(0, nx*lx + ny*ly + nz*lz)
+			diffuse := math.Max(0, nx*lx+ny*ly+nz*lz)
 			r := float64(col.R) * (0.1 + 0.9*diffuse)
 			g := float64(col.G) * (0.1 + 0.9*diffuse)
 			b := float64(col.B) * (0.1 + 0.9*diffuse)

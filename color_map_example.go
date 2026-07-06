@@ -203,10 +203,10 @@ func GenerateColorMapReferences() (map[string]func(image.Rectangle) image.Image,
 				}),
 			)
 			return NewColorMap(noise,
-				ColorStop{Position: 0.0, Color: color.RGBA{0, 0, 150, 255}},     // Water (Deep)
-				ColorStop{Position: 0.45, Color: color.RGBA{0, 100, 200, 255}},  // Water (Shallow)
+				ColorStop{Position: 0.0, Color: color.RGBA{0, 0, 150, 255}},      // Water (Deep)
+				ColorStop{Position: 0.45, Color: color.RGBA{0, 100, 200, 255}},   // Water (Shallow)
 				ColorStop{Position: 0.50, Color: color.RGBA{240, 230, 140, 255}}, // Sand
-				ColorStop{Position: 0.60, Color: color.RGBA{50, 150, 50, 255}},  // Grass
+				ColorStop{Position: 0.60, Color: color.RGBA{50, 150, 50, 255}},   // Grass
 				ColorStop{Position: 0.80, Color: color.RGBA{100, 100, 100, 255}}, // Rock
 				ColorStop{Position: 0.95, Color: color.RGBA{255, 255, 255, 255}}, // Snow
 			)
@@ -217,9 +217,9 @@ func GenerateColorMapReferences() (map[string]func(image.Rectangle) image.Image,
 				SetBounds(b),
 				NoiseSeed(800),
 				SetNoiseAlgorithm(&PerlinNoise{
-					Seed:        800,
-					Frequency:   0.1,
-					Octaves:     1,
+					Seed:      800,
+					Frequency: 0.1,
+					Octaves:   1,
 				}),
 			)
 			return NewColorMap(noise,

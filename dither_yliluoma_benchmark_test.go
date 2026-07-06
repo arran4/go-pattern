@@ -26,16 +26,16 @@ func BenchmarkYliluoma1Dither_deviseBestMixingPlan(b *testing.B) {
 		color.RGBA{0xff, 0xff, 0xff, 0xff},
 	}
 
-    img := image.NewRGBA(image.Rect(0,0,1,1))
-    dither := NewYliluoma1Dither(img, palette, 8)
+	img := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	dither := NewYliluoma1Dither(img, palette, 8)
 
-    d, ok := dither.(*Yliluoma1Dither)
-    if !ok {
-        b.Fatal("NewYliluoma1Dither did not return *Yliluoma1Dither")
-    }
+	d, ok := dither.(*Yliluoma1Dither)
+	if !ok {
+		b.Fatal("NewYliluoma1Dither did not return *Yliluoma1Dither")
+	}
 
-    b.ResetTimer()
-    for i := 0; i < b.N; i++ {
-        d.deviseBestMixingPlan(100, 100, 100)
-    }
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		d.deviseBestMixingPlan(100, 100, 100)
+	}
 }

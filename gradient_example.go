@@ -9,6 +9,7 @@ import (
 
 var LinearGradientOutputFilename = "linear_gradient.png"
 var LinearGradientZoomLevels = []int{}
+
 const LinearGradientOrder = 30
 const LinearGradientBaseLabel = "Horizontal"
 
@@ -41,11 +42,11 @@ func GenerateLinearGradientReferences() (map[string]func(image.Rectangle) image.
 	}, []string{"Vertical"}
 }
 
-
 // Radial Gradient Pattern
 
 var RadialGradientOutputFilename = "radial_gradient.png"
 var RadialGradientZoomLevels = []int{}
+
 const RadialGradientOrder = 31
 
 func ExampleNewRadialGradient() {
@@ -64,11 +65,11 @@ func GenerateRadialGradient(b image.Rectangle) image.Image {
 	)
 }
 
-
 // Conic Gradient Pattern
 
 var ConicGradientOutputFilename = "conic_gradient.png"
 var ConicGradientZoomLevels = []int{}
+
 const ConicGradientOrder = 32
 
 func ExampleNewConicGradient() {
