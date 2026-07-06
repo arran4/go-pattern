@@ -1,6 +1,7 @@
 # Agent rules for generation:
 # https://arran4.com/post/2026/006-Github-CI-and-Deploy/
 # Built using this post as a reference/guide.
+# This workflow defines the CI/CD pipeline for the project.
 name: CI/CD
 
 on:
