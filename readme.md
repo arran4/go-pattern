@@ -625,7 +625,11 @@ Demonstrates using Worley Noise (F2-F1) to create cracked earth.
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if err = png.Encode(f, img); err != nil {
 		panic(err)
 	}
@@ -1264,7 +1268,7 @@ Demonstrates composing patterns using Blend to create a realistic island terrain
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err = png.Encode(f, img); err != nil {
 		panic(err)
 	}
@@ -2219,7 +2223,7 @@ ExampleNewShojo_pink demonstrates a pink variant.
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err = png.Encode(f, img); err != nil {
 		panic(err)
 	}
@@ -3602,7 +3606,7 @@ Scales an input pattern by a factor.
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3652,7 +3656,7 @@ Example of applying a 2x2 Bayer ordered dither.
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3714,7 +3718,11 @@ Transposes the coordinates of an input pattern.
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3772,7 +3780,7 @@ Mirrors the input pattern horizontally or vertically.
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3819,7 +3827,7 @@ Rotates the input pattern by 90, 180, or 270 degrees.
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3894,7 +3902,7 @@ ExampleNewXTrans generates an example of applying an X-Trans CFA pattern.
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3989,7 +3997,7 @@ Subpixel lines with per-channel offset and vignette.
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	err = png.Encode(f, i)
 	if err != nil {
 		panic(err)

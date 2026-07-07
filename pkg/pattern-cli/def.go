@@ -210,7 +210,9 @@ func registerCommands(fm dsl.FuncMap) {
 		if err != nil {
 			return nil, err
 		}
-		defer f.Close()
+		defer func() {
+			_ = f.Close()
+		}()
 
 		if strings.HasSuffix(cleanPath, ".png") {
 			if err := png.Encode(f, input); err != nil {
