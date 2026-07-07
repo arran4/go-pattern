@@ -36,13 +36,14 @@ func NewYliluoma1Dither(input image.Image, palette color.Palette, size int, ops 
 
 	// Use standard Bayer matrix
 	var mat []float64
-	if size == 8 {
+	switch size {
+	case 8:
 		mat = Bayer8x8
-	} else if size == 4 {
+	case 4:
 		mat = Bayer4x4
-	} else if size == 2 {
+	case 2:
 		mat = Bayer2x2
-	} else {
+	default:
 		// Generate custom if needed, fallback to 8x8 for now or implement generator
 		mat = Bayer8x8
 		size = 8
@@ -269,13 +270,14 @@ func NewYliluoma2Dither(input image.Image, palette color.Palette, size int, ops 
 	}
 	// ... reuse matrix selection logic ...
 	var mat []float64
-	if size == 8 {
+	switch size {
+	case 8:
 		mat = Bayer8x8
-	} else if size == 4 {
+	case 4:
 		mat = Bayer4x4
-	} else if size == 2 {
+	case 2:
 		mat = Bayer2x2
-	} else {
+	default:
 		mat = Bayer8x8
 		size = 8
 	}

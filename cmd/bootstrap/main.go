@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/token"
 	"image"
 	"image/color"
@@ -21,6 +20,8 @@ import (
 	"strings"
 	"text/template"
 	"unicode"
+
+	"golang.org/x/tools/go/packages"
 
 	pattern "github.com/arran4/go-pattern"
 	"golang.org/x/image/font"
@@ -106,8 +107,11 @@ func main() {
 }
 
 func discoverPatterns(root string) ([]PatternDemo, error) {
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, root, nil, 0)
+	cfg := &packages.Config{
+		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax,
+	}
+	// Only load the target package directory
+	pkgs, err := packages.Load(cfg, root)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +119,9 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 	var patterns []PatternDemo
 
 	for _, pkg := range pkgs {
-		for filename, f := range pkg.Files {
+		fset := pkg.Fset
+		for _, f := range pkg.Syntax {
+			filename := fset.File(f.Pos()).Name()
 			// We only care about _example.go files for metadata
 			if !strings.HasSuffix(filename, "_example.go") {
 				continue
@@ -461,8 +467,11 @@ func (p *PatternDemo) Generate() image.Image {
 }
 
 func generateCLIInit(demos []PatternDemo, outfile string) error {
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, ".", nil, 0)
+	cfg := &packages.Config{
+		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax,
+	}
+	// Only load the current directory package, which was previously "."
+	pkgs, err := packages.Load(cfg, ".")
 	if err != nil {
 		return err
 	}
@@ -476,7 +485,9 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 	var commands []Command
 
 	for _, pkg := range pkgs {
-		for filename, f := range pkg.Files {
+		fset := pkg.Fset
+		for _, f := range pkg.Syntax {
+			filename := fset.File(f.Pos()).Name()
 			if strings.HasSuffix(filename, "_test.go") || strings.HasSuffix(filename, "_example.go") {
 				continue
 			}
@@ -484,6 +495,9 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 			ast.Inspect(f, func(n ast.Node) bool {
 				fn, ok := n.(*ast.FuncDecl)
 				if !ok {
+					return true
+				}
+				if fn.Recv != nil {
 					return true
 				}
 				if !strings.HasPrefix(fn.Name.Name, "New") {
@@ -496,7 +510,8 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 				takesInput := false
 
 				if fn.Type.Params != nil {
-					for i, param := range fn.Type.Params.List {
+					argIndex := 0
+					for _, param := range fn.Type.Params.List {
 						// type string
 						typeName := ""
 						isVariadic := false
@@ -527,11 +542,12 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 								}
 								// Treat other variadics as unsupported for now, or strings
 								args = append(args, typeName)
-							} else if i == 0 && typeName == "image.Image" {
+							} else if argIndex == 0 && typeName == "image.Image" {
 								takesInput = true
 							} else {
 								args = append(args, typeName)
 							}
+							argIndex++
 						}
 					}
 				}
@@ -567,12 +583,14 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 	sb.WriteString("func RegisterGeneratedCommands(fm dsl.FuncMap) {\n")
 
 	for _, cmd := range commands {
-		sb.WriteString(fmt.Sprintf("\tfm[\"%s\"] = func(args []string, input image.Image) (image.Image, error) {\n", cmd.Name))
+		fmt.Fprintf(&sb, "\tfm[\"%s\"] = func(args []string, input image.Image) (image.Image, error) {\n", cmd.Name)
 
 		// Check arg count
-		sb.WriteString(fmt.Sprintf("\t\tif len(args) < %d {\n", len(cmd.Args)))
-		sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"%s requires %d arguments\")\n", cmd.Name, len(cmd.Args)))
-		sb.WriteString("\t\t}\n")
+		if len(cmd.Args) > 0 {
+			fmt.Fprintf(&sb, "\t\tif len(args) < %d {\n", len(cmd.Args))
+			fmt.Fprintf(&sb, "\t\t\treturn nil, fmt.Errorf(\"%s requires %d arguments\")\n", cmd.Name, len(cmd.Args))
+			sb.WriteString("\t\t}\n")
+		}
 
 		// Check support first
 		supported := true
@@ -590,7 +608,7 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 			callArgs := []string{}
 			if cmd.TakesInput {
 				sb.WriteString("\t\tif input == nil {\n")
-				sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"%s requires an input image\")\n", cmd.Name))
+				fmt.Fprintf(&sb, "\t\t\treturn nil, fmt.Errorf(\"%s requires an input image\")\n", cmd.Name)
 				sb.WriteString("\t\t}\n")
 				callArgs = append(callArgs, "input")
 			}
@@ -599,27 +617,27 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 				varName := fmt.Sprintf("arg%d", i)
 				switch argType {
 				case "int":
-					sb.WriteString(fmt.Sprintf("\t\t%s, err := strconv.Atoi(args[%d])\n", varName, i))
+					fmt.Fprintf(&sb, "\t\t%s, err := strconv.Atoi(args[%d])\n", varName, i)
 					sb.WriteString("\t\tif err != nil {\n")
-					sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"argument %d must be int: %%v\", err)\n", i))
+					fmt.Fprintf(&sb, "\t\t\treturn nil, fmt.Errorf(\"argument %d must be int: %%v\", err)\n", i)
 					sb.WriteString("\t\t}\n")
 					callArgs = append(callArgs, varName)
 				case "float64":
-					sb.WriteString(fmt.Sprintf("\t\t%s, err := strconv.ParseFloat(args[%d], 64)\n", varName, i))
+					fmt.Fprintf(&sb, "\t\t%s, err := strconv.ParseFloat(args[%d], 64)\n", varName, i)
 					sb.WriteString("\t\tif err != nil {\n")
-					sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"argument %d must be float: %%v\", err)\n", i))
+					fmt.Fprintf(&sb, "\t\t\treturn nil, fmt.Errorf(\"argument %d must be float: %%v\", err)\n", i)
 					sb.WriteString("\t\t}\n")
 					callArgs = append(callArgs, varName)
 				case "bool":
-					sb.WriteString(fmt.Sprintf("\t\t%s, err := strconv.ParseBool(args[%d])\n", varName, i))
+					fmt.Fprintf(&sb, "\t\t%s, err := strconv.ParseBool(args[%d])\n", varName, i)
 					sb.WriteString("\t\tif err != nil {\n")
-					sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"argument %d must be bool: %%v\", err)\n", i))
+					fmt.Fprintf(&sb, "\t\t\treturn nil, fmt.Errorf(\"argument %d must be bool: %%v\", err)\n", i)
 					sb.WriteString("\t\t}\n")
 					callArgs = append(callArgs, varName)
 				case "color.Color":
-					sb.WriteString(fmt.Sprintf("\t\t%s, err := parseColor(args[%d])\n", varName, i))
+					fmt.Fprintf(&sb, "\t\t%s, err := parseColor(args[%d])\n", varName, i)
 					sb.WriteString("\t\tif err != nil {\n")
-					sb.WriteString(fmt.Sprintf("\t\t\treturn nil, fmt.Errorf(\"argument %d must be color: %%v\", err)\n", i))
+					fmt.Fprintf(&sb, "\t\t\treturn nil, fmt.Errorf(\"argument %d must be color: %%v\", err)\n", i)
 					sb.WriteString("\t\t}\n")
 					callArgs = append(callArgs, varName)
 				case "string":
@@ -627,9 +645,9 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 				}
 			}
 
-			sb.WriteString(fmt.Sprintf("\t\treturn pattern.%s(%s), nil\n", cmd.FuncName, strings.Join(callArgs, ", ")))
+			fmt.Fprintf(&sb, "\t\treturn pattern.%s(%s), nil\n", cmd.FuncName, strings.Join(callArgs, ", "))
 		} else {
-			sb.WriteString(fmt.Sprintf("\t\treturn nil, fmt.Errorf(\"command %s has unsupported argument types\")\n", cmd.Name))
+			fmt.Fprintf(&sb, "\t\treturn nil, fmt.Errorf(\"command %s has unsupported argument types\")\n", cmd.Name)
 		}
 
 		sb.WriteString("\t}\n")

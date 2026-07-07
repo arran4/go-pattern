@@ -17,7 +17,11 @@ func ExampleNewCamouflage() {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if err = png.Encode(f, img); err != nil {
 		panic(err)
 	}

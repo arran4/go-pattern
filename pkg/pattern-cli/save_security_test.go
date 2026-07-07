@@ -18,7 +18,7 @@ func TestSaveSecurity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Change directory to tempDir for test execution context
 	if err := os.Chdir(tempDir); err != nil {
@@ -40,10 +40,10 @@ func TestSaveSecurity(t *testing.T) {
 	absTarget := filepath.Join(os.TempDir(), "abs_pwned.png")
 
 	// Clean up potential leftovers (if test runs multiple times or failed before)
-	os.Remove(traversalTarget)
-	os.Remove(absTarget)
-	defer os.Remove(traversalTarget)
-	defer os.Remove(absTarget)
+	_ = os.Remove(traversalTarget)
+	_ = os.Remove(absTarget)
+	defer func() { _ = os.Remove(traversalTarget) }()
+	defer func() { _ = os.Remove(absTarget) }()
 
 	testCases := []struct {
 		name        string
@@ -92,7 +92,7 @@ func TestSaveSecurity(t *testing.T) {
 				// Verify file was NOT created
 				if _, statErr := os.Stat(tc.pathCreated); statErr == nil {
 					t.Errorf("Security check failed: File %s was created!", tc.pathCreated)
-					os.Remove(tc.pathCreated)
+		_ = os.Remove(tc.pathCreated)
 				}
 			} else {
 				if err != nil {
