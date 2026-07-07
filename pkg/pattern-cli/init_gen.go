@@ -3,10 +3,10 @@ package pattern_cli
 
 import (
 	"fmt"
-	"github.com/arran4/go-pattern"
-	"github.com/arran4/go-pattern/dsl"
 	"image"
 	"strconv"
+	"github.com/arran4/go-pattern/dsl"
+	"github.com/arran4/go-pattern"
 )
 
 func RegisterGeneratedCommands(fm dsl.FuncMap) {
@@ -462,7 +462,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		if input == nil {
 			return nil, fmt.Errorf("masked_blend requires an input image")
 		}
-		return pattern.NewMaskedBlend(input, input, input), nil
+		return pattern.NewMaskedBlend(input), nil
 	}
 	fm["maths"] = func(args []string, input image.Image) (image.Image, error) {
 		if len(args) < 1 {
