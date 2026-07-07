@@ -120,8 +120,11 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 
 	for _, pkg := range pkgs {
 		fset := pkg.Fset
+		if fset == nil {
+			continue
+		}
 		for _, f := range pkg.Syntax {
-			filename := fset.File(f.Pos()).Name()
+			filename := fset.Position(f.Pos()).Filename
 			// We only care about _example.go files for metadata
 			if !strings.HasSuffix(filename, "_example.go") {
 				continue
@@ -486,8 +489,11 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 
 	for _, pkg := range pkgs {
 		fset := pkg.Fset
+		if fset == nil {
+			continue
+		}
 		for _, f := range pkg.Syntax {
-			filename := fset.File(f.Pos()).Name()
+			filename := fset.Position(f.Pos()).Filename
 			if strings.HasSuffix(filename, "_test.go") || strings.HasSuffix(filename, "_example.go") {
 				continue
 			}
