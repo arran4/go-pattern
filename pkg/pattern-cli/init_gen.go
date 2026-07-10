@@ -3,10 +3,10 @@ package pattern_cli
 
 import (
 	"fmt"
-	"github.com/arran4/go-pattern"
-	"github.com/arran4/go-pattern/dsl"
 	"image"
 	"strconv"
+	"github.com/arran4/go-pattern/dsl"
+	"github.com/arran4/go-pattern"
 )
 
 func RegisterGeneratedCommands(fm dsl.FuncMap) {
@@ -17,9 +17,6 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command aligned has unsupported argument types")
 	}
 	fm["ambient_occlusion"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("ambient_occlusion requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("ambient_occlusion requires an input image")
 		}
@@ -69,9 +66,6 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command bitwise_and has unsupported argument types")
 	}
 	fm["bitwise_not"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("bitwise_not requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("bitwise_not requires an input image")
 		}
@@ -90,15 +84,12 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command bitwise_xor has unsupported argument types")
 	}
 	fm["blend"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 1 {
-			return nil, fmt.Errorf("blend requires 1 arguments")
+		if len(args) < 2 {
+			return nil, fmt.Errorf("blend requires 2 arguments")
 		}
 		return nil, fmt.Errorf("command blend has unsupported argument types")
 	}
 	fm["blue_noise"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("blue_noise requires 0 arguments")
-		}
 		return pattern.NewBlueNoise(), nil
 	}
 	fm["blue_noise_dither"] = func(args []string, input image.Image) (image.Image, error) {
@@ -108,15 +99,9 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command blue_noise_dither has unsupported argument types")
 	}
 	fm["brick"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("brick requires 0 arguments")
-		}
 		return pattern.NewBrick(), nil
 	}
 	fm["buffer"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("buffer requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("buffer requires an input image")
 		}
@@ -143,21 +128,12 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return pattern.NewChecker(arg0, arg1), nil
 	}
 	fm["chipped_brick"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("chipped_brick requires 0 arguments")
-		}
 		return pattern.NewChippedBrick(), nil
 	}
 	fm["chunky_bands"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("chunky_bands requires 0 arguments")
-		}
 		return pattern.NewChunkyBands(), nil
 	}
 	fm["circle"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("circle requires 0 arguments")
-		}
 		return pattern.NewCircle(), nil
 	}
 	fm["color_map"] = func(args []string, input image.Image) (image.Image, error) {
@@ -173,15 +149,9 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command concentric_rings has unsupported argument types")
 	}
 	fm["concentric_water"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("concentric_water requires 0 arguments")
-		}
 		return pattern.NewConcentricWater(), nil
 	}
 	fm["conic_gradient"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("conic_gradient requires 0 arguments")
-		}
 		return pattern.NewConicGradient(), nil
 	}
 	fm["crop"] = func(args []string, input image.Image) (image.Image, error) {
@@ -191,159 +161,84 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command crop has unsupported argument types")
 	}
 	fm["cross_hatch"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("cross_hatch requires 0 arguments")
-		}
 		return pattern.NewCrossHatch(), nil
 	}
 	fm["curvature"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("curvature requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("curvature requires an input image")
 		}
 		return pattern.NewCurvature(input), nil
 	}
 	fm["demo_and"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_and requires 0 arguments")
-		}
 		return pattern.NewDemoAnd(), nil
 	}
 	fm["demo_checker"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_checker requires 0 arguments")
-		}
 		return pattern.NewDemoChecker(), nil
 	}
 	fm["demo_chunky_bands"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_chunky_bands requires 0 arguments")
-		}
 		return pattern.NewDemoChunkyBands(), nil
 	}
 	fm["demo_circle"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_circle requires 0 arguments")
-		}
 		return pattern.NewDemoCircle(), nil
 	}
 	fm["demo_cross_hatch"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_cross_hatch requires 0 arguments")
-		}
 		return pattern.NewDemoCrossHatch(), nil
 	}
 	fm["demo_edge_detect"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_edge_detect requires 0 arguments")
-		}
 		return pattern.NewDemoEdgeDetect(), nil
 	}
 	fm["demo_fibonacci"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_fibonacci requires 0 arguments")
-		}
 		return pattern.NewDemoFibonacci(), nil
 	}
 	fm["demo_fine_grid"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_fine_grid requires 0 arguments")
-		}
 		return pattern.NewDemoFineGrid(), nil
 	}
 	fm["demo_glyph_ring"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_glyph_ring requires 0 arguments")
-		}
 		return pattern.NewDemoGlyphRing(), nil
 	}
 	fm["demo_horizontal_line"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_horizontal_line requires 0 arguments")
-		}
 		return pattern.NewDemoHorizontalLine(), nil
 	}
 	fm["demo_not"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_not requires 0 arguments")
-		}
 		return pattern.NewDemoNot(), nil
 	}
 	fm["demo_null"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_null requires 0 arguments")
-		}
 		return pattern.NewDemoNull(), nil
 	}
 	fm["demo_or"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_or requires 0 arguments")
-		}
 		return pattern.NewDemoOr(), nil
 	}
 	fm["demo_polka"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_polka requires 0 arguments")
-		}
 		return pattern.NewDemoPolka(), nil
 	}
 	fm["demo_rect"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_rect requires 0 arguments")
-		}
 		return pattern.NewDemoRect(), nil
 	}
 	fm["demo_simple_zoom"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_simple_zoom requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("demo_simple_zoom requires an input image")
 		}
 		return pattern.NewDemoSimpleZoom(input), nil
 	}
 	fm["demo_subpixel_lines"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_subpixel_lines requires 0 arguments")
-		}
 		return pattern.NewDemoSubpixelLines(), nil
 	}
 	fm["demo_thread_bands"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_thread_bands requires 0 arguments")
-		}
 		return pattern.NewDemoThreadBands(), nil
 	}
 	fm["demo_transposed"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_transposed requires 0 arguments")
-		}
 		return pattern.NewDemoTransposed(), nil
 	}
 	fm["demo_vertical_line"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_vertical_line requires 0 arguments")
-		}
 		return pattern.NewDemoVerticalLine(), nil
 	}
 	fm["demo_voronoi"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_voronoi requires 0 arguments")
-		}
 		return pattern.NewDemoVoronoi(), nil
 	}
 	fm["demo_xor"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("demo_xor requires 0 arguments")
-		}
 		return pattern.NewDemoXor(), nil
 	}
 	fm["edge_detect"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("edge_detect requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("edge_detect requires an input image")
 		}
@@ -366,51 +261,27 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command error_diffusion has unsupported argument types")
 	}
 	fm["fibonacci"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("fibonacci requires 0 arguments")
-		}
 		return pattern.NewFibonacci(), nil
 	}
 	fm["fine_grid"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("fine_grid requires 0 arguments")
-		}
 		return pattern.NewFineGrid(), nil
 	}
 	fm["fog"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("fog requires 0 arguments")
-		}
 		return pattern.NewFog(), nil
 	}
 	fm["globe"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("globe requires 0 arguments")
-		}
 		return pattern.NewGlobe(), nil
 	}
 	fm["glyph_ring"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("glyph_ring requires 0 arguments")
-		}
 		return pattern.NewGlyphRing(), nil
 	}
 	fm["go_logo"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("go_logo requires 0 arguments")
-		}
 		return pattern.NewGoLogo(), nil
 	}
 	fm["gopher"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("gopher requires 0 arguments")
-		}
 		return pattern.NewGopher(), nil
 	}
 	fm["grass_close"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("grass_close requires 0 arguments")
-		}
 		return pattern.NewGrassClose(), nil
 	}
 	fm["grid"] = func(args []string, input image.Image) (image.Image, error) {
@@ -432,15 +303,9 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command heatmap has unsupported argument types")
 	}
 	fm["hex_grid"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("hex_grid requires 0 arguments")
-		}
 		return pattern.NewHexGrid(), nil
 	}
 	fm["horizontal_line"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("horizontal_line requires 0 arguments")
-		}
 		return pattern.NewHorizontalLine(), nil
 	}
 	fm["knoll_dither"] = func(args []string, input image.Image) (image.Image, error) {
@@ -450,19 +315,13 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command knoll_dither has unsupported argument types")
 	}
 	fm["linear_gradient"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("linear_gradient requires 0 arguments")
-		}
 		return pattern.NewLinearGradient(), nil
 	}
 	fm["masked_blend"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("masked_blend requires 0 arguments")
+		if len(args) < 2 {
+			return nil, fmt.Errorf("masked_blend requires 2 arguments")
 		}
-		if input == nil {
-			return nil, fmt.Errorf("masked_blend requires an input image")
-		}
-		return pattern.NewMaskedBlend(input, input, input), nil
+		return nil, fmt.Errorf("command masked_blend has unsupported argument types")
 	}
 	fm["maths"] = func(args []string, input image.Image) (image.Image, error) {
 		if len(args) < 1 {
@@ -500,33 +359,21 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command multi_scale_ordered_dither has unsupported argument types")
 	}
 	fm["noise"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("noise requires 0 arguments")
-		}
 		return pattern.NewNoise(), nil
 	}
 	fm["normal_map"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("normal_map requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("normal_map requires an input image")
 		}
 		return pattern.NewNormalMap(input), nil
 	}
 	fm["not"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("not requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("not requires an input image")
 		}
 		return pattern.NewNot(input), nil
 	}
 	fm["null"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("null requires 0 arguments")
-		}
 		return pattern.NewNull(), nil
 	}
 	fm["or"] = func(args []string, input image.Image) (image.Image, error) {
@@ -542,9 +389,6 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command ordered_dither has unsupported argument types")
 	}
 	fm["p_c_b_traces"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("p_c_b_traces requires 0 arguments")
-		}
 		return pattern.NewPCBTraces(), nil
 	}
 	fm["padding"] = func(args []string, input image.Image) (image.Image, error) {
@@ -554,21 +398,12 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command padding has unsupported argument types")
 	}
 	fm["painted_planks"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("painted_planks requires 0 arguments")
-		}
 		return pattern.NewPaintedPlanks(), nil
 	}
 	fm["plasma"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("plasma requires 0 arguments")
-		}
 		return pattern.NewPlasma(), nil
 	}
 	fm["polka"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("polka requires 0 arguments")
-		}
 		return pattern.NewPolka(), nil
 	}
 	fm["quantize"] = func(args []string, input image.Image) (image.Image, error) {
@@ -585,9 +420,6 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return pattern.NewQuantize(input, arg0), nil
 	}
 	fm["radial_gradient"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("radial_gradient requires 0 arguments")
-		}
 		return pattern.NewRadialGradient(), nil
 	}
 	fm["random_dither"] = func(args []string, input image.Image) (image.Image, error) {
@@ -597,9 +429,6 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command random_dither has unsupported argument types")
 	}
 	fm["rect"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("rect requires 0 arguments")
-		}
 		return pattern.NewRect(), nil
 	}
 	fm["rotate"] = func(args []string, input image.Image) (image.Image, error) {
@@ -622,39 +451,21 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command scale has unsupported argument types")
 	}
 	fm["scales"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("scales requires 0 arguments")
-		}
 		return pattern.NewScales(), nil
 	}
 	fm["scatter"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("scatter requires 0 arguments")
-		}
 		return pattern.NewScatter(), nil
 	}
 	fm["screen_tone"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("screen_tone requires 0 arguments")
-		}
 		return pattern.NewScreenTone(), nil
 	}
 	fm["shojo"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("shojo requires 0 arguments")
-		}
 		return pattern.NewShojo(), nil
 	}
 	fm["sierpinski_carpet"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("sierpinski_carpet requires 0 arguments")
-		}
 		return pattern.NewSierpinskiCarpet(), nil
 	}
 	fm["sierpinski_triangle"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("sierpinski_triangle requires 0 arguments")
-		}
 		return pattern.NewSierpinskiTriangle(), nil
 	}
 	fm["simple_zoom"] = func(args []string, input image.Image) (image.Image, error) {
@@ -671,15 +482,9 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return pattern.NewSimpleZoom(input, arg0), nil
 	}
 	fm["speed_lines"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("speed_lines requires 0 arguments")
-		}
 		return pattern.NewSpeedLines(), nil
 	}
 	fm["subpixel_lines"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("subpixel_lines requires 0 arguments")
-		}
 		return pattern.NewSubpixelLines(), nil
 	}
 	fm["text"] = func(args []string, input image.Image) (image.Image, error) {
@@ -689,9 +494,6 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command text has unsupported argument types")
 	}
 	fm["thread_bands"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("thread_bands requires 0 arguments")
-		}
 		return pattern.NewThreadBands(), nil
 	}
 	fm["tile"] = func(args []string, input image.Image) (image.Image, error) {
@@ -718,18 +520,12 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return pattern.NewTransposed(input, arg0, arg1), nil
 	}
 	fm["v_h_s"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("v_h_s requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("v_h_s requires an input image")
 		}
 		return pattern.NewVHS(input), nil
 	}
 	fm["vertical_line"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("vertical_line requires 0 arguments")
-		}
 		return pattern.NewVerticalLine(), nil
 	}
 	fm["voronoi"] = func(args []string, input image.Image) (image.Image, error) {
@@ -745,36 +541,21 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command voronoi_tiles has unsupported argument types")
 	}
 	fm["warp"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("warp requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("warp requires an input image")
 		}
 		return pattern.NewWarp(input), nil
 	}
 	fm["wind_ridges"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("wind_ridges requires 0 arguments")
-		}
 		return pattern.NewWindRidges(), nil
 	}
 	fm["worley_noise"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("worley_noise requires 0 arguments")
-		}
 		return pattern.NewWorleyNoise(), nil
 	}
 	fm["worley_tiles"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("worley_tiles requires 0 arguments")
-		}
 		return pattern.NewWorleyTiles(), nil
 	}
 	fm["x_trans"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("x_trans requires 0 arguments")
-		}
 		if input == nil {
 			return nil, fmt.Errorf("x_trans requires an input image")
 		}
@@ -787,9 +568,6 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		return nil, fmt.Errorf("command xor has unsupported argument types")
 	}
 	fm["xor_pattern"] = func(args []string, input image.Image) (image.Image, error) {
-		if len(args) < 0 {
-			return nil, fmt.Errorf("xor_pattern requires 0 arguments")
-		}
 		return pattern.NewXorPattern(), nil
 	}
 	fm["yliluoma1_dither"] = func(args []string, input image.Image) (image.Image, error) {

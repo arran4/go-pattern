@@ -22,7 +22,7 @@ func ExampleNewSubpixelLines() {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	err = png.Encode(f, i)
 	if err != nil {
 		panic(err)

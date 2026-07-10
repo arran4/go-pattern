@@ -15,7 +15,7 @@ These patterns are designed to be:
 
 ### AbstractArt Pattern
 
-
+Abstract Art: Renamed from Crystal (Original implementation)
 
 ![AbstractArt Pattern](abstract_art.png)
 
@@ -53,7 +53,8 @@ These patterns are designed to be:
 
 ### Brick Pattern
 
-
+ExampleNewBrick creates a basic brick pattern.
+Output:
 
 ![Brick Pattern](brick.png)
 
@@ -67,7 +68,7 @@ These patterns are designed to be:
 
 ### Brick_stone Pattern
 
-
+ExampleNewBrick_stone demonstrates a stone-like wall using grey colors and size variations.
 
 ![Brick_stone Pattern](brick_stone.png)
 
@@ -103,7 +104,7 @@ These patterns are designed to be:
 
 ### Brick_textures Pattern
 
-
+ExampleNewBrick_textures demonstrates using different textures for bricks and mortar.
 
 ![Brick_textures Pattern](brick_textures.png)
 
@@ -157,7 +158,11 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if err = png.Encode(f, img); err != nil {
 		panic(err)
 	}
@@ -166,19 +171,20 @@ These patterns are designed to be:
 
 ### Candy Pattern
 
-
+Candy Example (M&Ms / Smarties)
+Demonstrates using the Scatter pattern to draw overlapping, colored candy circles.
 
 ![Candy Pattern](candy.png)
 
 ```go
 	// 1. Define colors for our candy.
 	colors := []color.RGBA{
-		{255, 0, 0, 255},     // Red
-		{0, 255, 0, 255},     // Green
-		{0, 0, 255, 255},     // Blue
-		{255, 255, 0, 255},   // Yellow
-		{255, 165, 0, 255},   // Orange
-		{139, 69, 19, 255},   // Brown
+		{255, 0, 0, 255},   // Red
+		{0, 255, 0, 255},   // Green
+		{0, 0, 255, 255},   // Blue
+		{255, 255, 0, 255}, // Yellow
+		{255, 165, 0, 255}, // Orange
+		{139, 69, 19, 255}, // Brown
 	}
 
 	// 2. Create the Scatter pattern.
@@ -206,7 +212,7 @@ These patterns are designed to be:
 			// z = sqrt(1 - x^2 - y^2)
 			nx := u / radius
 			ny := v / radius
-			nz := math.Sqrt(math.Max(0, 1.0 - nx*nx - ny*ny))
+			nz := math.Sqrt(math.Max(0, 1.0-nx*nx-ny*ny))
 
 			// Light source direction (top-left)
 			lx, ly, lz := -0.5, -0.5, 0.7
@@ -229,9 +235,9 @@ These patterns are designed to be:
 			specular := math.Pow(math.Max(0, specDot), 20) // Shininess
 
 			// Apply lighting
-			r := float64(baseCol.R) * (0.2 + 0.8*diffuse) + 255*specular*0.6
-			g := float64(baseCol.G) * (0.2 + 0.8*diffuse) + 255*specular*0.6
-			b := float64(baseCol.B) * (0.2 + 0.8*diffuse) + 255*specular*0.6
+			r := float64(baseCol.R)*(0.2+0.8*diffuse) + 255*specular*0.6
+			g := float64(baseCol.G)*(0.2+0.8*diffuse) + 255*specular*0.6
+			b := float64(baseCol.B)*(0.2+0.8*diffuse) + 255*specular*0.6
 
 			// Clamp
 			r = math.Min(255, math.Max(0, r))
@@ -240,7 +246,7 @@ These patterns are designed to be:
 
 			// Anti-aliasing at edge
 			alpha := 1.0
-			if dist > radius - 1.0 {
+			if dist > radius-1.0 {
 				alpha = radius - dist
 			}
 
@@ -273,7 +279,7 @@ These patterns are designed to be:
 
 ### Carpet Pattern
 
-
+Carpet: Visual interest increased
 
 ![Carpet Pattern](carpet.png)
 
@@ -302,7 +308,7 @@ These patterns are designed to be:
 
 	// Border Elements?
 	// Striped background for texture
-	stripes := NewCrossHatch(SetLineSize(1), SetSpaceSize(3), SetAngle(0), SetLineColor(color.RGBA{0,0,0,30}))
+	stripes := NewCrossHatch(SetLineSize(1), SetSpaceSize(3), SetAngle(0), SetLineColor(color.RGBA{0, 0, 0, 30}))
 
 	l1 := NewBlend(bg, stripes, BlendNormal)
 	l2 := NewBlend(l1, d1, BlendNormal)
@@ -314,7 +320,8 @@ These patterns are designed to be:
 
 ### Cells Pattern
 
-
+Cells Example (Biological)
+Demonstrates using Worley Noise to create a biological cell structure (e.g., plant cells).
 
 ![Cells Pattern](cells.png)
 
@@ -337,14 +344,14 @@ These patterns are designed to be:
 	// 0.9 - 1.0: Cell Wall (Thick Dark Border)
 
 	cells := NewColorMap(noise,
-		ColorStop{Position: 0.0, Color: color.RGBA{20, 80, 20, 255}},    // Nucleus Center
-		ColorStop{Position: 0.18, Color: color.RGBA{40, 100, 40, 255}},  // Nucleus
-		ColorStop{Position: 0.20, Color: color.RGBA{100, 180, 100, 255}},// Membrane
-		ColorStop{Position: 0.25, Color: color.RGBA{150, 220, 150, 255}},// Cytoplasm Start
-		ColorStop{Position: 0.70, Color: color.RGBA{140, 210, 140, 255}},// Cytoplasm End
-		ColorStop{Position: 0.85, Color: color.RGBA{50, 120, 50, 255}},  // Wall Inner
-		ColorStop{Position: 0.95, Color: color.RGBA{10, 40, 10, 255}},   // Wall Outer
-		ColorStop{Position: 1.0, Color: color.RGBA{0, 20, 0, 255}},      // Gap
+		ColorStop{Position: 0.0, Color: color.RGBA{20, 80, 20, 255}},     // Nucleus Center
+		ColorStop{Position: 0.18, Color: color.RGBA{40, 100, 40, 255}},   // Nucleus
+		ColorStop{Position: 0.20, Color: color.RGBA{100, 180, 100, 255}}, // Membrane
+		ColorStop{Position: 0.25, Color: color.RGBA{150, 220, 150, 255}}, // Cytoplasm Start
+		ColorStop{Position: 0.70, Color: color.RGBA{140, 210, 140, 255}}, // Cytoplasm End
+		ColorStop{Position: 0.85, Color: color.RGBA{50, 120, 50, 255}},   // Wall Inner
+		ColorStop{Position: 0.95, Color: color.RGBA{10, 40, 10, 255}},    // Wall Outer
+		ColorStop{Position: 1.0, Color: color.RGBA{0, 20, 0, 255}},       // Gap
 	)
 
 	f, err := os.Create(CellsOutputFilename)
@@ -364,7 +371,7 @@ These patterns are designed to be:
 
 ### CheckerBorder Pattern
 
-
+Checker Border: Classic black/white border strip
 
 ![CheckerBorder Pattern](checker_border.png)
 
@@ -384,7 +391,7 @@ These patterns are designed to be:
 
 ### ChippedBrick Pattern
 
-
+ExampleNewChippedBrick provides a sample for documentation use.
 
 ![ChippedBrick Pattern](chipped_brick.png)
 
@@ -406,7 +413,7 @@ These patterns are designed to be:
 
 ### Clouds Pattern
 
-
+ExampleNewClouds generates a generic cloud pattern.
 
 ![Clouds Pattern](clouds.png)
 
@@ -417,7 +424,7 @@ These patterns are designed to be:
 
 ### Clouds_cirrus Pattern
 
-
+ExampleNewClouds_cirrus generates wispy, high-altitude cirrus clouds.
 
 ![Clouds_cirrus Pattern](clouds_cirrus.png)
 
@@ -440,7 +447,9 @@ These patterns are designed to be:
 
 ### Clouds_cumulus Pattern
 
-
+ExampleNewClouds_cumulus generates fluffy, white cumulus clouds on a blue sky.
+It uses Perlin noise with a specific color map that has a sharp transition
+from blue to white to simulate the defined edges of cumulus clouds.
 
 ![Clouds_cumulus Pattern](clouds_cumulus.png)
 
@@ -457,26 +466,27 @@ These patterns are designed to be:
 	// We use a steep ramp around 0.5-0.6 to create distinct cloud shapes
 	// rather than a smooth fog.
 	return NewColorMap(noise,
-		ColorStop{0.0, color.RGBA{100, 180, 255, 255}}, // Blue Sky
-		ColorStop{0.4, color.RGBA{130, 200, 255, 255}}, // Light Sky
+		ColorStop{0.0, color.RGBA{100, 180, 255, 255}},  // Blue Sky
+		ColorStop{0.4, color.RGBA{130, 200, 255, 255}},  // Light Sky
 		ColorStop{0.55, color.RGBA{245, 245, 255, 255}}, // Cloud Edge (White-ish)
-		ColorStop{0.7, color.RGBA{255, 255, 255, 255}}, // Cloud Body
-		ColorStop{1.0, color.RGBA{230, 230, 240, 255}}, // Cloud Shadow/Density
+		ColorStop{0.7, color.RGBA{255, 255, 255, 255}},  // Cloud Body
+		ColorStop{1.0, color.RGBA{230, 230, 240, 255}},  // Cloud Shadow/Density
 	)
 ```
 
 
 ### Clouds_storm Pattern
 
-
+ExampleNewClouds_storm generates dark, turbulent storm clouds.
+It blends multiple layers of noise to create depth and complexity.
 
 ![Clouds_storm Pattern](clouds_storm.png)
 
 ```go
 	// Layer 1: Large, brooding shapes
 	base := NewNoise(NoiseSeed(666), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency:   0.01,
-		Octaves:     3,
+		Frequency: 0.01,
+		Octaves:   3,
 	}))
 
 	// Layer 2: Detailed turbulence
@@ -502,32 +512,34 @@ These patterns are designed to be:
 
 ### Clouds_sunset Pattern
 
-
+ExampleNewClouds_sunset generates clouds illuminated by a setting sun.
+It uses a linear gradient for the sky background and Perlin noise for the clouds,
+blending them to simulate under-lighting.
 
 ![Clouds_sunset Pattern](clouds_sunset.png)
 
 ```go
 	// 1. Sky Gradient (Orange to Purple)
 	sky := NewLinearGradient(
-		SetStartColor(color.RGBA{255, 100, 50, 255}),  // Orange/Red Horizon
-		SetEndColor(color.RGBA{50, 20, 100, 255}),     // Purple/Blue Zenith
+		SetStartColor(color.RGBA{255, 100, 50, 255}), // Orange/Red Horizon
+		SetEndColor(color.RGBA{50, 20, 100, 255}),    // Purple/Blue Zenith
 		GradientVertical(),
 	)
 
 	// 2. Cloud Shapes
 	clouds := NewNoise(NoiseSeed(888), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency:   0.012,
-		Octaves:     4,
+		Frequency: 0.012,
+		Octaves:   4,
 	}))
 
 	// Map cloud noise to alpha/color
 	// We want the clouds to be dark at the bottom (shadow) and pink/gold at the edges
 	cloudColor := NewColorMap(clouds,
-		ColorStop{0.0, color.Black},                        // No clouds
-		ColorStop{0.4, color.Black},                        // No clouds
-		ColorStop{0.5, color.RGBA{80, 40, 60, 255}},        // Dark cloud base
-		ColorStop{0.7, color.RGBA{200, 100, 80, 255}},      // Orange/Pink mid
-		ColorStop{1.0, color.RGBA{255, 200, 100, 255}},     // Gold highlights
+		ColorStop{0.0, color.Black},                    // No clouds
+		ColorStop{0.4, color.Black},                    // No clouds
+		ColorStop{0.5, color.RGBA{80, 40, 60, 255}},    // Dark cloud base
+		ColorStop{0.7, color.RGBA{200, 100, 80, 255}},  // Orange/Pink mid
+		ColorStop{1.0, color.RGBA{255, 200, 100, 255}}, // Gold highlights
 	)
 
 	// 3. Composite Clouds over Sky using Screen blend mode for a glowing effect
@@ -537,7 +549,8 @@ These patterns are designed to be:
 
 ### CrackedMud Pattern
 
-
+Cracked Mud Example
+Demonstrates using Worley Noise (F2-F1) to create cracked earth.
 
 ![CrackedMud Pattern](cracked_mud.png)
 
@@ -555,10 +568,10 @@ These patterns are designed to be:
 	// High value means center of cell.
 
 	mud := NewColorMap(noise,
-		ColorStop{Position: 0.0, Color: color.RGBA{30, 20, 10, 255}},    // Crack (Dark brown/black)
-		ColorStop{Position: 0.1, Color: color.RGBA{60, 40, 20, 255}},    // Crack edge
-		ColorStop{Position: 0.2, Color: color.RGBA{130, 100, 70, 255}},  // Mud surface
-		ColorStop{Position: 1.0, Color: color.RGBA{160, 120, 80, 255}},  // Center of mud chunk
+		ColorStop{Position: 0.0, Color: color.RGBA{30, 20, 10, 255}},   // Crack (Dark brown/black)
+		ColorStop{Position: 0.1, Color: color.RGBA{60, 40, 20, 255}},   // Crack edge
+		ColorStop{Position: 0.2, Color: color.RGBA{130, 100, 70, 255}}, // Mud surface
+		ColorStop{Position: 1.0, Color: color.RGBA{160, 120, 80, 255}}, // Center of mud chunk
 	)
 
 	f, err := os.Create(CrackedMudOutputFilename)
@@ -612,7 +625,11 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if err = png.Encode(f, img); err != nil {
 		panic(err)
 	}
@@ -638,9 +655,9 @@ These patterns are designed to be:
 	)
 
 	dirtColor := NewColorMap(base,
-		ColorStop{Position: 0.0, Color: color.RGBA{40, 30, 20, 255}}, // Dark Brown
-		ColorStop{Position: 0.5, Color: color.RGBA{80, 60, 40, 255}}, // Brown
-		ColorStop{Position: 0.8, Color: color.RGBA{100, 80, 60, 255}}, // Light Brown
+		ColorStop{Position: 0.0, Color: color.RGBA{40, 30, 20, 255}},   // Dark Brown
+		ColorStop{Position: 0.5, Color: color.RGBA{80, 60, 40, 255}},   // Brown
+		ColorStop{Position: 0.8, Color: color.RGBA{100, 80, 60, 255}},  // Light Brown
 		ColorStop{Position: 1.0, Color: color.RGBA{120, 100, 80, 255}}, // Pebbles
 	)
 
@@ -700,7 +717,7 @@ These patterns are designed to be:
 
 ### Dungeon Pattern
 
-
+Dungeon: Stone brick + moss speckles + edge cracks
 
 ![Dungeon Pattern](dungeon.png)
 
@@ -765,7 +782,7 @@ These patterns are designed to be:
 
 ### FantasyFrame Pattern
 
-
+We need to update ExampleNewFantasyFrame to use GenerateFantasyFrame or standard bounds
 
 ![FantasyFrame Pattern](fantasy_frame.png)
 
@@ -776,7 +793,7 @@ These patterns are designed to be:
 
 ### Fence Pattern
 
-
+Fence: Diagonal diamond grid (Chain link)
 
 ![Fence Pattern](fence.png)
 
@@ -798,7 +815,7 @@ These patterns are designed to be:
 
 ### FineGrid Pattern
 
-
+ExampleNewFineGrid renders a neon grid with glow and saves it to fine_grid.png.
 
 ![FineGrid Pattern](fine_grid.png)
 
@@ -869,7 +886,7 @@ These patterns are designed to be:
 
 ### Globe Pattern
 
-
+ExampleNewGlobe is the default example for the documentation.
 
 ![Globe Pattern](globe.png)
 
@@ -880,7 +897,7 @@ These patterns are designed to be:
 
 ### Globe_Grid Pattern
 
-
+ExampleNewGlobe_Grid demonstrates the wireframe/grid mode of the Globe pattern.
 
 ![Globe_Grid Pattern](globe_grid.png)
 
@@ -892,7 +909,8 @@ These patterns are designed to be:
 
 ### Globe_Projected Pattern
 
-
+ExampleNewGlobe_Projected demonstrates the true "Globe" pattern with spherical projection.
+It maps the same texture onto a sphere.
 
 ![Globe_Projected Pattern](globe_projected.png)
 
@@ -904,7 +922,8 @@ These patterns are designed to be:
 
 ### Globe_Simple Pattern
 
-
+ExampleNewGlobe_Simple demonstrates the "Circle and Texture" technique requested.
+It uses a flat circular mask over a terrain texture.
 
 ![Globe_Simple Pattern](globe_simple.png)
 
@@ -916,7 +935,7 @@ These patterns are designed to be:
 
 ### GlyphRing Pattern
 
-
+ExampleNewGlyphRing produces a demo PNG for documentation.
 
 ![GlyphRing Pattern](glyph_ring.png)
 
@@ -974,7 +993,8 @@ These patterns are designed to be:
 
 ### Grass Pattern
 
-
+Grass Example
+Demonstrates using Perlin Noise with ColorMap to create a simple grass texture.
 
 ![Grass Pattern](grass.png)
 
@@ -1036,7 +1056,8 @@ These patterns are designed to be:
 
 ### GrassClose Pattern
 
-
+Grass Close Example
+Demonstrates a procedural grass texture using the GrassClose pattern composed with Noise.
 
 ![GrassClose Pattern](grass_close.png)
 
@@ -1093,7 +1114,7 @@ These patterns are designed to be:
 
 ### HexGrid Pattern
 
-
+HexGrid example: alternating palette across axial coordinates with a subtle bevel.
 
 ![HexGrid Pattern](hex_grid.png)
 
@@ -1117,7 +1138,7 @@ These patterns are designed to be:
 
 ### Ice Pattern
 
-
+Ice: Pale base + thin cracks + faint gradient
 
 ![Ice Pattern](ice.png)
 
@@ -1153,7 +1174,8 @@ These patterns are designed to be:
 
 ### Islands Pattern
 
-
+Islands Example
+Demonstrates composing patterns using Blend to create a realistic island terrain.
 
 ![Islands Pattern](islands.png)
 
@@ -1197,12 +1219,12 @@ These patterns are designed to be:
 	// 0.6 - 1.0: Water
 
 	islands := NewColorMap(mixed,
-		ColorStop{Position: 0.0, Color: color.RGBA{250, 250, 250, 255}}, // Snow
+		ColorStop{Position: 0.0, Color: color.RGBA{250, 250, 250, 255}},  // Snow
 		ColorStop{Position: 0.15, Color: color.RGBA{120, 120, 120, 255}}, // Rock
-		ColorStop{Position: 0.30, Color: color.RGBA{34, 139, 34, 255}},  // Forest
+		ColorStop{Position: 0.30, Color: color.RGBA{34, 139, 34, 255}},   // Forest
 		ColorStop{Position: 0.50, Color: color.RGBA{210, 180, 140, 255}}, // Sand
-		ColorStop{Position: 0.55, Color: color.RGBA{64, 164, 223, 255}}, // Water
-		ColorStop{Position: 1.0, Color: color.RGBA{0, 0, 128, 255}},     // Deep Water
+		ColorStop{Position: 0.55, Color: color.RGBA{64, 164, 223, 255}},  // Water
+		ColorStop{Position: 1.0, Color: color.RGBA{0, 0, 128, 255}},      // Deep Water
 	)
 
 	f, err := os.Create(IslandsOutputFilename)
@@ -1246,7 +1268,7 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err = png.Encode(f, img); err != nil {
 		panic(err)
 	}
@@ -1255,7 +1277,7 @@ These patterns are designed to be:
 
 ### LavaFlow Pattern
 
-
+Lava Flow: Dark base + bright streaks + subtle noise
 
 ![LavaFlow Pattern](lava_flow.png)
 
@@ -1319,7 +1341,7 @@ These patterns are designed to be:
 
 ### MetalPlate Pattern
 
-
+Metal Plate: Improved texture (Brushed)
 
 ![MetalPlate Pattern](metal_plate.png)
 
@@ -1402,7 +1424,8 @@ These patterns are designed to be:
 
 ### Molecules Pattern
 
-
+Molecules Example (formerly Stones)
+Demonstrates using Worley Noise to create an atomic/molecular structure.
 
 ![Molecules Pattern](molecules.png)
 
@@ -1445,7 +1468,7 @@ These patterns are designed to be:
 
 ### MudTracks Pattern
 
-
+ExampleNewMudTracks lays down multiple compacted bands with embedded pebble noise.
 
 ![MudTracks Pattern](mud_tracks.png)
 
@@ -1512,7 +1535,8 @@ These patterns are designed to be:
 
 ### Null Pattern
 
-
+Null Pattern
+Returns a transparent color for all pixels.
 
 ![Null Pattern](null.png)
 
@@ -1535,7 +1559,7 @@ These patterns are designed to be:
 
 ### PCBTraces Pattern
 
-
+ExampleNewPCBTraces returns a sample PCB trace layout with default options.
 
 ![PCBTraces Pattern](pcbtraces.png)
 
@@ -1546,7 +1570,8 @@ These patterns are designed to be:
 
 ### PaintedPlanks Pattern
 
-
+ExampleNewPaintedPlanks demonstrates segmented planks with grain noise per board
+and a chipped paint overlay.
 
 ![PaintedPlanks Pattern](painted_planks.png)
 
@@ -1563,7 +1588,8 @@ These patterns are designed to be:
 
 ### Pebbles Pattern
 
-
+Pebbles Example (Chipped Stone / Gravel)
+Demonstrates using the Scatter pattern to create overlapping, irregular stones.
 
 ![Pebbles Pattern](pebbles.png)
 
@@ -1575,7 +1601,7 @@ These patterns are designed to be:
 		SetScatterMaxOverlap(1),
 		SetScatterGenerator(func(u, v float64, hash uint64) (color.Color, float64) {
 			// Randomize size slightly
-			rSize := float64(hash&0xFF)/255.0
+			rSize := float64(hash&0xFF) / 255.0
 			radius := 12.0 + rSize*6.0 // 12 to 18 pixels radius
 
 			// Perturb the shape using simple noise (simulated by sin/cos of hash+angle)
@@ -1584,8 +1610,8 @@ These patterns are designed to be:
 			dist := math.Sqrt(u*u + v*v)
 
 			// Simple radial noise
-			noise := math.Sin(angle*5 + float64(hash%10)) * 0.1
-			noise += math.Cos(angle*13 + float64(hash%7)) * 0.05
+			noise := math.Sin(angle*5+float64(hash%10)) * 0.1
+			noise += math.Cos(angle*13+float64(hash%7)) * 0.05
 
 			effectiveRadius := radius * (1.0 + noise)
 
@@ -1601,14 +1627,14 @@ These patterns are designed to be:
 			// Normal estimation for a flattened spheroid
 			nx := u / effectiveRadius
 			ny := v / effectiveRadius
-			nz := math.Sqrt(math.Max(0, 1.0 - nx*nx - ny*ny))
+			nz := math.Sqrt(math.Max(0, 1.0-nx*nx-ny*ny))
 
 			// Light dir
 			lx, ly, lz := -0.5, -0.5, 0.7
 			lLen := math.Sqrt(lx*lx + ly*ly + lz*lz)
 			lx, ly, lz = lx/lLen, ly/lLen, lz/lLen
 
-			diffuse := math.Max(0, nx*lx + ny*ly + nz*lz)
+			diffuse := math.Max(0, nx*lx+ny*ly+nz*lz)
 
 			// Apply shading
 			r := float64(col.R) * (0.1 + 0.9*diffuse)
@@ -1662,7 +1688,7 @@ These patterns are designed to be:
 
 ### PixelCamo Pattern
 
-
+Pixel Camo: Clustered 2x2 blocks in 3-4 colors
 
 ![PixelCamo Pattern](pixel_camo.png)
 
@@ -1689,7 +1715,8 @@ These patterns are designed to be:
 
 ### Polka Pattern
 
-
+Polka Pattern
+A pattern of dots (circles) arranged in a grid.
 
 ![Polka Pattern](polka.png)
 
@@ -1810,7 +1837,7 @@ These patterns are designed to be:
 	roadPath := NewVerticalLine(
 		SetLineSize(40), // Road width
 		SetSpaceSize(300),
-		SetLineColor(color.White), // Mask: White = Road
+		SetLineColor(color.White),  // Mask: White = Road
 		SetSpaceColor(color.Black), // Mask: Black = Grass
 		SetPhase(105),
 	)
@@ -1842,9 +1869,9 @@ These patterns are designed to be:
 	grain := NewNoise(
 		NoiseSeed(303),
 		SetNoiseAlgorithm(&PerlinNoise{
-			Seed:        303,
-			Frequency:   0.5,
-			Octaves:     2,
+			Seed:      303,
+			Frequency: 0.5,
+			Octaves:   2,
 		}),
 	)
 
@@ -1881,8 +1908,8 @@ These patterns are designed to be:
 	// Darken troughs using Multiply
 	shadows := NewColorMap(ripplesStretched,
 		ColorStop{Position: 0.0, Color: color.RGBA{180, 180, 180, 255}}, // Darker (Grey for Multiply)
-		ColorStop{Position: 0.5, Color: color.White}, // No change
-		ColorStop{Position: 1.0, Color: color.White}, // No change
+		ColorStop{Position: 0.5, Color: color.White},                    // No change
+		ColorStop{Position: 1.0, Color: color.White},                    // No change
 	)
 
 	// Rotate ripples
@@ -1922,7 +1949,8 @@ These patterns are designed to be:
 
 ### Scales Pattern
 
-
+Scales Example
+Demonstrates using the Scales pattern to create Amazonian fish scales.
 
 ![Scales Pattern](scales.png)
 
@@ -1966,7 +1994,8 @@ These patterns are designed to be:
 
 ### ScreenTone Pattern
 
-
+ScreenTone Pattern
+A halftone dot matrix pattern with adjustable density (Spacing) and angle.
 
 ![ScreenTone Pattern](screentone.png)
 
@@ -1995,7 +2024,7 @@ These patterns are designed to be:
 
 ### Shojo Pattern
 
-
+ExampleNewShojo produces a demo variant for readme.md.
 
 ![Shojo Pattern](shojo.png)
 
@@ -2018,7 +2047,7 @@ These patterns are designed to be:
 
 ### Shojo_blue Pattern
 
-
+ExampleNewShojo_blue demonstrates a blue variant.
 
 ![Shojo_blue Pattern](shojo_blue.png)
 
@@ -2044,7 +2073,7 @@ These patterns are designed to be:
 
 ### Shojo_pink Pattern
 
-
+ExampleNewShojo_pink demonstrates a pink variant.
 
 ![Shojo_pink Pattern](shojo_pink.png)
 
@@ -2165,7 +2194,7 @@ These patterns are designed to be:
 	// 3. Compression Tracks: Blueish/Grey depression.
 	tracks := NewCrossHatch(
 		SetLineColor(color.RGBA{200, 210, 230, 255}), // Icy blue/grey
-		SetSpaceColor(color.White), // Neutral for Multiply
+		SetSpaceColor(color.White),                   // Neutral for Multiply
 		SetLineSize(15),
 		SetSpaceSize(80),
 		SetAngles(25, 35), // Overlapping tracks
@@ -2194,7 +2223,7 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err = png.Encode(f, img); err != nil {
 		panic(err)
 	}
@@ -2290,7 +2319,8 @@ These patterns are designed to be:
 
 ### Stones Pattern
 
-
+Stones Example (Riverbed / Cobblestones)
+Demonstrates using Worley Noise (F2-F1) to create smooth stones with mortar.
 
 ![Stones Pattern](stones.png)
 
@@ -2333,7 +2363,7 @@ These patterns are designed to be:
 
 ### Stripe Pattern
 
-
+Warning Stripe: Diagonal alternating yellow/black
 
 ![Stripe Pattern](stripe.png)
 
@@ -2376,7 +2406,8 @@ These patterns are designed to be:
 
 ### Voronoi Pattern
 
-
+Voronoi Pattern
+Generates Voronoi cells.
 
 ![Voronoi Pattern](voronoi.png)
 
@@ -2411,7 +2442,8 @@ These patterns are designed to be:
 
 ### VoronoiTiles Pattern
 
-
+Voronoi Tiles
+Uses Voronoi cells to define tiles, raises the centers, darkens the gaps, and sprinkles dust noise.
 
 ![VoronoiTiles Pattern](voronoi_tiles.png)
 
@@ -2452,7 +2484,7 @@ These patterns are designed to be:
 	// Distortion noise
 	noise := NewNoise(NoiseSeed(99), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.03,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	// Apply Warp
@@ -2474,14 +2506,14 @@ These patterns are designed to be:
 
 ```go
 	baseNoise := NewNoise(NoiseSeed(777), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.02,
-		Octaves: 4,
+		Frequency:   0.02,
+		Octaves:     4,
 		Persistence: 0.5,
 	}))
 
 	warpNoise := NewNoise(NoiseSeed(888), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.02,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	warped := NewWarp(baseNoise,
@@ -2518,8 +2550,8 @@ These patterns are designed to be:
 	stripes := NewModuloStripe(colors)
 
 	noise := NewNoise(NoiseSeed(456), SetNoiseAlgorithm(&PerlinNoise{
-		Frequency: 0.04,
-		Octaves: 4,
+		Frequency:   0.04,
+		Octaves:     4,
 		Persistence: 0.6,
 	}))
 
@@ -2539,10 +2571,10 @@ These patterns are designed to be:
 ```go
 	fbm := func(seed int64) image.Image {
 		return NewNoise(NoiseSeed(seed), SetNoiseAlgorithm(&PerlinNoise{
-			Frequency: 0.015,
-			Octaves: 6,
+			Frequency:   0.015,
+			Octaves:     6,
 			Persistence: 0.5,
-			Lacunarity: 2.0,
+			Lacunarity:  2.0,
 		}))
 	}
 
@@ -2550,7 +2582,7 @@ These patterns are designed to be:
 
 	warp := NewNoise(NoiseSeed(202), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.01,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	warped := NewWarp(base,
@@ -2600,7 +2632,7 @@ These patterns are designed to be:
 
 	noiseLow := NewNoise(NoiseSeed(123), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.02,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	// Apply Warp
@@ -2705,7 +2737,7 @@ These patterns are designed to be:
 
 ### WaveBorder Pattern
 
-
+Wave Border: Repeating sinusoidal edge
 
 ![WaveBorder Pattern](wave_border.png)
 
@@ -2717,7 +2749,7 @@ These patterns are designed to be:
 		return color.Transparent
 	})
 	sine := NewGeneric(func(x, y int) color.Color {
-		v := math.Sin(float64(x) * 0.1) * 10.0
+		v := math.Sin(float64(x)*0.1) * 10.0
 		val := 128.0 + v
 		return color.Gray{Y: uint8(val)}
 	})
@@ -2732,7 +2764,7 @@ These patterns are designed to be:
 
 ### WindRidges Pattern
 
-
+ExampleNewWindRidges writes a wind-swept noise PNG showcasing parameterized streaks.
 
 ![WindRidges Pattern](wind.png)
 
@@ -2758,7 +2790,10 @@ These patterns are designed to be:
 
 ### WindowsDither Pattern
 
-
+ExampleNewWindowsDither demonstrates the classic Windows 16-color dithering
+using standard Bayer ordered dithering (comparable to what the user requested).
+This uses a 4x4 matrix which was common, or 8x8.
+The user linked article discusses standard ordered dithering with Bayer matrix.
 
 ![WindowsDither Pattern](dither_windows.png)
 
@@ -2773,7 +2808,7 @@ These patterns are designed to be:
 
 ### WindowsDither4x4 Pattern
 
-
+ExampleNewWindowsDither4x4 demonstrates 4x4 variant.
 
 ![WindowsDither4x4 Pattern](dither_windows_4x4.png)
 
@@ -2785,7 +2820,7 @@ These patterns are designed to be:
 
 ### WindowsDitherHalftone Pattern
 
-
+ExampleNewWindowsDitherHalftone uses a halftone pattern.
 
 ![WindowsDitherHalftone Pattern](dither_windows_halftone.png)
 
@@ -2797,7 +2832,7 @@ These patterns are designed to be:
 
 ### Wood Pattern
 
-
+ExampleNewWood demonstrates a procedural wood texture using domain warping on a distance field.
 
 ![Wood Pattern](wood.png)
 
@@ -2805,11 +2840,11 @@ These patterns are designed to be:
 	// 1. Wood Palette
 	// Dark brown (Late wood / Rings) -> Light Tan (Early wood) -> Dark
 	woodPalette := []ColorStop{
-		{0.0, color.RGBA{101, 67, 33, 255}},  // Dark Brown (Ring Edge)
+		{0.0, color.RGBA{101, 67, 33, 255}},   // Dark Brown (Ring Edge)
 		{0.15, color.RGBA{160, 120, 80, 255}}, // Transition
 		{0.5, color.RGBA{222, 184, 135, 255}}, // Light Tan (Center - Burlywood)
 		{0.85, color.RGBA{160, 120, 80, 255}}, // Transition
-		{1.0, color.RGBA{101, 67, 33, 255}},  // Back to Edge
+		{1.0, color.RGBA{101, 67, 33, 255}},   // Back to Edge
 	}
 
 	// 2. Base "Heightmap" Generator
@@ -2836,7 +2871,7 @@ These patterns are designed to be:
 	// Warp maps intensity to offset.
 	wobbleNoise := NewNoise(NoiseSeed(101), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.015,
-		Octaves: 2,
+		Octaves:   2,
 	}))
 
 	// Apply warp.
@@ -2852,7 +2887,7 @@ These patterns are designed to be:
 	// This simulates the jagged edges of the grain.
 	fiberDistortion := NewNoise(NoiseSeed(303), SetNoiseAlgorithm(&PerlinNoise{
 		Frequency: 0.1, // Higher freq
-		Octaves: 3,     // More detail
+		Octaves:   3,   // More detail
 	}))
 
 	// Chain Warps: WarpedRings -> Warp again with fiber distortion
@@ -2871,7 +2906,8 @@ These patterns are designed to be:
 
 ### WorleyNoise Pattern
 
-
+WorleyNoise Pattern
+Generates Worley (cellular) noise.
 
 ![WorleyNoise Pattern](worley.png)
 
@@ -2898,7 +2934,11 @@ These patterns are designed to be:
 
 ### WorleyTiles Pattern
 
-
+ExampleNewWorleyTiles tiles Worley/Voronoi stones with rounded edges and mortar.
+Parameters:
+  - stone size (pixels): SetTileStoneSize
+  - gap width (0-1): SetTileGapWidth
+  - color palette spread (0-1): SetTilePaletteSpread
 
 ![WorleyTiles Pattern](tile_worley.png)
 
@@ -2947,7 +2987,8 @@ These patterns are designed to be:
 
 ### Checker Pattern
 
-
+Checker Pattern
+Alternates between two colors in a checkerboard fashion.
 
 ![Checker Pattern](checker.png)
 
@@ -3142,7 +3183,8 @@ These patterns are designed to be:
 
 ### Gopher Pattern
 
-
+Gopher Pattern
+A static image of the Go Gopher.
 
 ![Gopher Pattern](gopher.png)
 
@@ -3165,7 +3207,8 @@ These patterns are designed to be:
 
 ### MathsMandelbrot Pattern
 
-
+Mandelbrot Set
+Generates a Mandelbrot set visualization.
 
 ![MathsMandelbrot Pattern](maths_mandelbrot.png)
 
@@ -3176,7 +3219,8 @@ These patterns are designed to be:
 
 ### Noise Pattern
 
-
+Noise Pattern
+Generates random noise using various algorithms (Crypto, Hash).
 
 ![Noise Pattern](noise.png)
 
@@ -3200,7 +3244,8 @@ These patterns are designed to be:
 
 ### Rect Pattern
 
-
+Rect Pattern
+A pattern that draws a filled rectangle.
 
 ![Rect Pattern](rect.png)
 
@@ -3255,7 +3300,8 @@ These patterns are designed to be:
 
 ### MathsJulia Pattern
 
-
+Julia Set
+Generates a Julia set visualization.
 
 ![MathsJulia Pattern](maths_julia.png)
 
@@ -3294,7 +3340,8 @@ These patterns are designed to be:
 
 ### MathsSine Pattern
 
-
+Sine Waves
+Generates a sine wave pattern.
 
 ![MathsSine Pattern](maths_sine.png)
 
@@ -3333,7 +3380,8 @@ These patterns are designed to be:
 
 ### MathsWaves Pattern
 
-
+Interference Waves
+Generates an interference pattern from multiple sine waves.
 
 ![MathsWaves Pattern](maths_waves.png)
 
@@ -3372,7 +3420,8 @@ These patterns are designed to be:
 
 ### Heatmap Pattern
 
-
+Heatmap
+Generates a heatmap for the function z = sin(x) * cos(y).
 
 ![Heatmap Pattern](heatmap.png)
 
@@ -3383,7 +3432,9 @@ These patterns are designed to be:
 
 ### ColorMap Pattern
 
-
+ColorMap Pattern
+Maps the luminance of a source pattern to a color gradient (ramp).
+This is useful for creating textures like grass, dirt, clouds, or heatmaps.
 
 ![ColorMap Pattern](colormap.png)
 
@@ -3453,7 +3504,8 @@ These patterns are designed to be:
 
 ### SpeedLines Pattern
 
-
+SpeedLines Pattern
+Basic radial speed lines.
 
 ![SpeedLines Pattern](speedlines.png)
 
@@ -3495,7 +3547,9 @@ These patterns are designed to be:
 
 ### Quantize Pattern
 
-
+Quantize Pattern
+Example of quantizing the colors of an image (Posterization).
+This example reduces the Gopher image to 4 levels per channel.
 
 ![Quantize Pattern](quantize.png)
 
@@ -3518,7 +3572,8 @@ These patterns are designed to be:
 
 ### SimpleZoom Pattern
 
-
+SimpleZoom Pattern
+Scales an input pattern by a factor.
 
 ![SimpleZoom Pattern](simplezoom.png)
 
@@ -3551,7 +3606,7 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3560,7 +3615,8 @@ These patterns are designed to be:
 
 ### Bayer2x2Dither Pattern
 
-
+Bayer2x2Dither Pattern
+Example of applying a 2x2 Bayer ordered dither.
 
 ![Bayer2x2Dither Pattern](bayer2x2.png)
 
@@ -3600,7 +3656,7 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3624,7 +3680,8 @@ These patterns are designed to be:
 
 ### Transposed Pattern
 
-
+Transposed Pattern
+Transposes the coordinates of an input pattern.
 
 ![Transposed Pattern](transposed.png)
 
@@ -3661,7 +3718,11 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3685,7 +3746,8 @@ These patterns are designed to be:
 
 ### Mirror Pattern
 
-
+Mirror Pattern
+Mirrors the input pattern horizontally or vertically.
 
 ![Mirror Pattern](mirror.png)
 
@@ -3718,7 +3780,7 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3727,7 +3789,8 @@ These patterns are designed to be:
 
 ### Rotate Pattern
 
-
+Rotate Pattern
+Rotates the input pattern by 90, 180, or 270 degrees.
 
 ![Rotate Pattern](rotate.png)
 
@@ -3764,7 +3827,7 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3773,7 +3836,7 @@ These patterns are designed to be:
 
 ### XTrans Pattern
 
-
+ExampleNewXTrans generates an example of applying an X-Trans CFA pattern.
 
 ![XTrans Pattern](xtrans.png)
 
@@ -3812,7 +3875,11 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3835,7 +3902,7 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3856,7 +3923,11 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if err := png.Encode(f, p); err != nil {
 		panic(err)
 	}
@@ -3865,7 +3936,7 @@ These patterns are designed to be:
 
 ### BooleanModes Pattern
 
-
+ExampleNewBooleanModes is a placeholder for documentation.
 
 ![BooleanModes Pattern](boolean_modes.png)
 
@@ -3876,7 +3947,8 @@ These patterns are designed to be:
 
 ### SierpinskiTriangle Pattern
 
-
+Sierpinski Triangle
+Generates a Sierpinski Triangle fractal (right-angled variant using Pascal's Triangle modulo 2).
 
 ![SierpinskiTriangle Pattern](sierpinski_triangle.png)
 
@@ -3887,7 +3959,8 @@ These patterns are designed to be:
 
 ### VHS Pattern
 
-
+Retro VHS Effect
+Demonstrates the VHS scanline, color shift, and noise effect.
 
 ![VHS Pattern](vhs.png)
 
@@ -3898,7 +3971,8 @@ These patterns are designed to be:
 
 ### SierpinskiCarpet Pattern
 
-
+Sierpinski Carpet
+Generates a Sierpinski Carpet fractal.
 
 ![SierpinskiCarpet Pattern](sierpinski_carpet.png)
 
@@ -3909,7 +3983,7 @@ These patterns are designed to be:
 
 ### SubpixelLines Pattern
 
-
+Subpixel lines with per-channel offset and vignette.
 
 ![SubpixelLines Pattern](subpixel_lines.png)
 
@@ -3923,7 +3997,7 @@ These patterns are designed to be:
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { if err := f.Close(); err != nil { panic(err) } }()
 	err = png.Encode(f, i)
 	if err != nil {
 		panic(err)
@@ -3933,7 +4007,8 @@ These patterns are designed to be:
 
 ### Buffer Pattern
 
-
+Buffer Pattern
+A pattern that buffers a source image.
 
 ![Buffer Pattern](buffer.png)
 
@@ -3965,7 +4040,8 @@ These patterns are designed to be:
 
 ### EdgeDetect Pattern
 
-
+EdgeDetect Pattern
+Applies Sobel edge detection to an input image.
 
 ![EdgeDetect Pattern](edgedetect.png)
 
@@ -4035,7 +4111,8 @@ These patterns are designed to be:
 
 ### DitherStages Pattern
 
-
+ExampleNewDitherStages demonstrates the progression of dithering techniques
+on a linear gradient, illustrating the "stages" or levels of detail each matrix provides.
 
 ![DitherStages Pattern](dither_stages.png)
 
@@ -4047,7 +4124,7 @@ These patterns are designed to be:
 
 ### DitherColorReduction Pattern
 
-
+ExampleNewDitherColorReduction demonstrates color reduction capabilities using various palettes.
 
 ![DitherColorReduction Pattern](dither_color_reduction.png)
 
@@ -4058,7 +4135,7 @@ These patterns are designed to be:
 
 ### Fog Pattern
 
-
+ExampleNewFog renders soft Perlin/fBm fog with a radial falloff so the center stays clearer.
 
 ![Fog Pattern](fog.png)
 
@@ -4073,7 +4150,8 @@ These patterns are designed to be:
 
 ### ConcentricWater Pattern
 
-
+ExampleNewConcentricWater demonstrates concentric distance-field ripples with
+sine-driven heights that tint and bend the normals of the surface.
 
 ![ConcentricWater Pattern](concentric_water.png)
 
