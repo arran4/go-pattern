@@ -191,7 +191,7 @@ func GenerateCircuitImpl(rect image.Rectangle) image.Image {
 			isTrace = drawLine(-half, 0, half, 0) || drawLine(0, -half, 0, half)
 		case 8: // Pad
 			isPad = drawPad()
-			// And connect to a neighbor? Let's just be a dot for now.
+			// Rendering as isolated dots without connections.
 		}
 
 		if isPad {
@@ -600,7 +600,7 @@ func GenerateFantasyFrame(rect image.Rectangle) image.Image {
 	return l2
 }
 
-// We need to update ExampleNewFantasyFrame to use GenerateFantasyFrame or standard bounds
+// ExampleNewFantasyFrame uses GenerateFantasyFrame with standard bounds
 func ExampleNewFantasyFrame() image.Image {
 	return GenerateFantasyFrame(image.Rect(0, 0, 150, 150))
 }

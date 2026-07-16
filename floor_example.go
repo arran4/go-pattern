@@ -17,7 +17,7 @@ func ExampleNewFloor() image.Image {
 	// `brick.go` makes bricks.
 	// `checker.go` makes checks.
 
-	// Let's use `NewBrick` for a tile floor.
+	// Using NewBrick to simulate a tile floor.
 	// Large square tiles.
 
 	// Create a marble texture for tiles

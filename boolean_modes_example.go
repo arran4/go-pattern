@@ -30,7 +30,7 @@ func GenerateBooleanModes(b image.Rectangle) image.Image {
 		SetBounds(b),
 	)
 
-	// Mode 1: ComponentWise (Default for these inputs if colors not set, but let's be explicit)
+	// Mode 1: ComponentWise (Explicit default configuration)
 	// Red&Gopher, Blue&Gopher
 	m1 := NewAnd([]image.Image{gopher, stripes}, SetBooleanMode(ModeComponentWise), SetBounds(b))
 

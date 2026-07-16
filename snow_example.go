@@ -26,8 +26,8 @@ func ExampleNewSnow() image.Image {
 	)
 
 	// 2. Sparkle: Use white/blue dots.
-	// We can use Scatter pattern to place small bright dots.
-	// But let's fix the noise approach.
+	// Scatter pattern places small bright dots.
+	// Applying the fixed noise approach.
 	// High frequency noise, thresholded.
 	sparkleNoise := NewNoise(
 		NoiseSeed(606),
@@ -38,7 +38,7 @@ func ExampleNewSnow() image.Image {
 	// Then Overlay or Screen them.
 	// If background is Transparent, Screen (1-(1-A)*(1-B)) of Snow(A) and Transparent(B=0) -> A.
 	// So sparkles need to be Additive.
-	// Or we can just use Mix/Over.
+	// Using Mix/Over blending.
 
 	sparkles := NewColorMap(sparkleNoise,
 		ColorStop{Position: 0.0, Color: color.Transparent},

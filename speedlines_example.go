@@ -106,10 +106,10 @@ func GenerateSpeedLinesReferences() (map[string]func(image.Rectangle) image.Imag
 		"GopherBurst": func(b image.Rectangle) image.Image {
 			gopher := NewGopher()
 			// For GopherBurst, we want to match Gopher bounds, but if b is provided by generator,
-			// usually we should respect it. However, the overlay depends on Gopher image size.
-			// Let's stick to Gopher bounds for the demo visual consistency, or center it in b.
+			// Overlay behavior may vary depending on the target image size.
+			// Bounding configuration focuses on visual consistency.
 			// The generator framework usually passes a standard box size (e.g. 200x200).
-			// If we want to show the gopher, we should probably stick to gopher size or center the gopher.
+			// Best practice maintains the subject scale and centering.
 			// I'll stick to the previous logic for GopherBurst as it's a specific "Reference" image,
 			// but I'll ensure it returns a valid image.
 			// Actually, the `b` passed to references is usually the size of the box in the readme table.

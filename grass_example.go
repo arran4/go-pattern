@@ -37,11 +37,11 @@ func ExampleNewGrass() {
 	)
 
 	// 3. Blend them. We want the detail to be prominent but influenced by the base.
-	// Multiply might darken too much, let's use Overlay or just simple addition/average.
-	// Actually, let's just use the detail noise warped by base noise for a wind-blown look?
+	// Overlay or simple addition/average prevents excessive darkening.
+	// Detailed noise warped by base noise creates a wind-blown appearance.
 	// Or simply blend them.
 
-	// Let's try blending: Base * 0.5 + Detail * 0.5
+	// Try blending: Base * 0.5 + Detail * 0.5
 	// Using BlendAverage is simple.
 	blended := NewBlend(baseNoise, detailNoise, BlendAverage)
 

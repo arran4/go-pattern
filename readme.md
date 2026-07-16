@@ -700,14 +700,14 @@ Demonstrates using Worley Noise (F2-F1) to create cracked earth.
 
 	// Puddles: Darker, smoother, reflective (mocked by color)
 	// Or use NormalMap to make them flat vs rough dirt.
-	// Let's make puddles dark brown/black and subtract detail.
+	// Puddles use dark colors to subtract detail.
 
 	puddleColor := NewRect(SetFillColor(color.RGBA{20, 15, 10, 255}))
 
 	// Blend puddle color based on mask?
 	// We don't have a "BlendMask" pattern yet that takes a mask image.
-	// But we can use boolean ops or just Blend?
-	// Or we can use the mask as alpha for the puddle layer and overlay it.
+	// Utilizing blend operations.
+	// The mask acts as alpha for overlaying the puddle layer.
 	// But our patterns usually return opaque images unless alpha is handled.
 
 	// Composite Puddle over Dirt using Mask.
@@ -782,7 +782,7 @@ Dungeon: Stone brick + moss speckles + edge cracks
 
 ### FantasyFrame Pattern
 
-We need to update ExampleNewFantasyFrame to use GenerateFantasyFrame or standard bounds
+ExampleNewFantasyFrame uses GenerateFantasyFrame with standard bounds
 
 ![FantasyFrame Pattern](fantasy_frame.png)
 
@@ -859,7 +859,7 @@ ExampleNewFineGrid renders a neon grid with glow and saves it to fine_grid.png.
 	// `brick.go` makes bricks.
 	// `checker.go` makes checks.
 
-	// Let's use `NewBrick` for a tile floor.
+	// Using NewBrick to simulate a tile floor.
 	// Large square tiles.
 
 	// Create a marble texture for tiles
@@ -1022,11 +1022,11 @@ Demonstrates using Perlin Noise with ColorMap to create a simple grass texture.
 	)
 
 	// 3. Blend them. We want the detail to be prominent but influenced by the base.
-	// Multiply might darken too much, let's use Overlay or just simple addition/average.
-	// Actually, let's just use the detail noise warped by base noise for a wind-blown look?
+	// Overlay or simple addition/average prevents excessive darkening.
+	// Detailed noise warped by base noise creates a wind-blown appearance.
 	// Or simply blend them.
 
-	// Let's try blending: Base * 0.5 + Detail * 0.5
+	// Try blending: Base * 0.5 + Detail * 0.5
 	// Using BlendAverage is simple.
 	blended := NewBlend(baseNoise, detailNoise, BlendAverage)
 
@@ -1201,17 +1201,17 @@ Demonstrates composing patterns using Blend to create a realistic island terrain
 
 	// Blend: Subtract detail from base shape? Or Overlay?
 	// Worley F1 is 0 at center (Peak), 1 at edge (Deep Water).
-	// We want Peaks to be high (1.0). So let's Invert Worley first?
+	// Inverting Worley creates high peaks (1.0).
 	// Or just use ColorMap on the result.
 	// If we Add detail to Worley, the values increase.
-	// Let's use BlendOverlay to mix the gradients.
+	// Mix the gradients using BlendOverlay.
 
 	mixed := NewBlend(baseShape, detail, BlendOverlay)
 
 	// ColorMap:
 	// Worley: 0 (Peak) -> 1 (Edge)
 	// Overlay tends to push contrast.
-	// Let's define:
+	// Parameters:
 	// 0.0 - 0.2: Snow (Peak)
 	// 0.2 - 0.4: Mountain/Rock
 	// 0.4 - 0.5: Forest
@@ -1794,7 +1794,7 @@ A pattern of dots (circles) arranged in a grid.
 
 	// Painted lines
 	// Yellow center line (dashed?)
-	// Let's do a solid double yellow or single yellow.
+	// Using a solid double or single yellow line.
 	// VerticalLine pattern repeats.
 	// Image width is usually 255.
 	// We want one line in the center.
@@ -1830,9 +1830,9 @@ A pattern of dots (circles) arranged in a grid.
 	)
 
 	// 2. Road Mask (Winding curve)
-	// We can use a low freq noise thresholded to a thin band?
+	// Low frequency noise thresholded into a thin band.
 	// Or use `ModuloStripe` or `Sine` warped.
-	// Let's use a warped VerticalLine.
+	// Applying a warped VerticalLine.
 
 	roadPath := NewVerticalLine(
 		SetLineSize(40), // Road width
@@ -1847,7 +1847,7 @@ A pattern of dots (circles) arranged in a grid.
 	windingRoadMask := NewWarp(roadPath, WarpDistortionX(warpNoise), WarpScale(50.0))
 
 	// 3. Road Texture
-	// Use asphalt from ExampleNewRoad, but we need to map it to the winding path?
+	// Apply the standard road asphalt texture to the path.
 	// A simple tiled asphalt is fine.
 	roadTex := ExampleNewRoad()
 
@@ -1928,7 +1928,7 @@ A pattern of dots (circles) arranged in a grid.
 ```go
 	// Zoomed in sand to show grains
 	// Use Scatter or just low freq noise mapped to dots?
-	// Let's use noise with thresholding to make "grains".
+	// Noise with thresholding creates a granular effect.
 
 	noise := NewNoise(
 		NoiseSeed(304),
@@ -2156,8 +2156,8 @@ ExampleNewShojo_pink demonstrates a pink variant.
 	)
 
 	// 2. Sparkle: Use white/blue dots.
-	// We can use Scatter pattern to place small bright dots.
-	// But let's fix the noise approach.
+	// Scatter pattern places small bright dots.
+	// Applying the fixed noise approach.
 	// High frequency noise, thresholded.
 	sparkleNoise := NewNoise(
 		NoiseSeed(606),
@@ -2168,7 +2168,7 @@ ExampleNewShojo_pink demonstrates a pink variant.
 	// Then Overlay or Screen them.
 	// If background is Transparent, Screen (1-(1-A)*(1-B)) of Snow(A) and Transparent(B=0) -> A.
 	// So sparkles need to be Additive.
-	// Or we can just use Mix/Over.
+	// Using Mix/Over blending.
 
 	sparkles := NewColorMap(sparkleNoise,
 		ColorStop{Position: 0.0, Color: color.Transparent},
@@ -2249,7 +2249,7 @@ ExampleNewShojo_pink demonstrates a pink variant.
 			{180, 80}, {80, 180},
 		},
 		// Colors: Using Greyscale for heightmap initially, or color for texture
-		// Let's make a texture.
+		// Creating a base texture.
 		[]color.Color{
 			color.RGBA{100, 100, 100, 255},
 			color.RGBA{120, 115, 110, 255},
@@ -2664,8 +2664,8 @@ Uses Voronoi cells to define tiles, raises the centers, darkens the gaps, and sp
 
 	// 2. Flow Maps: We simulate flow by warping the noise.
 	// We'll use another lower frequency noise as the vector field (x/y displacement).
-	// Since Warp takes one image for X and Y, we can use the same noise or different ones.
-	// Let's create a "flow" map.
+	// Warp utilizes noise functions for X and Y displacement.
+	// Generating a flow map.
 	flowX := NewNoise(
 		NoiseSeed(2),
 		SetNoiseAlgorithm(&PerlinNoise{
@@ -2684,18 +2684,18 @@ Uses Voronoi cells to define tiles, raises the centers, darkens the gaps, and sp
 	// 3. Normal Map: Convert the heightmap to normals
 	normals := NewNormalMap(warped, NormalMapStrength(4.0))
 
-	// 4. Colorization: We can use the normal map directly (it looks cool/techy),
-	// or we can try to render it. But the prompt asked for "normals + flow maps".
+	// 4. Colorization: The normal map can be utilized directly,
+	// or custom rendering could be applied.
 	// Usually water is rendered with reflection/refraction which needs a shader.
-	// Here we can output the normal map as the representation of the water surface.
-	// Or we can blend it with a blue tint to make it look like water.
+	// Normal map is output as the representation of the water surface.
+	// A blue tint blend simulates water.
 
 	waterBlue := color.RGBA{0, 0, 100, 255}
 	waterTint := NewRect(SetFillColor(waterBlue))
 
 	// Blend normals with blue using Overlay or SoftLight
 	// Overlay might be too harsh for normals.
-	// Let's just return the normal map as it is the "texture" of water surface.
+	// Returning the normal map texture for the water surface.
 	// Or maybe "Multiply" the blue with the normal map to tint it.
 
 	blended := NewBlend(normals, waterTint, BlendAverage)
@@ -2799,7 +2799,7 @@ The user linked article discusses standard ordered dithering with Bayer matrix.
 
 ```go
 	img := NewGopher()
-	// Spread 0 = auto calculate, or we can fine tune.
+	// Spread 0 indicates auto calculation; can be fine tuned.
 	// Standard Windows dithering often just used the nearest color after thresholding.
 	// We use NewBayer8x8Dither for "Standard Ordered Dithering".
 	return NewBayer8x8Dither(img, Windows16)
@@ -3046,10 +3046,10 @@ Alternates between two colors in a checkerboard fashion.
 
 	// bounded := NewChecker(color.Black, color.White) // Checkers default to 255x255 but here we want fixed?
 	// Actually NewChecker returns default bounds.
-	// Let's use NewCrop or just standard bounds behavior.
+	// Using standard bounds behavior with NewCrop.
 	// But `layout()` uses `image.Bounds()` if not `Bounded`.
 
-	// Let's create a bounded Mock that is 100x100.
+	// Create a bounded Mock that is 100x100.
 	hundred := 100
 	zero := 0
 
@@ -3065,7 +3065,7 @@ Alternates between two colors in a checkerboard fashion.
 
 	// Unbounded pattern: e.g. a generic Tile or Checker that we want to fill space.
 	// NewChecker returns 255x255.
-	// Let's wrap it in an unbounded structure.
+	// Wrap the source in an unbounded structure.
 	u := &unboundedPattern{
 		Image: NewChecker(color.RGBA{200, 0, 0, 255}, color.White),
 	}

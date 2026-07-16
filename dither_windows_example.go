@@ -13,7 +13,7 @@ var WindowsDitherZoomLevels = []int{}
 // The user linked article discusses standard ordered dithering with Bayer matrix.
 func ExampleNewWindowsDither() image.Image {
 	img := NewGopher()
-	// Spread 0 = auto calculate, or we can fine tune.
+	// Spread 0 indicates auto calculation; can be fine tuned.
 	// Standard Windows dithering often just used the nearest color after thresholding.
 	// We use NewBayer8x8Dither for "Standard Ordered Dithering".
 	return NewBayer8x8Dither(img, Windows16)

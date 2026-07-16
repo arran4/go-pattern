@@ -32,7 +32,7 @@ func ExampleNewSimpleZoom() {
 
 func GenerateSimpleZoom(b image.Rectangle) image.Image {
 	// SimpleZoom needs an input image.
-	// We can use a Checker pattern as the input for the demo.
+	// A Checker pattern serves as demo input.
 	return NewDemoSimpleZoom(NewChecker(color.Black, color.White), SetBounds(b))
 }
 
