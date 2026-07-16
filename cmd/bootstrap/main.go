@@ -148,8 +148,8 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 				name := strings.TrimPrefix(fn.Name.Name, "ExampleNew")
 
 				// Extract Usage Sample
-				start := fset.Position(fn.Body.Lbrace).Offset + 1
-				end := fset.Position(fn.Body.Rbrace).Offset
+				start := pkg.Fset.Position(fn.Body.Lbrace).Offset + 1
+				end := pkg.Fset.Position(fn.Body.Rbrace).Offset
 				usage := string(fileContent[start:end])
 				usage = strings.Trim(usage, "\n")
 
@@ -164,7 +164,7 @@ func discoverPatterns(root string) ([]PatternDemo, error) {
 
 				// Look up configuration in the AST of the same file
 				pd.OutputFilename = findStringVar(f, name+"OutputFilename")
-				pd.ZoomLevels = findIntSliceVar(f, fileContent, fset, name+"ZoomLevels")
+				pd.ZoomLevels = findIntSliceVar(f, fileContent, pkg.Fset, name+"ZoomLevels")
 				pd.Order = findIntConst(f, name+"Order")
 				pd.BaseLabel = findStringConst(f, name+"BaseLabel")
 
@@ -614,7 +614,7 @@ func generateCLIInit(demos []PatternDemo, outfile string) error {
 			callArgs := []string{}
 			if cmd.TakesInput {
 				sb.WriteString("\t\tif input == nil {\n")
-				fmt.Fprintf(&sb, "\t\t\treturn nil, fmt.Errorf(\"%s requires an input image\")\n", cmd.Name)
+				fmt.Fprintf(&sb, "\t\t\treturn nil, fmt.Errorf(\"%%s requires an input image\", \"%s\")\n", cmd.Name)
 				sb.WriteString("\t\t}\n")
 				callArgs = append(callArgs, "input")
 			}

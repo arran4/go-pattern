@@ -18,7 +18,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 	}
 	fm["ambient_occlusion"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("ambient_occlusion requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "ambient_occlusion")
 		}
 		return pattern.NewAmbientOcclusion(input), nil
 	}
@@ -51,7 +51,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("bayer_dither requires 1 arguments")
 		}
 		if input == nil {
-			return nil, fmt.Errorf("bayer_dither requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "bayer_dither")
 		}
 		arg0, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -67,7 +67,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 	}
 	fm["bitwise_not"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("bitwise_not requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "bitwise_not")
 		}
 		return pattern.NewBitwiseNot(input), nil
 	}
@@ -103,7 +103,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 	}
 	fm["buffer"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("buffer requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "buffer")
 		}
 		return pattern.NewBuffer(input), nil
 	}
@@ -165,7 +165,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 	}
 	fm["curvature"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("curvature requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "curvature")
 		}
 		return pattern.NewCurvature(input), nil
 	}
@@ -216,7 +216,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 	}
 	fm["demo_simple_zoom"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("demo_simple_zoom requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "demo_simple_zoom")
 		}
 		return pattern.NewDemoSimpleZoom(input), nil
 	}
@@ -240,7 +240,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 	}
 	fm["edge_detect"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("edge_detect requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "edge_detect")
 		}
 		return pattern.NewEdgeDetect(input), nil
 	}
@@ -334,7 +334,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("mirror requires 2 arguments")
 		}
 		if input == nil {
-			return nil, fmt.Errorf("mirror requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "mirror")
 		}
 		arg0, err := strconv.ParseBool(args[0])
 		if err != nil {
@@ -363,13 +363,13 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 	}
 	fm["normal_map"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("normal_map requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "normal_map")
 		}
 		return pattern.NewNormalMap(input), nil
 	}
 	fm["not"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("not requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "not")
 		}
 		return pattern.NewNot(input), nil
 	}
@@ -411,7 +411,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("quantize requires 1 arguments")
 		}
 		if input == nil {
-			return nil, fmt.Errorf("quantize requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "quantize")
 		}
 		arg0, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -436,7 +436,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("rotate requires 1 arguments")
 		}
 		if input == nil {
-			return nil, fmt.Errorf("rotate requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "rotate")
 		}
 		arg0, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -473,7 +473,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("simple_zoom requires 1 arguments")
 		}
 		if input == nil {
-			return nil, fmt.Errorf("simple_zoom requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "simple_zoom")
 		}
 		arg0, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -507,7 +507,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("transposed requires 2 arguments")
 		}
 		if input == nil {
-			return nil, fmt.Errorf("transposed requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "transposed")
 		}
 		arg0, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -521,7 +521,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 	}
 	fm["v_h_s"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("v_h_s requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "v_h_s")
 		}
 		return pattern.NewVHS(input), nil
 	}
@@ -542,7 +542,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 	}
 	fm["warp"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("warp requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "warp")
 		}
 		return pattern.NewWarp(input), nil
 	}
@@ -557,7 +557,7 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 	}
 	fm["x_trans"] = func(args []string, input image.Image) (image.Image, error) {
 		if input == nil {
-			return nil, fmt.Errorf("x_trans requires an input image")
+			return nil, fmt.Errorf("%s requires an input image", "x_trans")
 		}
 		return pattern.NewXTrans(input), nil
 	}
