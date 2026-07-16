@@ -51,10 +51,10 @@ func ExampleNewGridUnbounded(ops ...func(any)) image.Image {
 
 	// bounded := NewChecker(color.Black, color.White) // Checkers default to 255x255 but here we want fixed?
 	// Actually NewChecker returns default bounds.
-	// Let's use NewCrop or just standard bounds behavior.
+	// Using standard bounds behavior with NewCrop.
 	// But `layout()` uses `image.Bounds()` if not `Bounded`.
 
-	// Let's create a bounded Mock that is 100x100.
+	// Create a bounded Mock that is 100x100.
 	hundred := 100
 	zero := 0
 
@@ -70,7 +70,7 @@ func ExampleNewGridUnbounded(ops ...func(any)) image.Image {
 
 	// Unbounded pattern: e.g. a generic Tile or Checker that we want to fill space.
 	// NewChecker returns 255x255.
-	// Let's wrap it in an unbounded structure.
+	// Wrap the source in an unbounded structure.
 	u := &unboundedPattern{
 		Image: NewChecker(color.RGBA{200, 0, 0, 255}, color.White),
 	}

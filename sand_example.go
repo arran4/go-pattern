@@ -33,7 +33,7 @@ func ExampleNewSand() image.Image {
 func ExampleNewSand_zoomed() image.Image {
 	// Zoomed in sand to show grains
 	// Use Scatter or just low freq noise mapped to dots?
-	// Let's use noise with thresholding to make "grains".
+	// Noise with thresholding creates a granular effect.
 
 	noise := NewNoise(
 		NoiseSeed(304),

@@ -25,8 +25,8 @@ func ExampleNewWater() image.Image {
 
 	// 2. Flow Maps: We simulate flow by warping the noise.
 	// We'll use another lower frequency noise as the vector field (x/y displacement).
-	// Since Warp takes one image for X and Y, we can use the same noise or different ones.
-	// Let's create a "flow" map.
+	// Warp utilizes noise functions for X and Y displacement.
+	// Generating a flow map.
 	flowX := NewNoise(
 		NoiseSeed(2),
 		SetNoiseAlgorithm(&PerlinNoise{
@@ -45,18 +45,18 @@ func ExampleNewWater() image.Image {
 	// 3. Normal Map: Convert the heightmap to normals
 	normals := NewNormalMap(warped, NormalMapStrength(4.0))
 
-	// 4. Colorization: We can use the normal map directly (it looks cool/techy),
-	// or we can try to render it. But the prompt asked for "normals + flow maps".
+	// 4. Colorization: The normal map can be utilized directly,
+	// or custom rendering could be applied.
 	// Usually water is rendered with reflection/refraction which needs a shader.
-	// Here we can output the normal map as the representation of the water surface.
-	// Or we can blend it with a blue tint to make it look like water.
+	// Normal map is output as the representation of the water surface.
+	// A blue tint blend simulates water.
 
 	waterBlue := color.RGBA{0, 0, 100, 255}
 	waterTint := NewRect(SetFillColor(waterBlue))
 
 	// Blend normals with blue using Overlay or SoftLight
 	// Overlay might be too harsh for normals.
-	// Let's just return the normal map as it is the "texture" of water surface.
+	// Returning the normal map texture for the water surface.
 	// Or maybe "Multiply" the blue with the normal map to tint it.
 
 	blended := NewBlend(normals, waterTint, BlendAverage)

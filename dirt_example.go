@@ -61,14 +61,14 @@ func ExampleNewDirt_mud() image.Image {
 
 	// Puddles: Darker, smoother, reflective (mocked by color)
 	// Or use NormalMap to make them flat vs rough dirt.
-	// Let's make puddles dark brown/black and subtract detail.
+	// Puddles use dark colors to subtract detail.
 
 	puddleColor := NewRect(SetFillColor(color.RGBA{20, 15, 10, 255}))
 
 	// Blend puddle color based on mask?
 	// We don't have a "BlendMask" pattern yet that takes a mask image.
-	// But we can use boolean ops or just Blend?
-	// Or we can use the mask as alpha for the puddle layer and overlay it.
+	// Utilizing blend operations.
+	// The mask acts as alpha for overlaying the puddle layer.
 	// But our patterns usually return opaque images unless alpha is handled.
 
 	// Composite Puddle over Dirt using Mask.

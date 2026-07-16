@@ -35,17 +35,17 @@ func ExampleNewIslands() {
 
 	// Blend: Subtract detail from base shape? Or Overlay?
 	// Worley F1 is 0 at center (Peak), 1 at edge (Deep Water).
-	// We want Peaks to be high (1.0). So let's Invert Worley first?
+	// Inverting Worley creates high peaks (1.0).
 	// Or just use ColorMap on the result.
 	// If we Add detail to Worley, the values increase.
-	// Let's use BlendOverlay to mix the gradients.
+	// Mix the gradients using BlendOverlay.
 
 	mixed := NewBlend(baseShape, detail, BlendOverlay)
 
 	// ColorMap:
 	// Worley: 0 (Peak) -> 1 (Edge)
 	// Overlay tends to push contrast.
-	// Let's define:
+	// Parameters:
 	// 0.0 - 0.2: Snow (Peak)
 	// 0.2 - 0.4: Mountain/Rock
 	// 0.4 - 0.5: Forest

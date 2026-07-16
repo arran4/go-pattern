@@ -50,7 +50,7 @@ func ExampleNewRoad_marked() image.Image {
 
 	// Painted lines
 	// Yellow center line (dashed?)
-	// Let's do a solid double yellow or single yellow.
+	// Using a solid double or single yellow line.
 	// VerticalLine pattern repeats.
 	// Image width is usually 255.
 	// We want one line in the center.
@@ -79,9 +79,9 @@ func ExampleNewRoad_terrain() image.Image {
 	)
 
 	// 2. Road Mask (Winding curve)
-	// We can use a low freq noise thresholded to a thin band?
+	// Low frequency noise thresholded into a thin band.
 	// Or use `ModuloStripe` or `Sine` warped.
-	// Let's use a warped VerticalLine.
+	// Applying a warped VerticalLine.
 
 	roadPath := NewVerticalLine(
 		SetLineSize(40), // Road width
@@ -96,7 +96,7 @@ func ExampleNewRoad_terrain() image.Image {
 	windingRoadMask := NewWarp(roadPath, WarpDistortionX(warpNoise), WarpScale(50.0))
 
 	// 3. Road Texture
-	// Use asphalt from ExampleNewRoad, but we need to map it to the winding path?
+	// Apply the standard road asphalt texture to the path.
 	// A simple tiled asphalt is fine.
 	roadTex := ExampleNewRoad()
 

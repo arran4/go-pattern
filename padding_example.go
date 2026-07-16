@@ -99,7 +99,7 @@ func NewDemoPaddingAlignedWithOffset(ops ...func(any)) image.Image {
 	// Align Top-Left (0,0) but add 20px padding on Top/Left to offset it.
 	// We use variadic padding args: 20 (all sides).
 	// Actually user asked for "padding on one or two of the aligned sides".
-	// Let's do Top/Left alignment but with extra padding on Left/Top.
+	// Top-Left alignment with additional padding applied.
 	// Using 4 args: Top=20, Right=0, Bottom=0, Left=20.
 	return NewAligned(gopher, 150, 150, 0.0, 0.0, image.NewUniform(color.RGBA{200, 220, 200, 255}), 20, 0, 0, 20)
 }

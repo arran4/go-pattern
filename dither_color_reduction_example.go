@@ -40,7 +40,7 @@ func GenerateDitherColorReductionReferences() (map[string]func(image.Rectangle) 
 	bw := color.Palette{color.Black, color.White}
 
 	// WebSafe (216 colors) - simplified subset or full generation?
-	// Let's generate a simple WebSafe-ish 6x6x6 palette
+	// Generate a simple WebSafe 6x6x6 palette
 	webSafe := make(color.Palette, 0, 216)
 	for r := 0; r < 6; r++ {
 		for g := 0; g < 6; g++ {

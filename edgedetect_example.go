@@ -47,9 +47,9 @@ func GenerateEdgeDetectReferences() (map[string]func(image.Rectangle) image.Imag
 		// NewGopher returns a fixed size image. We might want to scale it or just return it?
 		// The pattern framework usually expects bounds.
 		// If we use NewGopher, it ignores 'b' unless we wrap it.
-		// Let's just return it, but maybe centered or tiled if 'b' is large?
+		// The result can be centered or tiled if bounds are large.
 		// For demo, the bootstrap tool calls with 150x150. Gopher is likely larger/smaller.
-		// Let's use it as is.
+		// Using the default unadjusted result.
 		return NewGopher()
 	}
 

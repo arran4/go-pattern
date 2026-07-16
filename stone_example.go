@@ -23,7 +23,7 @@ func ExampleNewStone() image.Image {
 			{180, 80}, {80, 180},
 		},
 		// Colors: Using Greyscale for heightmap initially, or color for texture
-		// Let's make a texture.
+		// Creating a base texture.
 		[]color.Color{
 			color.RGBA{100, 100, 100, 255},
 			color.RGBA{120, 115, 110, 255},

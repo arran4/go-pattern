@@ -13,13 +13,13 @@ var (
 
 func ExampleMaterial_basic() {
 	// Base height map: A simple noise or shape
-	// Let's use a Radial Gradient to simulate a sphere bump
+	// Using a Radial Gradient to simulate a spherical bump
 	base := NewRadialGradient(
 		GradientCenter(0.5, 0.5),
 		SetStartColor(color.White), // High in center
 		SetEndColor(color.Black),   // Low at edges
 		// GradientRadius(0.4), // This option does not exist in RadialGradient, it uses bounds.
-		// But we can simulate radius by scaling or bounds if we wanted.
+		// Radius can be simulated via scaling or bounds adjustment.
 		// RadialGradient defaults to filling the bounds.
 	)
 
@@ -33,7 +33,7 @@ func ExampleMaterial_basic() {
 		AO:        AOFromHeight(base, 4),
 	}
 
-	// We can also generate Curvature
+	// Optional Curvature generation
 	curv := CurvatureFromHeight(base)
 
 	fmt.Println("Material created")
