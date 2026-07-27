@@ -44,5 +44,5 @@ func GenerateSlate(rect image.Rectangle) image.Image {
 }
 
 func init() {
-	GlobalGenerators["Slate"] = GenerateSlate
+	RegisterGenerator("Slate", GenerateSlate)
 }

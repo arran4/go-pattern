@@ -97,6 +97,6 @@ func GenerateWater_surface(rect image.Rectangle) image.Image {
 }
 
 func init() {
-	GlobalGenerators["Water"] = GenerateWater
-	GlobalGenerators["Water_surface"] = GenerateWater_surface
+	RegisterGenerator("Water", GenerateWater)
+	RegisterGenerator("Water_surface", GenerateWater_surface)
 }

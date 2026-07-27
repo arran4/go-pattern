@@ -16,14 +16,14 @@ var (
 const ShojoBaseLabel = "Shojo"
 
 func init() {
-	GlobalGenerators["Shojo"] = GenerateShojo
-	GlobalReferences["Shojo"] = GenerateShojoReferences
+	RegisterGenerator("Shojo", GenerateShojo)
+	RegisterReferences("Shojo", GenerateShojoReferences)
 
-	GlobalGenerators["Shojo_pink"] = GenerateShojo_pink
-	GlobalReferences["Shojo_pink"] = GenerateShojoReferences
+	RegisterGenerator("Shojo_pink", GenerateShojo_pink)
+	RegisterReferences("Shojo_pink", GenerateShojoReferences)
 
-	GlobalGenerators["Shojo_blue"] = GenerateShojo_blue
-	GlobalReferences["Shojo_blue"] = GenerateShojoReferences
+	RegisterGenerator("Shojo_blue", GenerateShojo_blue)
+	RegisterReferences("Shojo_blue", GenerateShojoReferences)
 }
 
 // GenerateShojo generates a Shojo Sparkles pattern.

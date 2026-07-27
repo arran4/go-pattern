@@ -190,21 +190,21 @@ func ExampleNewWarp_terrain() image.Image {
 }
 
 func init() {
-	GlobalGenerators[WarpBaseLabel] = GenerateWarp
-	GlobalReferences[WarpBaseLabel] = GenerateWarpReferences
+	RegisterGenerator(WarpBaseLabel, GenerateWarp)
+	RegisterReferences(WarpBaseLabel, GenerateWarpReferences)
 
 	// Register variants using the exact suffix ID expected by bootstrap (Warp_wood, etc.)
-	GlobalGenerators["Warp_wood"] = GenerateWarp_wood
-	GlobalReferences["Warp_wood"] = GenerateWarpReferences_Empty
+	RegisterGenerator("Warp_wood", GenerateWarp_wood)
+	RegisterReferences("Warp_wood", GenerateWarpReferences_Empty)
 
-	GlobalGenerators["Warp_marble"] = GenerateWarp_marble
-	GlobalReferences["Warp_marble"] = GenerateWarpReferences_Empty
+	RegisterGenerator("Warp_marble", GenerateWarp_marble)
+	RegisterReferences("Warp_marble", GenerateWarpReferences_Empty)
 
-	GlobalGenerators["Warp_clouds"] = GenerateWarp_clouds
-	GlobalReferences["Warp_clouds"] = GenerateWarpReferences_Empty
+	RegisterGenerator("Warp_clouds", GenerateWarp_clouds)
+	RegisterReferences("Warp_clouds", GenerateWarpReferences_Empty)
 
-	GlobalGenerators["Warp_terrain"] = GenerateWarp_terrain
-	GlobalReferences["Warp_terrain"] = GenerateWarpReferences_Empty
+	RegisterGenerator("Warp_terrain", GenerateWarp_terrain)
+	RegisterReferences("Warp_terrain", GenerateWarpReferences_Empty)
 }
 
 // Generator Wrappers

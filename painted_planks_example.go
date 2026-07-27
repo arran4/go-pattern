@@ -24,8 +24,8 @@ func ExampleNewPaintedPlanks() image.Image {
 }
 
 func init() {
-	GlobalGenerators[PaintedPlanksBaseLabel] = GeneratePaintedPlanks
-	GlobalReferences[PaintedPlanksBaseLabel] = GeneratePaintedPlanksReferences
+	RegisterGenerator(PaintedPlanksBaseLabel, GeneratePaintedPlanks)
+	RegisterReferences(PaintedPlanksBaseLabel, GeneratePaintedPlanksReferences)
 }
 
 func GeneratePaintedPlanks(rect image.Rectangle) image.Image {

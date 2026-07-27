@@ -49,6 +49,6 @@ func GenerateNormalMap_sphere(rect image.Rectangle) image.Image {
 }
 
 func init() {
-	GlobalGenerators["NormalMap"] = GenerateNormalMap
-	GlobalGenerators["NormalMap_sphere"] = GenerateNormalMap_sphere
+	RegisterGenerator("NormalMap", GenerateNormalMap)
+	RegisterGenerator("NormalMap_sphere", GenerateNormalMap_sphere)
 }
