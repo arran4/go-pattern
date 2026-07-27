@@ -82,6 +82,6 @@ func GenerateSnow_tracks(rect image.Rectangle) image.Image {
 }
 
 func init() {
-	RegisterGenerator("Snow", GenerateSnow)
-	RegisterGenerator("Snow_tracks", GenerateSnow_tracks)
+	GlobalGenerators["Snow"] = GenerateSnow
+	GlobalGenerators["Snow_tracks"] = GenerateSnow_tracks
 }

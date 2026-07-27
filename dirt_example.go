@@ -84,6 +84,6 @@ func GenerateDirt_mud(rect image.Rectangle) image.Image {
 }
 
 func init() {
-	RegisterGenerator("Dirt", GenerateDirt)
-	RegisterGenerator("Dirt_mud", GenerateDirt_mud)
+	GlobalGenerators["Dirt"] = GenerateDirt
+	GlobalGenerators["Dirt_mud"] = GenerateDirt_mud
 }

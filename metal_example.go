@@ -69,6 +69,6 @@ func GenerateMetal_scratched(rect image.Rectangle) image.Image {
 }
 
 func init() {
-	RegisterGenerator("Metal", GenerateMetal)
-	RegisterGenerator("Metal_scratched", GenerateMetal_scratched)
+	GlobalGenerators["Metal"] = GenerateMetal
+	GlobalGenerators["Metal_scratched"] = GenerateMetal_scratched
 }

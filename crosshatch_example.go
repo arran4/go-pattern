@@ -22,8 +22,8 @@ var (
 )
 
 func init() {
-	RegisterGenerator(CrossHatchBaseLabel, GenerateCrossHatch)
-	RegisterReferences(CrossHatchBaseLabel, GenerateCrossHatchReferences)
+	GlobalGenerators[CrossHatchBaseLabel] = GenerateCrossHatch
+	GlobalReferences[CrossHatchBaseLabel] = GenerateCrossHatchReferences
 }
 
 func GenerateCrossHatch(rect image.Rectangle) image.Image {

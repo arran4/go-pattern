@@ -92,7 +92,7 @@ func GenerateSand_zoomed(rect image.Rectangle) image.Image {
 }
 
 func init() {
-	RegisterGenerator("Sand", GenerateSand)
-	RegisterGenerator("Sand_dunes", GenerateSand_dunes)
-	RegisterGenerator("Sand_zoomed", GenerateSand_zoomed)
+	GlobalGenerators["Sand"] = GenerateSand
+	GlobalGenerators["Sand_dunes"] = GenerateSand_dunes
+	GlobalGenerators["Sand_zoomed"] = GenerateSand_zoomed
 }

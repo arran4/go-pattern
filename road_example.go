@@ -119,7 +119,7 @@ func GenerateRoad_terrain(rect image.Rectangle) image.Image {
 }
 
 func init() {
-	RegisterGenerator("Road", GenerateRoad)
-	RegisterGenerator("Road_marked", GenerateRoad_marked)
-	RegisterGenerator("Road_terrain", GenerateRoad_terrain)
+	GlobalGenerators["Road"] = GenerateRoad
+	GlobalGenerators["Road_marked"] = GenerateRoad_marked
+	GlobalGenerators["Road_terrain"] = GenerateRoad_terrain
 }

@@ -92,6 +92,6 @@ func GenerateStone_cobble(rect image.Rectangle) image.Image {
 }
 
 func init() {
-	RegisterGenerator("Stone", GenerateStone)
-	RegisterGenerator("Stone_cobble", GenerateStone_cobble)
+	GlobalGenerators["Stone"] = GenerateStone
+	GlobalGenerators["Stone_cobble"] = GenerateStone_cobble
 }

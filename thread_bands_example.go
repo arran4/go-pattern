@@ -17,8 +17,8 @@ var (
 )
 
 func init() {
-	RegisterGenerator(ThreadBandsBaseLabel, GenerateThreadBands)
-	RegisterReferences(ThreadBandsBaseLabel, GenerateThreadBandsReferences)
+	GlobalGenerators[ThreadBandsBaseLabel] = GenerateThreadBands
+	GlobalReferences[ThreadBandsBaseLabel] = GenerateThreadBandsReferences
 }
 
 func GenerateThreadBands(rect image.Rectangle) image.Image {

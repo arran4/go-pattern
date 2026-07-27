@@ -159,20 +159,20 @@ func ExampleNewClouds_sunset() image.Image {
 }
 
 func init() {
-	RegisterGenerator(CloudsBaseLabel, GenerateClouds)
-	RegisterReferences(CloudsBaseLabel, GenerateCloudsReferences)
+	GlobalGenerators[CloudsBaseLabel] = GenerateClouds
+	GlobalReferences[CloudsBaseLabel] = GenerateCloudsReferences
 
-	RegisterGenerator("Clouds_cumulus", GenerateClouds_cumulus)
-	RegisterReferences("Clouds_cumulus", GenerateCloudsReferences_Empty)
+	GlobalGenerators["Clouds_cumulus"] = GenerateClouds_cumulus
+	GlobalReferences["Clouds_cumulus"] = GenerateCloudsReferences_Empty
 
-	RegisterGenerator("Clouds_cirrus", GenerateClouds_cirrus)
-	RegisterReferences("Clouds_cirrus", GenerateCloudsReferences_Empty)
+	GlobalGenerators["Clouds_cirrus"] = GenerateClouds_cirrus
+	GlobalReferences["Clouds_cirrus"] = GenerateCloudsReferences_Empty
 
-	RegisterGenerator("Clouds_storm", GenerateClouds_storm)
-	RegisterReferences("Clouds_storm", GenerateCloudsReferences_Empty)
+	GlobalGenerators["Clouds_storm"] = GenerateClouds_storm
+	GlobalReferences["Clouds_storm"] = GenerateCloudsReferences_Empty
 
-	RegisterGenerator("Clouds_sunset", GenerateClouds_sunset)
-	RegisterReferences("Clouds_sunset", GenerateCloudsReferences_Empty)
+	GlobalGenerators["Clouds_sunset"] = GenerateClouds_sunset
+	GlobalReferences["Clouds_sunset"] = GenerateCloudsReferences_Empty
 }
 
 func GenerateClouds(rect image.Rectangle) image.Image {

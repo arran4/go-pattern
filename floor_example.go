@@ -46,5 +46,5 @@ func GenerateFloor(rect image.Rectangle) image.Image {
 }
 
 func init() {
-	RegisterGenerator("Floor", GenerateFloor)
+	GlobalGenerators["Floor"] = GenerateFloor
 }
