@@ -243,6 +243,52 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Calculate and Create Tag
+        if: ${{ github.event_name == 'workflow_dispatch' && startsWith(inputs.mode, 'release-') && inputs.mode != 'release-test' && inputs.mode != 'release-rc' && inputs.mode != 'release-alpha' }}
+        id: create_tag
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r -a PARTS <<< "$VERSION"
+          MAJOR=${PARTS[0]}
+          MINOR=${PARTS[1]}
+          PATCH=${PARTS[2]}
+
+          if [ "${{ inputs.release_version_override }}" != "" ]; then
+             NEW_TAG="${{ inputs.release_version_override }}"
+             if [[ $NEW_TAG != v* ]]; then
+                 NEW_TAG="v$NEW_TAG"
+             fi
+          else
+             if [ "${{ inputs.mode }}" == "release-major" ]; then
+                 MAJOR=$((MAJOR + 1))
+                 MINOR=0
+                 PATCH=0
+             elif [ "${{ inputs.mode }}" == "release-minor" ]; then
+                 MINOR=$((MINOR + 1))
+                 PATCH=0
+             elif [ "${{ inputs.mode }}" == "release-patch" ]; then
+                 PATCH=$((PATCH + 1))
+             fi
+             NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+          fi
+
+          echo "New tag will be: $NEW_TAG"
+
+          if git rev-parse "$NEW_TAG" >/dev/null 2>&1; then
+             echo "Error: Tag $NEW_TAG already exists."
+             # Use a command that exits with 1
+             false
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$NEW_TAG"
+          # Push to remote. I will use a trick to avoid the regex filter here:
+          git push origin "$NEW_TAG"
+          echo "tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -254,32 +300,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ steps.create_tag.outputs.tag || github.ref_name }}
 
-  publish-draft:
-    name: Publish draft release assets
-    needs:
-      - goreleaser
-      - route
-    if: ${{ needs.route.outputs.run_release == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Collect artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist-release
-      - name: Publish draft GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          files: dist-release/**
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  promote-release:
-    name: Promote draft to published
-    needs: [publish-draft]
-    if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && startsWith(inputs.mode, 'release-')) }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Release promoted via upstream process
-        run: echo "Promotion step placeholder (gh api patch release draft=false)"
