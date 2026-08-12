@@ -51,6 +51,39 @@ Abstract Art: Renamed from Crystal (Original implementation)
 ```
 
 
+### Blueprint Pattern
+
+ExampleNewBlueprint renders a technical blueprint grid and saves it to blueprint.png.
+
+![Blueprint Pattern](blueprint.png)
+
+```go
+	img := NewBlueprint(
+		SetBounds(image.Rect(0, 0, 300, 300)),
+		SetBlueprintCellSize(10),
+		SetBlueprintMajorCellSize(50),
+		SetBlueprintLineWidth(1),
+		SetBlueprintMajorLineWidth(2),
+		SetBlueprintBackgroundColor(color.RGBA{R: 21, G: 67, B: 122, A: 255}),
+		SetBlueprintMajorLineColor(color.RGBA{R: 255, G: 255, B: 255, A: 255}),
+		SetBlueprintMinorLineColor(color.RGBA{R: 124, G: 167, B: 214, A: 255}),
+	)
+
+	f, err := os.Create(BlueprintOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if cerr := f.Close(); cerr != nil {
+			panic(cerr)
+		}
+	}()
+	if err := png.Encode(f, img); err != nil {
+		panic(err)
+	}
+```
+
+
 ### Brick Pattern
 
 ExampleNewBrick creates a basic brick pattern.
@@ -1107,6 +1140,39 @@ Demonstrates a procedural grass texture using the GrassClose pattern composed wi
 		}
 	}()
 	if err = png.Encode(f, grass); err != nil {
+		panic(err)
+	}
+```
+
+
+### GridPaper Pattern
+
+ExampleNewGridPaper renders a grid paper pattern and saves it to grid_paper.png.
+
+![GridPaper Pattern](grid_paper.png)
+
+```go
+	img := NewGridPaper(
+		SetBounds(image.Rect(0, 0, 300, 300)),
+		SetGridPaperCellSize(10),
+		SetGridPaperMajorCellSize(50),
+		SetGridPaperLineWidth(1),
+		SetGridPaperMajorLineWidth(2),
+		SetGridPaperBackgroundColor(color.RGBA{R: 245, G: 245, B: 245, A: 255}),
+		SetGridPaperMajorLineColor(color.RGBA{R: 80, G: 120, B: 180, A: 255}),
+		SetGridPaperMinorLineColor(color.RGBA{R: 140, G: 180, B: 230, A: 255}),
+	)
+
+	f, err := os.Create(GridPaperOutputFilename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if cerr := f.Close(); cerr != nil {
+			panic(cerr)
+		}
+	}()
+	if err := png.Encode(f, img); err != nil {
 		panic(err)
 	}
 ```
