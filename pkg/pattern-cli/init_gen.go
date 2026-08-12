@@ -99,6 +99,9 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 		}
 		return nil, fmt.Errorf("command blue_noise_dither has unsupported argument types")
 	}
+	fm["blueprint"] = func(args []string, input image.Image) (image.Image, error) {
+		return pattern.NewBlueprint(), nil
+	}
 	fm["brick"] = func(args []string, input image.Image) (image.Image, error) {
 		return pattern.NewBrick(), nil
 	}
@@ -290,6 +293,9 @@ func RegisterGeneratedCommands(fm dsl.FuncMap) {
 			return nil, fmt.Errorf("grid requires 1 arguments")
 		}
 		return nil, fmt.Errorf("command grid has unsupported argument types")
+	}
+	fm["grid_paper"] = func(args []string, input image.Image) (image.Image, error) {
+		return pattern.NewGridPaper(), nil
 	}
 	fm["halftone_dither"] = func(args []string, input image.Image) (image.Image, error) {
 		if len(args) < 2 {
