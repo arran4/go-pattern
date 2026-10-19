@@ -119,7 +119,7 @@ func TestGrid_NonZeroOrigin(t *testing.T) {
 	g1 := NewGrid(
 		CellPos(0, 0, img),
 		SetBounds(image.Rect(10, 10, 20, 20)),
-		FixedSize(10, 10), // Required to hit the first layout branch
+		FixedSize(10, 10), // Explicitly exercise fixed-size layout
 	)
 
 	gb1 := g1.Bounds()
@@ -133,19 +133,17 @@ func TestGrid_NonZeroOrigin(t *testing.T) {
 		t.Errorf("Expected pixel at (15, 15) to map to local (5, 5) and be fully red. Got color: %v", c1)
 	}
 
-	// Case 2: Natural Non-zero explicitly
-	// If FixedSize isn't called, SetBounds should still inform the Min bounds of the layout
+	// Case 2: Non-zero origin with automatic content-derived sizing.
+	// A zero-size SetBounds supplies the origin without setting fixed dimensions.
 	g2 := NewGrid(
 		CellPos(0, 0, img),
-		SetBounds(image.Rect(10, 10, 20, 20)),
+		SetBounds(image.Rect(10, 10, 10, 10)),
 	)
 
 	gb2 := g2.Bounds()
-	// It takes Min from bounds, but Max from totalW/H.
-	// Total W/H is 10/10 from the image.
-	// So expected is (10,10)-(20,20).
+	// The resulting size comes from the 10x10 child, retaining origin (10,10).
 	if gb2.Min.X != 10 || gb2.Min.Y != 10 || gb2.Max.X != 20 || gb2.Max.Y != 20 {
-		t.Fatalf("Grid bounds do not respect explicit SetBounds (Natural branch): %v", gb2)
+		t.Fatalf("Grid bounds do not preserve origin with automatic sizing: %v", gb2)
 	}
 
 	c2 := g2.At(15, 15)
@@ -162,7 +160,7 @@ func TestGrid_NonZeroOrigin(t *testing.T) {
 
 	gb3 := g3.Bounds()
 	if gb3.Min.X != -10 || gb3.Min.Y != -10 || gb3.Max.X != 0 || gb3.Max.Y != 0 {
-		t.Fatalf("Grid bounds do not respect negative origin explicit SetBounds (Natural branch): %v", gb3)
+		t.Fatalf("Grid bounds do not respect negative origin (fixed-size branch): %v", gb3)
 	}
 
 	c3 := g3.At(-5, -5)
