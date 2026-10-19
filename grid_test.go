@@ -118,6 +118,7 @@ func TestGrid_GridSize(t *testing.T) {
 	g := NewGrid(
 		GridSize(5, 5),
 		CellPos(0, 0, img),
+		SetBounds(image.Rect(10, 10, 20, 20)),
 	)
 
 	// My current implementation: cols=5, rows=5.
@@ -140,11 +141,9 @@ func TestGrid_NonZeroOrigin(t *testing.T) {
 
 	g := NewGrid(
 		CellPos(0, 0, img),
+		SetBounds(image.Rect(10, 10, 20, 20)),
 	)
 
-    b := image.Rect(10, 10, 20, 20)
-    g.(*Grid).SetBounds(b)
-    g.(*Grid).layout()
 
 	gb := g.Bounds()
 	if gb.Min.X != 10 || gb.Min.Y != 10 || gb.Max.X != 20 || gb.Max.Y != 20 {
