@@ -98,37 +98,11 @@ func TestGrid_Column(t *testing.T) {
 }
 
 func TestGrid_GridSize(t *testing.T) {
-	// Create a 5x5 grid but only populate one cell
-	// It should be 0 size if no content, but since we don't know content size,
-	// GridSize mainly affects the number of cells reserved.
-	// However, if we don't have content, the size is 0.
-	// But if we have content at (0,0) and GridSize(5,5), the grid should be at least (0,0) to (5*w, 5*h)?
-	// My implementation only uses existing content to determine row/col sizes.
-	// If a row/col is empty, its size is 0.
-
-	// So GridSize(5,5) with one cell at (0,0) (10x10) will result in:
-	// Col 0: 10w. Cols 1-4: 0w. Total w: 10.
-	// Row 0: 10h. Rows 1-4: 0h. Total h: 10.
-
-	// Wait, if I supply GridSize, does it mean empty cells have some default size?
-	// The prompt says: "NewGrid(GridSize(2,2), CellPos(0,1,i1), CellPos(1,0,i3))".
-	// This implies GridSize sets up the structure.
-
 	img := image.NewRGBA(image.Rect(0, 0, 10, 10))
 	g := NewGrid(
 		GridSize(5, 5),
 		CellPos(0, 0, img),
-		SetBounds(image.Rect(10, 10, 20, 20)),
 	)
-
-	// My current implementation: cols=5, rows=5.
-	// cellWidths[0] = 10. cellWidths[1..4] = 0.
-	// rowHeights[0] = 10. rowHeights[1..4] = 0.
-	// Bounds: 10x10.
-
-	// This seems correct for "flexible" layout where empty columns collapse.
-	// Unless "Table balancing formula" implies uniform distribution?
-	// "intelligently tries to balance the internals using table balancing formula that is a simplified one webbrowsers use"
 
 	if g.Bounds().Dx() != 10 {
 		t.Errorf("Expected width 10, got %d", g.Bounds().Dx())
@@ -137,22 +111,73 @@ func TestGrid_GridSize(t *testing.T) {
 
 func TestGrid_NonZeroOrigin(t *testing.T) {
 	img := image.NewRGBA(image.Rect(0, 0, 10, 10))
+	// Set a pixel to verify coordinate mapping: Local (5,5)
 	img.Set(5, 5, color.RGBA{255, 0, 0, 255})
+	// Transparent everywhere else by default
 
-	g := NewGrid(
+	// Case 1: Fixed Non-zero explicitly
+	g1 := NewGrid(
+		CellPos(0, 0, img),
+		SetBounds(image.Rect(10, 10, 20, 20)),
+		FixedSize(10, 10), // Required to hit the first layout branch
+	)
+
+	gb1 := g1.Bounds()
+	if gb1.Min.X != 10 || gb1.Min.Y != 10 || gb1.Max.X != 20 || gb1.Max.Y != 20 {
+		t.Fatalf("Grid bounds do not respect explicit SetBounds (FixedSize branch): %v", gb1)
+	}
+
+	c1 := g1.At(15, 15)
+	r1, g1c, b1, a1 := c1.RGBA()
+	if r1 != 0xFFFF || g1c != 0 || b1 != 0 || a1 != 0xFFFF {
+		t.Errorf("Expected pixel at (15, 15) to map to local (5, 5) and be fully red. Got color: %v", c1)
+	}
+
+	// Case 2: Natural Non-zero explicitly
+	// If FixedSize isn't called, SetBounds should still inform the Min bounds of the layout
+	g2 := NewGrid(
 		CellPos(0, 0, img),
 		SetBounds(image.Rect(10, 10, 20, 20)),
 	)
 
-
-	gb := g.Bounds()
-	if gb.Min.X != 10 || gb.Min.Y != 10 || gb.Max.X != 20 || gb.Max.Y != 20 {
-		t.Fatalf("Grid bounds do not respect SetBounds: %v", gb)
+	gb2 := g2.Bounds()
+	// It takes Min from bounds, but Max from totalW/H.
+	// Total W/H is 10/10 from the image.
+	// So expected is (10,10)-(20,20).
+	if gb2.Min.X != 10 || gb2.Min.Y != 10 || gb2.Max.X != 20 || gb2.Max.Y != 20 {
+		t.Fatalf("Grid bounds do not respect explicit SetBounds (Natural branch): %v", gb2)
 	}
 
-	c := g.At(15, 15)
-	r, _, _, _ := c.RGBA()
-	if r != 0xFFFF {
-		t.Errorf("Expected pixel at (15, 15) to map to local (5, 5) and be red. Got color: %v", c)
+	c2 := g2.At(15, 15)
+	r2, g2c, b2, a2 := c2.RGBA()
+	if r2 != 0xFFFF || g2c != 0 || b2 != 0 || a2 != 0xFFFF {
+		t.Errorf("Expected pixel at (15, 15) to map to local (5, 5) and be fully red. Got color: %v", c2)
+	}
+
+	// Case 3: Negative Origin
+	g3 := NewGrid(
+		CellPos(0, 0, img),
+		SetBounds(image.Rect(-10, -10, 0, 0)),
+	)
+
+	gb3 := g3.Bounds()
+	if gb3.Min.X != -10 || gb3.Min.Y != -10 || gb3.Max.X != 0 || gb3.Max.Y != 0 {
+		t.Fatalf("Grid bounds do not respect negative origin explicit SetBounds (Natural branch): %v", gb3)
+	}
+
+	c3 := g3.At(-5, -5)
+	r3, g3c, b3, a3 := c3.RGBA()
+	if r3 != 0xFFFF || g3c != 0 || b3 != 0 || a3 != 0xFFFF {
+		t.Errorf("Expected pixel at (-5, -5) to map to local (5, 5) and be fully red. Got color: %v", c3)
+	}
+
+	// Case 4: Default Zero-origin behavior unaffected
+	g4 := NewGrid(
+		CellPos(0, 0, img),
+	)
+
+	gb4 := g4.Bounds()
+	if gb4.Min.X != 0 || gb4.Min.Y != 0 || gb4.Max.X != 10 || gb4.Max.Y != 10 {
+		t.Fatalf("Grid bounds default behavior altered: %v", gb4)
 	}
 }
