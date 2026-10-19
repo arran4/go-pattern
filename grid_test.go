@@ -133,3 +133,27 @@ func TestGrid_GridSize(t *testing.T) {
 		t.Errorf("Expected width 10, got %d", g.Bounds().Dx())
 	}
 }
+
+func TestGrid_NonZeroOrigin(t *testing.T) {
+	img := image.NewRGBA(image.Rect(0, 0, 10, 10))
+	img.Set(5, 5, color.RGBA{255, 0, 0, 255})
+
+	g := NewGrid(
+		CellPos(0, 0, img),
+	)
+
+    b := image.Rect(10, 10, 20, 20)
+    g.(*Grid).SetBounds(b)
+    g.(*Grid).layout()
+
+	gb := g.Bounds()
+	if gb.Min.X != 10 || gb.Min.Y != 10 || gb.Max.X != 20 || gb.Max.Y != 20 {
+		t.Fatalf("Grid bounds do not respect SetBounds: %v", gb)
+	}
+
+	c := g.At(15, 15)
+	r, _, _, _ := c.RGBA()
+	if r != 0xFFFF {
+		t.Errorf("Expected pixel at (15, 15) to map to local (5, 5) and be red. Got color: %v", c)
+	}
+}
