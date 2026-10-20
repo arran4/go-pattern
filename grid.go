@@ -313,7 +313,7 @@ func (g *Grid) layout() {
 
 	// If FixedSize is set, handle flexible expansion
 	if g.fixedWidth > 0 && g.fixedHeight > 0 {
-		g.bounds = image.Rect(0, 0, g.fixedWidth, g.fixedHeight)
+		g.bounds = image.Rect(g.bounds.Min.X, g.bounds.Min.Y, g.bounds.Min.X+g.fixedWidth, g.bounds.Min.Y+g.fixedHeight)
 
 		// 1. Distribute extra width to flexible columns
 		// A column is flexible if it has 0 width (meaning no bounded content forced a size).
@@ -358,7 +358,7 @@ func (g *Grid) layout() {
 		}
 
 	} else {
-		g.bounds = image.Rect(0, 0, totalW, totalH)
+		g.bounds = image.Rect(g.bounds.Min.X, g.bounds.Min.Y, g.bounds.Min.X+totalW, g.bounds.Min.Y+totalH)
 	}
 
 	g.cellWidths = colWidths
